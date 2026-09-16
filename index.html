@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161b">
+<title>Idioma, Spanish trainer</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><b>Idi</b><s>oma</s></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-screen="practice">Practice</button>
+    <button class="tab" data-screen="manage">Manage</button>
+    <button class="tab" data-screen="progress">Progress</button>
+  </nav>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="btn-menu" aria-label="More">&#8943;</button>
+</header>
+
+<div class="menu" id="menu" hidden>
+  <label class="toggle">
+    <input type="checkbox" id="set-typo">
+    <span>Typo tolerance <em>accepts a single-letter slip</em></span>
+  </label>
+  <label class="field inline">
+    <span>Cards per round</span>
+    <input type="number" id="set-round" min="1" max="100" step="1">
+  </label>
+  <div class="menu-row">
+    <button class="btn" id="btn-export">Export backup</button>
+    <label class="btn" for="file-import">Import backup</label>
+    <input type="file" id="file-import" accept=".json,application/json" hidden>
+  </div>
+  <div class="menu-row">
+    <button class="btn danger" id="btn-reset">Reset all progress</button>
+  </div>
+  <p class="muted small" id="saved-at"></p>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<main>
+
+  <!-- ============================ PRACTICE ============================ -->
+  <section class="screen on" id="screen-practice">
+
+    <div class="round-bar" id="round-bar" hidden>
+      <div class="round-progress"><i id="round-fill"></i></div>
+      <span class="mono small" id="round-count"></span>
+    </div>
+
+    <div class="card" id="card" hidden>
+      <div class="card-head">
+        <span class="band" id="card-band"></span>
+        <span class="muted small mono" id="card-level"></span>
+      </div>
+      <p class="prompt" id="card-prompt"></p>
+      <p class="muted small" id="card-hint"></p>
+
+      <form id="answer-form" autocomplete="off">
+        <input type="text" id="answer" placeholder="Type your answer"
+               autocapitalize="none" autocorrect="off" spellcheck="false">
+        <button class="btn primary" type="submit" id="btn-submit">Check</button>
+      </form>
+
+      <div class="verdict" id="verdict" hidden>
+        <div class="verdict-head">
+          <span class="chip" id="verdict-chip"></span>
+          <span class="muted small" id="verdict-detail"></span>
+        </div>
+        <p class="answer-line">
+          <span class="muted small">Answer</span>
+          <b id="verdict-answer"></b>
+        </p>
+        <p class="context mono small" id="verdict-context" hidden></p>
+        <p class="note" id="verdict-note" hidden></p>
+        <div class="verdict-actions">
+          <button class="btn" id="btn-override" hidden>I was right</button>
+          <button class="btn primary" id="btn-next">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pane" id="round-start">
+      <h2>Ready when you are</h2>
+      <p class="muted" id="start-blurb"></p>
+      <button class="btn primary big" id="btn-start">Start a round</button>
+    </div>
+
+    <div class="pane" id="round-end" hidden>
+      <h2>Round done</h2>
+      <div class="stats" id="end-stats"></div>
+      <div class="movers" id="end-movers"></div>
+      <button class="btn primary big" id="btn-again">Another round</button>
+    </div>
+  </section>
+
+  <!-- ============================= MANAGE ============================= -->
+  <section class="screen" id="screen-manage">
+    <div class="pane">
+      <h2>Add a word</h2>
+      <form id="add-word" class="grid">
+        <label class="field"><span>Spanish</span><input id="nw-es" required></label>
+        <label class="field"><span>Other accepted Spanish</span><input id="nw-alt" placeholder="comma separated"></label>
+        <label class="field"><span>English</span><input id="nw-en" required placeholder="comma separated"></label>
+        <label class="field"><span>Part of speech</span><input id="nw-pos" placeholder="noun, verb, phrase"></label>
+        <label class="field wide"><span>Note</span><input id="nw-note" placeholder="dialect warnings, gender, usage"></label>
+        <button class="btn primary" type="submit">Add word</button>
+      </form>
+    </div>
+
+    <div class="pane">
+      <h2>Add a sentence</h2>
+      <p class="muted small">Wrap the target form in curly braces, for example
+        <span class="mono">Nosotros {comemos} a la una.</span> The answer is filled in from the braces.</p>
+      <form id="add-sentence" class="grid">
+        <label class="field"><span>Word</span>
+          <select id="ns-word"></select>
+        </label>
+        <label class="field wide"><span>Spanish sentence</span><input id="ns-es" required placeholder="Nosotros {comemos} a la una."></label>
+        <label class="field wide"><span>English</span><input id="ns-en" required placeholder="We eat at one."></label>
+        <button class="btn primary" type="submit">Add sentence</button>
+      </form>
+    </div>
+
+    <div class="pane">
+      <div class="pane-head">
+        <h2>Word bank</h2>
+        <input id="filter" class="filter" placeholder="Filter by Spanish, English or note">
+      </div>
+      <div class="filters" id="quick-filters">
+        <button class="pill on" data-filter="all">All</button>
+        <button class="pill" data-filter="recognition">Recognition</button>
+        <button class="pill" data-filter="production">Production</button>
+        <button class="pill" data-filter="cloze">Cloze</button>
+        <button class="pill" data-filter="nosentence">Cloze, no sentence</button>
+        <button class="pill" data-filter="disabled">Disabled</button>
+      </div>
+      <div class="table-wrap">
+        <table class="bank">
+          <thead><tr>
+            <th>Spanish</th><th>English</th><th>Level</th><th>Band</th>
+            <th>Seen</th><th>Right</th><th>Wrong</th><th></th>
+          </tr></thead>
+          <tbody id="bank-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ PROGRESS ============================ -->
+  <section class="screen" id="screen-progress">
+    <div class="pane">
+      <h2>Where the bank sits</h2>
+      <div class="bands" id="band-bars"></div>
+    </div>
+    <div class="pane">
+      <h2>Totals</h2>
+      <div class="stats" id="progress-stats"></div>
+    </div>
+    <div class="pane">
+      <h2>Best streaks</h2>
+      <div class="table-wrap">
+        <table class="bank">
+          <thead><tr><th>Spanish</th><th>English</th><th>Level</th><th>Streak</th><th>Accuracy</th></tr></thead>
+          <tbody id="streak-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="seed.js"></script>
+<script src="engine.js"></script>
+<script src="store.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
