@@ -44,7 +44,10 @@ console.log('after override:', JSON.stringify(after), '-> wrong count returned t
 console.log('\n--- backup round trip ---');
 await p.click('#btn-menu'); await p.waitForTimeout(150);
 const dl = await Promise.all([p.waitForEvent('download'), p.click('#btn-export')]).then(r => r[0]);
-const path = '/tmp/claude-0/-home-user-PVHub/6e692316-ca7f-5627-b1f9-959b09a3df82/scratchpad/backup.json';
+const { tmpdir } = await import('os');
+const { join } = await import('path');
+// Somebody's scratchpad from another machine used to be hardcoded here.
+const path = join(tmpdir(), 'idioma-backup-test.json');
 await dl.saveAs(path);
 const { readFileSync } = await import('fs');
 const saved = JSON.parse(readFileSync(path, 'utf8'));

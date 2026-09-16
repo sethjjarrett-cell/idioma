@@ -3,14 +3,67 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14161b">
+<meta name="theme-color" content="#ff7a1a">
 <title>Idioma, Spanish trainer</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+<!-- Zorro, the mascot. Drawn once and stamped out with <use>; the three
+     faces are switched by custom properties, which inherit into the shadow
+     tree, so a face change is one CSS line and no extra markup. -->
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="fox-sym" viewBox="0 0 120 120">
+    <g stroke-linejoin="round" stroke-linecap="round">
+      <!-- ears -->
+      <path d="M30 46 L18 10 L52 26 Z" fill="var(--fur, #ff8a2b)" stroke="var(--fur, #ff8a2b)" stroke-width="7"/>
+      <path d="M90 46 L102 10 L68 26 Z" fill="var(--fur, #ff8a2b)" stroke="var(--fur, #ff8a2b)" stroke-width="7"/>
+      <path d="M32 40 L25 21 L44 29 Z" fill="var(--ear, #ffc79a)" stroke="var(--ear, #ffc79a)" stroke-width="4"/>
+      <path d="M88 40 L95 21 L76 29 Z" fill="var(--ear, #ffc79a)" stroke="var(--ear, #ffc79a)" stroke-width="4"/>
+      <!-- head and muzzle -->
+      <path d="M60 24 C88 24 106 44 106 66 C106 90 86 106 60 106 C34 106 14 90 14 66 C14 44 32 24 60 24 Z"
+            fill="var(--fur, #ff8a2b)"/>
+      <path d="M60 64 C80 64 92 74 92 85 C92 96 78 104 60 104 C42 104 28 96 28 85 C28 74 40 64 60 64 Z"
+            fill="var(--snout, #fff3e6)"/>
+      <!-- cheeks -->
+      <ellipse cx="30" cy="74" rx="7" ry="5" fill="var(--blush, #ff5c33)" opacity="0.35"/>
+      <ellipse cx="90" cy="74" rx="7" ry="5" fill="var(--blush, #ff5c33)" opacity="0.35"/>
+      <!-- nose, shared by every face -->
+      <path d="M60 72 c6 0 9 2 9 5 c0 4 -5 7 -9 7 c-4 0 -9 -3 -9 -7 c0 -3 3 -5 9 -5 z" fill="var(--ink, #4a2c15)"/>
+
+      <!-- idle -->
+      <g opacity="var(--fox-idle, 1)">
+        <circle cx="42" cy="58" r="6" fill="var(--ink, #4a2c15)"/>
+        <circle cx="78" cy="58" r="6" fill="var(--ink, #4a2c15)"/>
+        <circle cx="44" cy="56" r="2" fill="#fff"/>
+        <circle cx="80" cy="56" r="2" fill="#fff"/>
+        <path d="M60 85 v4 M60 89 c0 5 -5 8 -10 6 M60 89 c0 5 5 8 10 6"
+              fill="none" stroke="var(--ink, #4a2c15)" stroke-width="3.5"/>
+      </g>
+
+      <!-- right answer -->
+      <g opacity="var(--fox-happy, 0)">
+        <path d="M35 60 q7 -11 14 0 M71 60 q7 -11 14 0"
+              fill="none" stroke="var(--ink, #4a2c15)" stroke-width="4.5"/>
+        <path d="M47 88 q13 14 26 0 q-13 6 -26 0 z" fill="var(--ink, #4a2c15)"/>
+      </g>
+
+      <!-- wrong answer -->
+      <g opacity="var(--fox-sad, 0)">
+        <circle cx="42" cy="60" r="5.5" fill="var(--ink, #4a2c15)"/>
+        <circle cx="78" cy="60" r="5.5" fill="var(--ink, #4a2c15)"/>
+        <path d="M34 53 L50 47 M86 53 L70 47 M50 98 q10 -9 20 0"
+              fill="none" stroke="var(--ink, #4a2c15)" stroke-width="4"/>
+      </g>
+    </g>
+  </symbol>
+</svg>
+
 <header class="top">
-  <div class="brand"><b>Idi</b><s>oma</s></div>
+  <div class="brand">
+    <svg class="fox fox-sm" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
+    <span>Idioma</span>
+  </div>
   <nav class="tabs" id="tabs">
     <button class="tab on" data-screen="practice">Practice</button>
     <button class="tab" data-screen="manage">Manage</button>
@@ -23,7 +76,7 @@
 <div class="menu" id="menu" hidden>
   <label class="toggle">
     <input type="checkbox" id="set-typo">
-    <span>Typo tolerance <em>accepts a single-letter slip</em></span>
+    <span>Typo tolerance <em>lets a single-letter slip through outright; off, it comes back as Almost</em></span>
   </label>
   <label class="field inline">
     <span>Cards per round</span>
@@ -68,9 +121,11 @@
 
       <div class="verdict" id="verdict" hidden>
         <div class="verdict-head">
+          <svg class="fox fox-md" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
           <span class="chip" id="verdict-chip"></span>
           <span class="muted small" id="verdict-detail"></span>
         </div>
+        <p class="diff" id="verdict-diff" hidden></p>
         <p class="answer-line">
           <span class="muted small">Answer</span>
           <b id="verdict-answer"></b>
@@ -79,19 +134,31 @@
         <p class="note" id="verdict-note" hidden></p>
         <div class="verdict-actions">
           <button class="btn" id="btn-override" hidden>I was right</button>
+          <button class="btn primary" id="btn-retry" hidden>Type it again</button>
           <button class="btn primary" id="btn-next">Next</button>
         </div>
       </div>
     </div>
 
-    <div class="pane" id="round-start">
-      <h2>Ready when you are</h2>
-      <p class="muted" id="start-blurb"></p>
+    <div class="pane hero" id="round-start">
+      <div class="hero-top">
+        <svg class="fox fox-lg bob" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
+        <div class="bubble">
+          <h2>Ready when you are</h2>
+          <p class="muted" id="start-blurb"></p>
+        </div>
+      </div>
       <button class="btn primary big" id="btn-start">Start a round</button>
     </div>
 
-    <div class="pane" id="round-end" hidden>
-      <h2>Round done</h2>
+    <div class="pane hero" id="round-end" hidden>
+      <div class="hero-top">
+        <svg class="fox fox-lg happy" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
+        <div class="bubble">
+          <h2>Round done</h2>
+          <p class="muted small">Here is what moved.</p>
+        </div>
+      </div>
       <div class="stats" id="end-stats"></div>
       <div class="movers" id="end-movers"></div>
       <button class="btn primary big" id="btn-again">Another round</button>

@@ -18,6 +18,15 @@
   let card = null;
   let lastResult = null;
 
+  /* The word's progress as it stood when the card was drawn. Every grade
+     is applied to this rather than to whatever the last grade left, so
+     answering again, fixing a near miss and overriding a wrong answer all
+     land on exactly the progress that answer would have produced first
+     time. Re-grading used to unpick its own arithmetic by hand, which
+     could not restore a streak it had already zeroed. */
+  let cardBefore = null;
+  let retypes = 0;
+
   /* ------------------------------------------------------------------
      Small helpers
      ------------------------------------------------------------------ */
@@ -191,6 +200,8 @@
     const word = round.queue[round.index];
     card = Engine.buildCard(word, prog(word.id), sentencesFor);
     lastResult = null;
+    cardBefore = JSON.parse(JSON.stringify(prog(word.id)));
+    retypes = 0;
 
     const p = prog(word.id);
     $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
@@ -207,6 +218,7 @@
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
     $("verdict").hidden = true;
+    $("card").classList.remove("correct", "almost", "wrong");
     $("card").hidden = false;
     $("round-count").textContent = `${round.index + 1} / ${round.queue.length}`;
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
@@ -217,28 +229,62 @@
   $("answer-form").addEventListener("submit", (e) => {
     e.preventDefault();
     if (!card || !$("verdict").hidden) return;
+    // An empty box on a second go is a mis-hit Enter, not an answer.
+    if (retypes && !$("answer").value.trim()) return;
     grade($("answer").value);
   });
 
   function grade(typed) {
-    const res = Engine.checkAnswer(typed, card.accepted, {
+    applyAndShow(Engine.checkAnswer(typed, card.accepted, {
       typoTolerance: state.settings.typoTolerance,
-    });
-    applyAndShow(res.correct, res.near, typed);
+    }), typed);
   }
 
-  function applyAndShow(wasCorrect, near, typed) {
+  /* What the three verdicts are called, and the class each one puts on the
+     card so the stylesheet can colour the whole block at once. */
+  const VERDICT = {
+    correct: { chip: "Correct", tone: "good" },
+    almost: { chip: "Almost", tone: "warn" },
+    wrong: { chip: "Not quite", tone: "bad" },
+  };
+
+  const WHY = {
+    article: "an article apart",
+    infinitive: "the infinitive apart",
+    spelling: "a letter out",
+  };
+
+  /* The diff comes out of the engine as ops; the markup is this file's
+     business. The answer's own words are shown, with what was added struck
+     out, what was left out underlined, and a misspelt word carrying a mark
+     on the letters to look at. */
+  const DIFF = {
+    same: (o) => esc(o.text),
+    extra: (o) => `<s class="d-extra">${esc(o.text)}</s>`,
+    missing: (o) => `<ins class="d-missing">${esc(o.text)}</ins>`,
+    changed: (o) => `<span class="d-changed">${esc(o.head)}<mark>${esc(o.fix)}</mark>${esc(o.tail)}</span>`,
+  };
+  const renderDiff = (ops) => ops.map((o) => (DIFF[o.op] || DIFF.same)(o)).join(" ");
+
+  function applyAndShow(res, typed) {
     const id = card.word.id;
-    const applied = Engine.applyResult(progWrite(id), wasCorrect, new Date().toISOString());
+    let outcome = res.correct ? "correct" : res.almost ? "almost" : "wrong";
+    // A second go can only improve the card. Someone who stops to fix a
+    // near miss should never end up worse off for having bothered.
+    if (retypes && outcome === "wrong") outcome = "almost";
+
+    state.progress[id] = { ...cardBefore };
+    const applied = Engine.applyResult(state.progress[id], outcome, new Date().toISOString());
     state.progress[id] = applied.progress;
     commit();
 
-    lastResult = { id, wasCorrect, applied, typed };
-    round.results.push({ id, wasCorrect });
+    lastResult = { id, outcome, applied, typed, res };
+    // Keyed by position rather than pushed, so re-grading the same card
+    // replaces its result instead of counting the card twice.
+    round.results[round.index] = { id, outcome };
+    // Same for the movers: keep only where this word ended up.
+    round.movers = round.movers.filter((m) => m.id !== id);
     if (applied.movedUp || applied.movedDown) {
-      // Keep only the latest move per word, so a word that bounced up and
-      // down inside one round reports where it ended up.
-      round.movers = round.movers.filter((m) => m.id !== id);
       round.movers.push({
         id, up: applied.movedUp, es: card.word.es,
         from: applied.levelBefore, to: applied.levelAfter,
@@ -246,18 +292,29 @@
       });
     }
 
-    $("verdict-chip").textContent = wasCorrect ? "Correct" : "Not quite";
-    $("verdict-chip").className = "chip " + (wasCorrect ? "good" : "bad");
+    $("verdict-chip").textContent = VERDICT[outcome].chip;
+    $("verdict-chip").className = "chip " + VERDICT[outcome].tone;
+    // The card carries the result as a class so the stylesheet can colour
+    // the verdict block and pick the mascot's face; no other JS knows
+    // anything about how the answer is drawn.
+    $("card").classList.toggle("correct", outcome === "correct");
+    $("card").classList.toggle("almost", outcome === "almost");
+    $("card").classList.toggle("wrong", outcome === "wrong");
 
     let detail = "";
-    if (wasCorrect && near) detail = "accepted with typo tolerance";
-    else if (!wasCorrect && typed.trim()) detail = `you typed "${typed.trim()}"`;
+    if (outcome === "correct" && res.near) detail = "accepted with typo tolerance";
+    else if (outcome === "almost") detail = WHY[res.reason] || "close";
+    else if (outcome === "wrong" && typed.trim()) detail = `you typed "${typed.trim()}"`;
     if (applied.movedUp) detail += `${detail ? " · " : ""}L${applied.levelBefore} to L${applied.levelAfter}`;
     if (applied.movedDown) detail += `${detail ? " · " : ""}dropped to L${applied.levelAfter}`;
-    if (wasCorrect && !applied.movedUp && Engine.isBoundaryLevel(applied.levelBefore)) {
+    if (applied.held) detail += `${detail ? " · " : ""}holding at L${applied.levelAfter}`;
+    if (outcome === "correct" && !applied.movedUp && Engine.isBoundaryLevel(applied.levelBefore)) {
       detail += `${detail ? " · " : ""}one more in a row to move up a band`;
     }
     $("verdict-detail").textContent = detail;
+
+    $("verdict-diff").innerHTML = res.diff ? renderDiff(res.diff) : "";
+    $("verdict-diff").hidden = !res.diff;
 
     $("verdict-answer").textContent = card.reveal;
     $("verdict-context").textContent = card.revealContext || "";
@@ -267,37 +324,40 @@
     $("verdict-note").textContent = note || "";
     $("verdict-note").hidden = !note;
 
-    // The override only makes sense on a wrong answer, and only when
-    // something was actually typed.
-    $("btn-override").hidden = wasCorrect || !typed.trim();
+    // The override makes sense on anything short of a clean pass, and only
+    // when something was actually typed.
+    $("btn-override").hidden = outcome === "correct" || !typed.trim();
+    // On an amber card the second go is the point, so it takes the primary
+    // button and Next steps back.
+    $("btn-retry").hidden = outcome !== "almost";
+    $("btn-next").classList.toggle("primary", outcome !== "almost");
 
     $("answer").disabled = true;
     $("btn-submit").disabled = true;
     $("verdict").hidden = false;
-    $("btn-next").focus();
+    (outcome === "almost" ? $("btn-retry") : $("btn-next")).focus();
   }
 
-  /* Reverse the last result and re-apply it as correct. The word is put
-     back to the progress it had before this card, so an override cannot
-     leave a doubled count behind. */
+  /* Reopen the box for another go at the same card. Nothing is undone
+     here: the snapshot means the next grade is applied from scratch. */
+  function startRetype() {
+    if (!card) return;
+    retypes += 1;
+    $("verdict").hidden = true;
+    $("answer").value = "";
+    $("answer").disabled = false;
+    $("btn-submit").disabled = false;
+    $("answer").focus();
+  }
+
+  $("btn-retry").addEventListener("click", startRetype);
+
+  /* Mark the last answer correct after all. The snapshot makes this exact:
+     it is the same as if the right answer had been typed first time. */
   $("btn-override").addEventListener("click", () => {
-    if (!lastResult || lastResult.wasCorrect) return;
-    const id = lastResult.id;
-    const p = state.progress[id];
-    const restored = {
-      ...p,
-      level: lastResult.applied.levelBefore,
-      totalWrong: Math.max(0, p.totalWrong - 1),
-      timesSeen: Math.max(0, p.timesSeen - 1),
-      correctStreak: lastResult.applied.progress.correctStreak,
-    };
-    // correctStreak was zeroed by the wrong answer; the original streak is
-    // not recoverable from here, so it restarts at this card.
-    restored.correctStreak = 0;
-    state.progress[id] = restored;
-    round.results.pop();
-    round.movers = round.movers.filter((m) => m.id !== id);
-    applyAndShow(true, false, lastResult.typed);
+    if (!lastResult || lastResult.outcome === "correct") return;
+    applyAndShow({ correct: true, almost: false, near: false, reason: null, diff: null },
+      lastResult.typed);
     toast("Marked correct.");
   });
 
@@ -311,8 +371,11 @@
     $("round-bar").hidden = true;
     $("round-fill").style.width = "100%";
 
-    const n = round.results.length;
-    const right = round.results.filter((r) => r.wasCorrect).length;
+    // results is keyed by card position, so a skipped card leaves a hole.
+    const answered = round.results.filter(Boolean);
+    const n = answered.length;
+    const count = (outcome) => answered.filter((r) => r.outcome === outcome).length;
+    const right = count("correct");
     const pct = n ? Math.round((right / n) * 100) : 0;
 
     state.stats.rounds += 1;
@@ -322,6 +385,7 @@
     $("end-stats").innerHTML = [
       stat(pct + "%", "accuracy"),
       stat(`${right}/${n}`, "correct"),
+      stat(count("almost"), "almost"),
       stat(round.movers.filter((m) => m.up).length, "levelled up"),
       stat(round.movers.filter((m) => !m.up).length, "dropped"),
     ].join("");
@@ -522,13 +586,14 @@
   function renderProgress() {
     const all = words();
     const counts = { recognition: 0, production: 0, cloze: 0 };
-    let seen = 0, right = 0, wrong = 0, atCeiling = 0;
+    let seen = 0, right = 0, wrong = 0, almost = 0, atCeiling = 0;
     for (const w of all) {
       const p = prog(w.id);
       counts[Engine.bandForLevel(p.level).key] += 1;
       if (p.timesSeen) seen += 1;
       right += p.totalCorrect;
       wrong += p.totalWrong;
+      almost += p.totalAlmost || 0;
       if (p.level >= Engine.CONFIG.BAND_CLOZE_TOP) atCeiling += 1;
     }
     const total = all.length || 1;
@@ -551,6 +616,7 @@
       stat(atCeiling, "at level 10 or above"),
       stat(answered ? Math.round((right / answered) * 100) + "%" : "-", "lifetime accuracy"),
       stat(answered, "cards answered"),
+      stat(almost, "near misses"),
       stat(state.stats.rounds, "rounds done"),
     ].join("");
 
@@ -588,7 +654,11 @@
     if (e.key !== "Enter") return;
     if ($("verdict").hidden || $("card").hidden) return;
     e.preventDefault();
-    $("btn-next").click();
+    // Enter takes the primary action, which on an amber card is the second
+    // go. Only the first one, though: past that, Enter has to mean Next, or
+    // a card you cannot spell becomes a card you cannot leave.
+    const retryOffered = !$("btn-retry").hidden && retypes === 0;
+    (retryOffered ? $("btn-retry") : $("btn-next")).click();
   });
 
   window.addEventListener("beforeunload", () => Store.saveNow(state));
