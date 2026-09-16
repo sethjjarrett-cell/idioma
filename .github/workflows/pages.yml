@@ -1,0 +1,43 @@
+# Publishes the site to GitHub Pages on every push to main.
+#
+# There is nothing to build: the app is plain HTML, CSS and JavaScript
+# loaded with ordinary script tags, so the whole folder is uploaded as it
+# stands. That is the same thing you get by double-clicking index.html.
+#
+# The configure step below tries to turn Pages on by itself. If it is not
+# allowed to, do it once by hand: Settings, then Pages, then set Source to
+# "GitHub Actions", and re-run this workflow.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it part way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+        with:
+          # Switch Pages on without a trip to the settings screen, where allowed.
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
