@@ -105,5 +105,57 @@ const r2 = E.pickRound(SEED.vocabulary, pf, NOW, 130);
 ok('disabled words excluded', !r2.some(w => w.id === 'comer'));
 ok('round cannot exceed the pool', E.pickRound(SEED.vocabulary.slice(0,5), pf, NOW, 15).length === 5);
 
+console.log('--- the amber band ---');
+const near = (typed, acc, opt) => E.checkAnswer(typed, acc, opt);
+ok('English article flagged, not failed',
+  near('a glass of water', ['glass of water']).almost === true);
+ok('and named as an article',
+  near('a glass of water', ['glass of water']).reason === 'article');
+ok('an amber answer is not a correct one',
+  near('a glass of water', ['glass of water']).correct === false);
+ok('article the other way round too', near('table', ['the table']).almost === true);
+ok('Spanish article stays free, not amber', near('mesa', ['la mesa']).correct === true);
+ok('missing infinitive flagged', near('walk', ['to walk']).reason === 'infinitive');
+ok('one-letter slip is amber with tolerance off',
+  near('habitacon', ['habitación']).reason === 'spelling');
+ok('the same slip is a clean pass with tolerance on',
+  near('habitacon', ['habitación'], { typoTolerance: true }).correct === true);
+ok('a different word is still wrong',
+  near('kitchen', ['bathroom']).almost === false);
+ok('two letters out of a short answer is still wrong',
+  near('bano', ['casa']).almost === false);
+ok('two letters out of a long answer is amber',
+  near('por supueso', ['por supuesto']).almost === true);
+
+console.log('--- the correction ---');
+const d1 = near('a glass of water', ['glass of water']).diff;
+ok('extra word marked as typed', d1[0].op === 'extra' && d1[0].text === 'a');
+ok('the rest of the answer left alone', d1.slice(1).every(o => o.op === 'same'));
+const d2 = near('habitacon', ['habitación']).diff;
+ok('a misspelling is one changed word, not two edits', d2.length === 1 && d2[0].op === 'changed');
+ok('the missing letter is picked out', d2[0].fix === 'i', JSON.stringify(d2[0]));
+ok('and the accent survives into the highlight', d2[0].head + d2[0].fix + d2[0].tail === 'habitación');
+const d3 = near('walk', ['to walk']).diff;
+ok('a dropped word is marked missing', d3[0].op === 'missing' && d3[0].text === 'to');
+
+console.log('--- an amber answer holds the word ---');
+let a = { ...E.freshProgress(), level: 5, correctStreak: 1 };
+const held = E.applyResult(a, 'almost', NOW);
+ok('level does not move', held.levelAfter === 5 && held.held === true);
+ok('streak stands rather than breaking', held.progress.correctStreak === 1);
+ok('it is not counted as right or wrong',
+  held.progress.totalCorrect === 0 && held.progress.totalWrong === 0);
+ok('but it is counted', held.progress.totalAlmost === 1);
+ok('the card still counts as seen', held.progress.timesSeen === 1);
+ok('booleans still mean correct and wrong',
+  E.applyResult(a, true, NOW).levelAfter === 6 && E.applyResult(a, false, NOW).levelAfter === 4);
+// A near miss at a band boundary must not promote on its own, but must not
+// cost the streak that a later right answer needs either.
+let b = { ...E.freshProgress(), level: 3, correctStreak: 1 };
+b = E.applyResult(b, 'almost', NOW).progress;
+ok('amber at a boundary does not promote', b.level === 3);
+b = E.applyResult(b, true, NOW).progress;
+ok('and the standing streak still carries it over', b.level === 4);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

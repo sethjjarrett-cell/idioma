@@ -34,6 +34,12 @@
   --bad-deep: #b53820;
   --bad-edge: #b53820;
   --bad-soft: #ffe7e1;
+  /* The amber band sits between the two. Pushed yellow rather than amber
+     so that it does not read as the brand orange on an orange page. */
+  --warn: #e0a500;
+  --warn-deep: #8a6300;
+  --warn-edge: #a87a00;
+  --warn-soft: #fff6d6;
 
   /* mascot */
   --fur: #ff8a2b;
@@ -79,6 +85,7 @@ html, body {
 .fox.sad   { --fox-idle: 0; --fox-sad: 1; }
 .card.correct .verdict .fox { --fox-idle: 0; --fox-happy: 1; }
 .card.wrong   .verdict .fox { --fox-idle: 0; --fox-sad: 1; }
+/* Amber leaves him on his idle face: not pleased, not sorry, waiting. */
 
 .bob { animation: bob 3.4s ease-in-out infinite; }
 @keyframes bob {
@@ -95,13 +102,9 @@ html, body {
   position: sticky; top: 0; z-index: 20;
 }
 .brand {
-  display: flex; align-items: center; gap: 8px;
-  font: 800 20px var(--round); letter-spacing: -0.4px; user-select: none;
-  color: var(--accent-deep);
-}
-.brand s {
-  text-decoration: none; color: var(--on-accent); background: var(--accent);
-  border-radius: 8px; padding: 1px 7px; margin-left: 2px;
+  display: flex; align-items: center; gap: 9px;
+  font: 800 20px var(--round); letter-spacing: -0.3px; user-select: none;
+  color: var(--text);
 }
 .spacer { flex: 1; }
 
@@ -257,28 +260,56 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
   background: var(--panel2); border-top: 2px solid var(--line);
 }
 .card.correct .verdict { background: var(--good-soft); border-top-color: #cfe9b4; }
+.card.almost .verdict { background: var(--warn-soft); border-top-color: #f0dfa4; }
 .card.wrong .verdict { background: var(--bad-soft); border-top-color: #f6cabe; }
+/* An amber card stays open for a second go, so it keeps a border while the
+   box is back and the verdict is hidden. */
+.card.almost { border-color: var(--warn); }
 .verdict-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .chip {
   font: 800 17px var(--round); letter-spacing: -0.2px;
   border-radius: 999px; padding: 0;
 }
 .chip.good { color: var(--good-deep); }
+.chip.warn { color: var(--warn-deep); }
 .chip.bad { color: var(--bad-deep); }
 
 .answer-line { margin: 6px 0; display: flex; align-items: baseline; gap: 10px; }
 .answer-line .small { font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
 .answer-line b { font-size: 21px; font-weight: 800; color: var(--text); }
 .card.correct .answer-line b { color: var(--good-deep); }
+.card.almost .answer-line b { color: var(--warn-deep); }
 .card.wrong .answer-line b { color: var(--bad-deep); }
+
+/* The correction line: the answer's own words, with what was typed over
+   the top of them. Marked three ways rather than by colour alone, because
+   colour alone is not a way of telling anyone anything. */
+.diff {
+  margin: 4px 0 10px; font: 600 19px/1.5 var(--round);
+  word-break: break-word;
+}
+.diff .d-extra {
+  color: var(--bad-deep); text-decoration-thickness: 2px;
+}
+.diff .d-missing {
+  color: var(--warn-deep); text-decoration: underline;
+  text-decoration-style: wavy; text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.diff .d-changed mark {
+  background: var(--warn); color: #2f2202;
+  border-radius: 5px; padding: 0 3px;
+}
 .context { color: var(--muted); margin: 8px 0 0; }
 .note {
   margin: 12px 0 0; padding: 11px 13px; border-radius: 14px;
   background: var(--panel); border: 2px solid var(--line);
   font-size: 13px; line-height: 1.55;
 }
-.verdict-actions { display: flex; gap: 10px; margin-top: 16px; }
-.verdict-actions .btn { flex: 1; }
+/* Up to three buttons now, so they wrap rather than squeeze: at a phone
+   width "Type it again" does not fit a third of the card. */
+.verdict-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.verdict-actions .btn { flex: 1 1 130px; }
 .card.correct .verdict .btn.primary {
   background: var(--good); border-color: var(--good); box-shadow: 0 4px 0 var(--good-edge);
 }
@@ -287,6 +318,11 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
   background: var(--bad); border-color: var(--bad); box-shadow: 0 4px 0 var(--bad-edge);
 }
 .card.wrong .verdict .btn.primary:active { box-shadow: 0 0 0 var(--bad-edge); }
+.card.almost .verdict .btn.primary {
+  background: var(--warn); border-color: var(--warn); color: #2f2202;
+  box-shadow: 0 4px 0 var(--warn-edge);
+}
+.card.almost .verdict .btn.primary:active { box-shadow: 0 0 0 var(--warn-edge); }
 .verdict .btn:not(.primary) { background: transparent; }
 
 .hero .hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
@@ -440,6 +476,10 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
     --bad-deep: #ff9781;
     --bad-edge: #a4301b;
     --bad-soft: #3d221c;
+    --warn: #e8b52c;
+    --warn-deep: #f4cf72;
+    --warn-edge: #9a7205;
+    --warn-soft: #3a2f13;
     --snout: #ffe9d4;
     color-scheme: dark;
   }

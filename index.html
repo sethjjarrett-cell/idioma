@@ -62,7 +62,7 @@
 <header class="top">
   <div class="brand">
     <svg class="fox fox-sm" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
-    <span><b>Idi</b><s>oma</s></span>
+    <span>Idioma</span>
   </div>
   <nav class="tabs" id="tabs">
     <button class="tab on" data-screen="practice">Practice</button>
@@ -76,7 +76,7 @@
 <div class="menu" id="menu" hidden>
   <label class="toggle">
     <input type="checkbox" id="set-typo">
-    <span>Typo tolerance <em>accepts a single-letter slip</em></span>
+    <span>Typo tolerance <em>lets a single-letter slip through outright; off, it comes back as Almost</em></span>
   </label>
   <label class="field inline">
     <span>Cards per round</span>
@@ -125,6 +125,7 @@
           <span class="chip" id="verdict-chip"></span>
           <span class="muted small" id="verdict-detail"></span>
         </div>
+        <p class="diff" id="verdict-diff" hidden></p>
         <p class="answer-line">
           <span class="muted small">Answer</span>
           <b id="verdict-answer"></b>
@@ -133,6 +134,7 @@
         <p class="note" id="verdict-note" hidden></p>
         <div class="verdict-actions">
           <button class="btn" id="btn-override" hidden>I was right</button>
+          <button class="btn primary" id="btn-retry" hidden>Type it again</button>
           <button class="btn primary" id="btn-next">Next</button>
         </div>
       </div>

@@ -40,8 +40,12 @@ one copy of the bank.
 Bright, rounded and chunky, in the manner of the big language apps, but
 orange rather than green. Fat corner radii, all-caps buttons sitting on a
 solid slab of darker colour that the press squashes flat, and a verdict block
-that takes the colour of the answer so being right or wrong is the shape of
-the screen before it is words.
+that takes the colour of the answer — green, amber or red — so how the answer
+went is the shape of the screen before it is words.
+
+The wordmark is the word, set plainly. An earlier draft boxed half of it in
+an orange chip, which turned out to be a well-known logo for something that
+is not a Spanish trainer.
 
 Every colour is a custom property at the top of `styles.css`, so retuning the
 whole theme is one block. The dark scheme at the bottom of the file is nothing
@@ -116,9 +120,49 @@ Typo tolerance (Levenshtein distance 1) is **off** by default, behind the
 toggle in the menu. When it is on and it is what let an answer through, the
 card says so rather than quietly accepting a misspelling.
 
-"I was right" appears on a wrong answer. It rewinds that card completely, the
-level, the wrong count and the times-seen, then re-applies it as correct, so
-an override cannot leave a doubled count behind.
+#### Almost
+
+Three verdicts, not two. Typing `a glass of water` when the answer is
+`glass of water` is not right, but calling it wrong is a lie about how close
+it was, so it comes back amber:
+
+| What was typed | Verdict | Why |
+|---|---|---|
+| `glass of water` | Correct | |
+| `mesa` for `la mesa` | Correct | Spanish article, free in either direction |
+| `a glass of water` | Almost | an article the answer does not have |
+| `walk` for `to walk` | Almost | the infinitive apart |
+| `huger` for `hunger` | Almost | a letter out |
+| `kitchen` for `bathroom` | Wrong | a different word |
+
+The card shows the answer's own words with the correction over the top: what
+was added struck through, what was left out underlined, and a misspelt word
+carrying a mark on the letters to look at. Marked three ways rather than by
+colour alone, because colour alone tells a colour-blind reader nothing.
+
+An amber answer **holds** the word: no level up, no level down, and the
+streak stands rather than breaking. "Type it again" reopens the box for
+another go, and a second go can only improve the card — get it right and it
+counts as a correct answer for that card, get it wrong again and it is still
+amber. So a near miss costs nothing but the retype, which is the point: the
+learner sees what was off and types the right thing before moving on.
+
+The English articles are flagged rather than waved through because they are
+not nothing: `a glass of water` is `un vaso de agua` and `glass of water` is
+not. The Spanish ones stay free, because the bank is not consistent about
+them and the article is not the form being tested.
+
+Amber is where a single-letter slip lands when typo tolerance is off, which
+is what makes that toggle worth having: off no longer means harsh, it means
+make me retype it.
+
+#### Overrides, and re-grading a card
+
+"I was right" appears on anything short of a clean pass. Grading always works
+from a snapshot of the word's progress taken when the card was drawn, so
+overriding, or fixing a near miss, lands on exactly the progress that answer
+would have produced first time — no doubled counts, and a streak the card
+broke comes back intact rather than restarting.
 
 ## Progress and backups
 
@@ -151,20 +195,24 @@ You can also edit `seed.js` directly in any text editor.
 ## Tests
 
 ```bash
-node tests/test-engine.mjs      # 49 assertions, no dependencies
+node tests/test-engine.mjs      # 74 assertions, no dependencies
 ```
 
 Covers the bands, level movement, the two-in-a-row boundary rule, the floor
-and ceiling, the selection weighting, every answer-checking rule, card
-building in all three bands including the no-sentence fallback, and round
-selection.
+and ceiling, the selection weighting, every answer-checking rule, which near
+misses go amber and which stay wrong, the correction diff down to the letter,
+what an amber answer does and does not do to a word, card building in all
+three bands including the no-sentence fallback, and round selection.
 
-`tests/test-ui.mjs` and `tests/test-ui2.mjs` drive the real page in a browser
-and need Playwright installed, which the app itself does not. Between them
-they cover a full round from `file://`, persistence across a reload, adding a
-word, the Manage filters, a real cloze card, the override, an export and
-import round trip, a rejected junk file, and an iPhone viewport with no
-horizontal overflow.
+`tests/test-ui.mjs`, `test-ui2.mjs` and `test-ui3.mjs` drive the real page in
+a browser and need Playwright installed, which the app itself does not.
+Between them they cover a full round from `file://`, persistence across a
+reload, adding a word, the Manage filters, a real cloze card, the override, an
+export and import round trip, a rejected junk file, an iPhone viewport with no
+horizontal overflow, and the whole amber path: the near miss, the correction
+shown on the card, the second go that is also wrong not making things worse,
+and the second go that is right earning the level without counting the card
+twice.
 
 ## Not built, by request
 
