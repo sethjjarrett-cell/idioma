@@ -14,7 +14,7 @@ with ordinary script tags, so it works straight off the disk and offline.
 
 ```
 index.html      the three screens
-styles.css      dark theme, mobile down to a phone
+styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
 engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
@@ -34,6 +34,33 @@ the brief asks for something that opens by double-clicking. `seed.js` is the
 supplied JSON unchanged with an assignment on the front, so it stays
 hand-editable and diffable exactly as JSON would be, and there is only ever
 one copy of the bank.
+
+## The look
+
+Bright, rounded and chunky, in the manner of the big language apps, but
+orange rather than green. Fat corner radii, all-caps buttons sitting on a
+solid slab of darker colour that the press squashes flat, and a verdict block
+that takes the colour of the answer so being right or wrong is the shape of
+the screen before it is words.
+
+Every colour is a custom property at the top of `styles.css`, so retuning the
+whole theme is one block. The dark scheme at the bottom of the file is nothing
+but a token swap, in warm browns so the orange still belongs; it follows the
+system setting.
+
+The mascot is a fox called Zorro, which is what a Spanish speaker would call
+him. He is one inline `<symbol>` near the top of `index.html`, stamped out
+with `<use>`, and he has three faces: idle, right and wrong. The faces are
+`<g>` groups whose opacity reads a custom property, and custom properties
+inherit into the shadow tree a `<use>` builds, so switching his expression is
+one CSS line and no extra markup:
+
+```css
+.card.correct .verdict .fox { --fox-idle: 0; --fox-happy: 1; }
+```
+
+`app.js` puts a `correct` or `wrong` class on the card and knows nothing else
+about how any of this is drawn.
 
 ## How the mastery engine works
 

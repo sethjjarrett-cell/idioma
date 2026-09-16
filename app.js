@@ -207,6 +207,7 @@
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
     $("verdict").hidden = true;
+    $("card").classList.remove("correct", "wrong");
     $("card").hidden = false;
     $("round-count").textContent = `${round.index + 1} / ${round.queue.length}`;
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
@@ -248,6 +249,11 @@
 
     $("verdict-chip").textContent = wasCorrect ? "Correct" : "Not quite";
     $("verdict-chip").className = "chip " + (wasCorrect ? "good" : "bad");
+    // The card carries the result as a class so the stylesheet can colour
+    // the whole verdict block and pick the mascot's face; no other JS knows
+    // anything about how the answer is drawn.
+    $("card").classList.toggle("correct", wasCorrect);
+    $("card").classList.toggle("wrong", !wasCorrect);
 
     let detail = "";
     if (wasCorrect && near) detail = "accepted with typo tolerance";
