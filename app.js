@@ -114,6 +114,7 @@
     $("set-typo").checked = !!state.settings.typoTolerance;
     $("set-introduce").checked = state.settings.introduceNew !== false;
     $("set-round").value = state.settings.roundSize;
+    drawSync();
     $("saved-at").textContent = state.savedAt
       ? `Last saved ${new Date(state.savedAt).toLocaleString("en-GB")}`
       : "Nothing saved yet.";
@@ -176,6 +177,104 @@
     resetPracticeView();
     updateStartBlurb();
     toast("Progress reset.");
+  });
+
+  /* ------------------------------------------------------------------
+     Sync
+
+     All of it is optional and none of it is allowed to get in the way. Every
+     failure here ends in a message in the menu and an app that carries on
+     working from localStorage exactly as it would with no sync at all.
+     ------------------------------------------------------------------ */
+
+  let syncCfg = Sync.loadConfig();
+  let syncing = false;
+
+  function drawSync() {
+    $("sync-url").value = syncCfg.url || "";
+    $("sync-code").value = syncCfg.code || "";
+    const el = $("sync-state");
+    el.classList.remove("on", "bad");
+    if (!Sync.configured(syncCfg)) { el.textContent = "Not set up"; return; }
+    if (syncing) { el.textContent = "Syncing..."; return; }
+    if (syncCfg.lastError) { el.textContent = syncCfg.lastError; el.classList.add("bad"); return; }
+    el.textContent = syncCfg.lastSyncedAt
+      ? `Synced ${new Date(syncCfg.lastSyncedAt).toLocaleString("en-GB")}`
+      : "Ready, not synced yet";
+    el.classList.add("on");
+  }
+
+  const rememberSync = (next) => { syncCfg = Sync.saveConfig(next); drawSync(); };
+
+  /* `quiet` is for the automatic syncs, on load and after a round: they say
+     nothing when they fail, because a toast about the network in the middle
+     of practising is no help to anybody. The button is not quiet. */
+  async function doSync({ quiet = false } = {}) {
+    if (!Sync.configured(syncCfg) || syncing) return;
+    syncing = true;
+    drawSync();
+    try {
+      Store.saveNow(state);
+      const merged = await Sync.run(syncCfg, state, { save: (c) => { syncCfg = c; } });
+      if (merged && merged !== state) {
+        state = merged;
+        Store.saveNow(state);
+        // Whatever came back may change every screen, so redraw the lot.
+        round = null; card = null;
+        resetPracticeView();
+        refreshMenu(); refreshTopicSelect(); refreshWordSelect(); updateStartBlurb();
+        if (!quiet) toast("Synced.");
+      } else if (!quiet) {
+        toast("Synced.");
+      }
+      rememberSync({ ...syncCfg, lastError: null });
+    } catch (e) {
+      rememberSync({ ...syncCfg, lastError: e.message || "sync failed" });
+      if (!quiet) toast(`Could not sync: ${e.message}`, true);
+    } finally {
+      syncing = false;
+      drawSync();
+    }
+  }
+
+  const readSyncFields = () => rememberSync({
+    ...syncCfg,
+    url: $("sync-url").value.trim(),
+    code: $("sync-code").value.trim().toLowerCase(),
+    // A different box is a different history, so the revision cannot carry over.
+    rev: 0,
+    lastError: null,
+  });
+  $("sync-url").addEventListener("change", readSyncFields);
+  $("sync-code").addEventListener("change", readSyncFields);
+
+  $("btn-sync-now").addEventListener("click", () => {
+    if (!Sync.configured(syncCfg)) { toast("Set a sync URL and a code first.", true); return; }
+    doSync();
+  });
+
+  $("btn-sync-new").addEventListener("click", () => {
+    if (syncCfg.code && !window.confirm("Replace the current sync code? Any other device using the old one will stop syncing with this one until you give it the new code.")) return;
+    rememberSync({ ...syncCfg, code: Sync.newCode(), rev: 0, lastSyncedAt: null, lastError: null });
+    toast("New code made. Put it on your other device.");
+  });
+
+  $("btn-sync-copy").addEventListener("click", async () => {
+    if (!syncCfg.code) { toast("No code to copy yet.", true); return; }
+    try {
+      await navigator.clipboard.writeText(syncCfg.code);
+      toast("Code copied.");
+    } catch (e) {
+      // Clipboard access is refused often enough that it needs a fallback.
+      $("sync-code").select();
+      toast("Copy it from the box.", true);
+    }
+  });
+
+  $("btn-sync-off").addEventListener("click", () => {
+    if (!window.confirm("Stop syncing on this device? Your progress here is untouched, and what is already on the server stays there.")) return;
+    rememberSync({ url: "", code: "", rev: 0, lastSyncedAt: null, lastError: null });
+    toast("Syncing off.");
   });
 
   /* ------------------------------------------------------------------
@@ -590,6 +689,9 @@
 
     $("round-end").hidden = false;
     updateStartBlurb();
+    // The end of a round is the moment worth pushing: the most progress has
+    // just been made and nobody is mid-card.
+    doSync({ quiet: true });
   }
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
@@ -878,6 +980,10 @@
     if (btn.dataset.act === "toggle") {
       const p = progWrite(id);
       p.enabled = p.enabled === false;
+      // Stamped so sync can tell a disable happened after the last answer.
+      // Without this, disabling a word here would be quietly switched back on
+      // by another device that had merely practised it more recently.
+      p.changedAt = new Date().toISOString();
       commit(); renderBank(); updateStartBlurb();
       return;
     }
@@ -1032,6 +1138,9 @@
      ------------------------------------------------------------------ */
 
   if (loaded.warning) toast(loaded.warning, true);
+  drawSync();
+  // On load, not blocking it: the app is already usable by the time this runs.
+  doSync({ quiet: true });
   refreshMenu();
   refreshTopicSelect();
   refreshWordSelect();
