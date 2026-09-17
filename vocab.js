@@ -96,7 +96,7 @@ const VOCAB = {
     {"id":"o","es":"o","en":["or"],"pos":"conjunction","topic":"glue","note":"Becomes u before a word starting with o or ho."},
     {"id":"pero","es":"pero","en":["but"],"pos":"conjunction","topic":"glue"},
     {"id":"porque","es":"porque","en":["because"],"pos":"conjunction","topic":"glue","note":"One word, no accent. ¿Por qué? with two is the question."},
-    {"id":"si-cond","es":"si","en":["if"],"pos":"conjunction","topic":"glue","note":"No accent. Sí with one means yes."},
+    {"id":"si-cond","es":"si","en":["if"],"pos":"conjunction","topic":"glue","note":"if, with no accent. si with one, sí, is yes. si + present is the everyday if: si llueve, no salgo."},
     {"id":"aunque","es":"aunque","en":["although","even though"],"pos":"conjunction","topic":"glue"},
     {"id":"tambien","es":"también","en":["also","too","as well"],"pos":"adverb","topic":"glue","note":"For agreeing with a positive. Tampoco is the negative version."},
     {"id":"tampoco","es":"tampoco","en":["neither","not either"],"pos":"adverb","topic":"glue","note":"Agreeing with a negative: yo tampoco, me neither."},

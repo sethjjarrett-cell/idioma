@@ -2,7 +2,7 @@
 {"id": "o", "es": "o", "en": ["or"], "pos": "conjunction", "topic": "glue", "note": "Becomes u before a word starting with o or ho.", "sent": {"es": "¿Prefieres té {o} café?", "en": "Do you prefer tea or coffee?"}}
 {"id": "pero", "es": "pero", "en": ["but"], "pos": "conjunction", "topic": "glue", "note": "", "sent": {"es": "Es caro, {pero} vale la pena.", "en": "It is expensive, but it is worth it."}}
 {"id": "porque", "es": "porque", "en": ["because"], "pos": "conjunction", "topic": "glue", "note": "One word, no accent. ¿Por qué? with two is the question.", "sent": {"es": "No salí {porque} estaba lloviendo.", "en": "I did not go out because it was raining."}}
-{"id": "si-cond", "es": "si", "en": ["if"], "pos": "conjunction", "topic": "glue", "note": "No accent. Sí with one means yes.", "sent": {"es": "{Si} llueve, nos quedamos en casa.", "en": "If it rains, we will stay at home."}}
+{"id":"si-cond","es":"si","en":["if"],"pos":"conjunction","topic":"glue","note":"if, with no accent. si with one, sí, is yes. si + present is the everyday if: si llueve, no salgo.","sent":{"es":"{Si} llueve, nos quedamos en casa.","en":"If it rains, we will stay at home."}}
 {"sentenceOnly": true, "wordId": "que", "sent": {"es": "Creo {que} tiene razón.", "en": "I think that he is right."}}
 {"sentenceOnly": true, "wordId": "cuando", "sent": {"es": "Te llamo {cuando} llegue.", "en": "I will call you when I arrive."}}
 {"id": "aunque", "es": "aunque", "en": ["although", "even though"], "pos": "conjunction", "topic": "glue", "note": "", "sent": {"es": "Salimos {aunque} hacía frío.", "en": "We went out although it was cold."}}
