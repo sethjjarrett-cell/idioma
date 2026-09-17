@@ -13,14 +13,20 @@ with ordinary script tags, so it works straight off the disk and offline.
 ## Files
 
 ```
-index.html      the three screens
+index.html      the five screens
 styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
+topics.js       which context each word belongs to
+verbs.js        the ending tables, and the one function that reads them
+pronounce.js    Spanish spelling to an English respelling; no data, all rules
 engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
 app.js          UI wiring; asks the engine for a card and draws the answer
 tests/          see below
 ```
+
+`topics.js`, `verbs.js` and `pronounce.js` are each free of the DOM and of
+each other, and `tests/test-data.mjs` checks all three without a browser.
 
 `engine.js` holds every rule and touches no DOM, so the mastery logic can be
 read and tested on its own. Every number the brief called out is a named
@@ -65,6 +71,64 @@ one CSS line and no extra markup:
 
 `app.js` puts a `correct` or `wrong` class on the card and knows nothing else
 about how any of this is drawn.
+
+## Topics
+
+Every seed word is filed under a context in `topics.js`: food and drink, out
+and about, where things are, at home, paying and shopping, small talk, asking
+questions, days and time, describing things, everyday verbs, little words.
+The Topics screen shows each one with how far through it you are and a button
+that runs a round drawn from that topic alone. Nothing else changes: same
+levels, same bands, same selection weighting, smaller pool.
+
+The filing is kept out of `seed.js` deliberately. That file is the supplied
+bank, verbatim, and a word's topic is a judgement rather than a fact about the
+word, so it lives where it can be argued with separately. `tests/test-data.mjs`
+fails if a word is filed twice or not at all, which is what stops a word added
+to the bank from quietly vanishing off this screen.
+
+There is no Sport topic because there is no sport vocabulary in the bank yet.
+Topics are built from what is actually there rather than from a list of
+subjects that ought to exist; add the words and add the topic.
+
+## Verb endings
+
+The Lessons screen carries the ending tables: three families, six tenses
+(present, preterite, imperfect, future, conditional, present subjunctive),
+five persons. Latin American, so no vosotros; there is a note on vos, which
+you will hear in Medellín. Each tense opens to a table built against real
+verbs rather than shown as bare endings, with the stem greyed and the ending
+in colour, because `-o -as -a` is hard to hold on to and `hablo hablas habla`
+is not. Eighteen irregular verbs are written out in full underneath.
+
+Those tables are also the drill. "Practise this table" turns a tense into
+cards: the verb and the person are the prompt, the answer is read straight out
+of `verbs.js`. A drill can only ask what the lesson already teaches, so a form
+cannot be right in one place and wrong in the other, and a wrong form is wrong
+in exactly one editable spot.
+
+**A drill does not move any word's level.** A word's level means how well that
+word is known; diluting it with endings drilled off a table would make it mean
+nothing, so drills report a score and touch no progress at all.
+
+## Pronunciation
+
+Spanish spelling is near enough deterministic, so `pronounce.js` works the
+sound out rather than storing it: there is no pronunciation data to keep in
+step with the bank, and a word typed in this morning gets the same treatment
+as a seeded one. It syllabifies, finds the stress, and returns a plain English
+respelling with the stressed syllable in capitals — `habitación` to
+`ah-bee-tah-SYOHN`, `jueves` to `HWEH-behs`. IPA would be more precise and
+less use.
+
+It only shows up where the spelling would mislead an English reader. `MEH-sah`
+under mesa is noise; `HWEH-behs` under jueves is the point. The Lessons screen
+has the rules behind it, each with examples from the bank.
+
+It is a respeller, not a phonetician: the rr is written `rr` and left to the
+note, the soft Spanish d between vowels is not marked, and regional habits
+(the coastal aspirated s, the Southern Cone ll) are out of scope. Colombian,
+seseo throughout.
 
 ## How the mastery engine works
 
@@ -133,6 +197,7 @@ it was, so it comes back amber:
 | `a glass of water` | Almost | an article the answer does not have |
 | `walk` for `to walk` | Almost | the infinitive apart |
 | `huger` for `hunger` | Almost | a letter out |
+| `hunegr` for `hunger` | Almost | two letters swapped counts as one slip |
 | `kitchen` for `bathroom` | Wrong | a different word |
 
 The card shows the answer's own words with the correction over the top: what
@@ -155,6 +220,11 @@ them and the article is not the form being tested.
 Amber is where a single-letter slip lands when typo tolerance is off, which
 is what makes that toggle worth having: off no longer means harsh, it means
 make me retype it.
+
+Distance is Damerau rather than plain Levenshtein, so a swapped pair of
+letters costs one edit instead of two. Typing `hunegr` is one slip of the
+fingers and is judged as one; plain Levenshtein calls it two and drops it over
+the threshold into Wrong.
 
 #### Overrides, and re-grading a card
 
@@ -204,7 +274,7 @@ misses go amber and which stay wrong, the correction diff down to the letter,
 what an amber answer does and does not do to a word, card building in all
 three bands including the no-sentence fallback, and round selection.
 
-`tests/test-ui.mjs`, `test-ui2.mjs` and `test-ui3.mjs` drive the real page in
+`tests/test-ui.mjs` through `test-ui4.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -212,11 +282,14 @@ export and import round trip, a rejected junk file, an iPhone viewport with no
 horizontal overflow, and the whole amber path: the near miss, the correction
 shown on the card, the second go that is also wrong not making things worse,
 and the second go that is right earning the level without counting the card
-twice.
+twice. `test-ui4.mjs` covers the topic screens, checks that a topic round
+really is drawn from that topic alone, opens the lesson tables, runs a
+conjugation drill and confirms it leaves every word's progress untouched.
 
 ## Not built, by request
 
-Full interval scheduler with due dates, audio and text to speech, conjugation
-drills, multiple languages, cloud sync. The seams are left clean: scheduling
+Full interval scheduler with due dates, audio and text to speech, multiple
+languages, cloud sync. Conjugation drills were on this list and are now built,
+at the asking; they are deliberately kept out of the word mastery model. The seams are left clean: scheduling
 lives entirely in `selectionWeight` and `pickRound`, so a due-date scheduler
 replaces those two functions and nothing else.

@@ -66,6 +66,8 @@
   </div>
   <nav class="tabs" id="tabs">
     <button class="tab on" data-screen="practice">Practice</button>
+    <button class="tab" data-screen="topics">Topics</button>
+    <button class="tab" data-screen="lessons">Lessons</button>
     <button class="tab" data-screen="manage">Manage</button>
     <button class="tab" data-screen="progress">Progress</button>
   </nav>
@@ -100,6 +102,11 @@
   <!-- ============================ PRACTICE ============================ -->
   <section class="screen on" id="screen-practice">
 
+    <div class="picked" id="start-picked" hidden>
+      <span class="pick-chip" id="start-picked-name"></span>
+      <button class="btn" id="btn-clear-pick">Whole bank</button>
+    </div>
+
     <div class="round-bar" id="round-bar" hidden>
       <div class="round-progress"><i id="round-fill"></i></div>
       <span class="mono small" id="round-count"></span>
@@ -130,6 +137,7 @@
           <span class="muted small">Answer</span>
           <b id="verdict-answer"></b>
         </p>
+        <p class="say" id="verdict-say" hidden></p>
         <p class="context mono small" id="verdict-context" hidden></p>
         <p class="note" id="verdict-note" hidden></p>
         <div class="verdict-actions">
@@ -165,6 +173,49 @@
     </div>
   </section>
 
+  <!-- ============================= TOPICS ============================= -->
+  <section class="screen" id="screen-topics">
+    <div class="pane">
+      <h2>Practise one context at a time</h2>
+      <p class="muted small">A round drawn from a single topic instead of the whole
+        bank. The same levels and the same rules apply; only the pool changes.
+        Topics live in <span class="mono">topics.js</span> and are a judgement, not
+        a fact, so move anything that is filed wrongly.</p>
+    </div>
+    <div id="topic-list"></div>
+  </section>
+
+  <!-- ============================ LESSONS ============================= -->
+  <section class="screen" id="screen-lessons">
+    <div class="pane">
+      <h2>Verb endings</h2>
+      <p class="muted small">Three families, six tenses, five persons. Open a tense
+        to see the endings against a real verb, then practise that table as cards.
+        Latin American, so no vosotros.</p>
+      <div class="lesson-list" id="verb-tenses"></div>
+    </div>
+
+    <div class="pane">
+      <h2>The verbs that will not behave</h2>
+      <p class="muted small">Written out in full rather than worked out from a rule,
+        because the point of an irregular is that the rule does not reach it.</p>
+      <div class="lesson-list" id="verb-irregulars"></div>
+    </div>
+
+    <div class="pane">
+      <h2>Worth knowing</h2>
+      <div class="lesson-list" id="verb-notes"></div>
+    </div>
+
+    <div class="pane">
+      <h2>Saying it out loud</h2>
+      <p class="muted small">Spanish spelling tells you the sound, which English
+        spelling does not. Learn these and you can read any word aloud, including
+        ones you have never seen.</p>
+      <div class="lesson-list" id="pron-rules"></div>
+    </div>
+  </section>
+
   <!-- ============================= MANAGE ============================= -->
   <section class="screen" id="screen-manage">
     <div class="pane">
@@ -174,6 +225,7 @@
         <label class="field"><span>Other accepted Spanish</span><input id="nw-alt" placeholder="comma separated"></label>
         <label class="field"><span>English</span><input id="nw-en" required placeholder="comma separated"></label>
         <label class="field"><span>Part of speech</span><input id="nw-pos" placeholder="noun, verb, phrase"></label>
+        <label class="field"><span>Topic</span><select id="nw-topic"></select></label>
         <label class="field wide"><span>Note</span><input id="nw-note" placeholder="dialect warnings, gender, usage"></label>
         <button class="btn primary" type="submit">Add word</button>
       </form>
@@ -242,6 +294,9 @@
 </main>
 
 <script src="seed.js"></script>
+<script src="topics.js"></script>
+<script src="verbs.js"></script>
+<script src="pronounce.js"></script>
 <script src="engine.js"></script>
 <script src="store.js"></script>
 <script src="app.js"></script>
