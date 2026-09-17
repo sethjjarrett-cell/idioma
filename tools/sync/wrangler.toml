@@ -1,0 +1,8 @@
+name = "idioma-sync"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# Created by the command in README.md; paste the id it prints here.
+[[kv_namespaces]]
+binding = "IDIOMA"
+id = "PASTE_THE_KV_NAMESPACE_ID_HERE"

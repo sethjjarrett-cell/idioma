@@ -88,6 +88,28 @@
     <span>Cards per round</span>
     <input type="number" id="set-round" min="1" max="100" step="1">
   </label>
+  <div class="sync">
+    <div class="sync-head">
+      <b>Sync across devices</b>
+      <span class="muted small" id="sync-state">Not set up</span>
+    </div>
+    <label class="field"><span>Sync URL</span>
+      <input id="sync-url" placeholder="https://idioma-sync.yourname.workers.dev"
+             autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <label class="field"><span>Sync code</span>
+      <input id="sync-code" class="mono" placeholder="paste the code from your other device"
+             autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <div class="menu-row">
+      <button class="btn" id="btn-sync-now">Sync now</button>
+      <button class="btn" id="btn-sync-new">New code</button>
+      <button class="btn" id="btn-sync-copy">Copy code</button>
+      <button class="btn danger" id="btn-sync-off">Stop syncing</button>
+    </div>
+    <p class="muted small">Anyone with the code has your progress, so treat it
+      like a password. Set-up takes one command; see
+      <span class="mono">tools/sync/README.md</span>.</p>
+  </div>
+
   <div class="menu-row">
     <button class="btn" id="btn-export">Export backup</button>
     <label class="btn" for="file-import">Import backup</label>
@@ -322,6 +344,7 @@
 <script src="pronounce.js"></script>
 <script src="engine.js"></script>
 <script src="store.js"></script>
+<script src="sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -21,10 +21,12 @@ vocab.js        the generated bank: 404 more words, 802 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
 tools/tatoeba/  importers for Tatoeba sentences and Wiktionary glosses
+tools/sync/     the forty-line server, and how to deploy it once
 verbs.js        the ending tables, and the one function that reads them
 pronounce.js    Spanish spelling to an English respelling; no data, all rules
 engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
+sync.js         the merge, and the two calls that move one JSON blob
 app.js          UI wiring; asks the engine for a card and draws the answer
 tests/          see below
 ```
@@ -377,6 +379,66 @@ overriding, or fixing a near miss, lands on exactly the progress that answer
 would have produced first time — no doubled counts, and a streak the card
 broke comes back intact rather than restarting.
 
+## Syncing a phone and a laptop
+
+Optional, off until you set it up, and the app is unchanged if you never do.
+There is no account: one JSON blob under one secret code.
+
+It costs so little because the shape was already there. The whole of a
+learner's progress is a single serialisable object with a timestamp, because
+Export needed that anyway, so syncing is *put the blob somewhere both devices
+can reach, and merge on the way in*. No schema, no migration, no login. The
+server is forty lines and two routes.
+
+Set-up is one command; see `tools/sync/README.md`. Then paste the URL and the
+code into the `⋯` menu on both devices. Syncing happens on load, at the end of
+every round, and on the button.
+
+### How two devices agree
+
+localStorage stays the primary store. Sync is something that happens to it
+afterwards, and the merge lives in `sync.js`:
+
+| | |
+|---|---|
+| A word's progress | whichever device **touched it last** wins |
+| Words you added | union; on the same id, the younger save wins |
+| Settings | the younger save wins |
+| Rounds done | the higher of the two, never the sum |
+
+"Touched last" rather than "further along" is the important one. Taking the
+higher level would quietly undo every wrong answer, because a level that went
+down went down for a reason. And a disable counts as a touch, which is why a
+progress row carries `changedAt` as well as `lastSeen`: without it, disabling
+a word on the laptop would be switched back on by a phone that had merely
+practised it more recently.
+
+Merging is safe to repeat. Merging the same pair twice, or a state with
+itself, changes nothing, which is what lets it run on every page load without
+keeping any history.
+
+The merge is the only part of this that can lose someone's work, so it is a
+pure function of two states and `tests/test-sync.mjs` puts 28 assertions
+through it. `tests/test-ui6.mjs` then runs two browsers against a real server
+and checks the paths that matter more than the happy one: a level that went
+down staying down, a word added on one device arriving on the other, two
+devices writing at the same moment, the server unreachable, the server
+returning 500, and turning it off again.
+
+### What can go wrong, and what happens
+
+Nothing here is allowed to block a card. Offline, endpoint down, wrong code,
+private browsing with no storage: each one leaves the app working exactly as
+it does with no sync at all, and says what happened in the menu. A clash with
+another device returns the newer version so the client can merge it and retry,
+once.
+
+The code is 110 bits from `crypto.getRandomValues` and it *is* the
+authorisation — it names an unguessable box rather than unlocking a named
+account. So **anyone you give the code to has your progress**, and the app
+says so where you set it up. Nothing personal is in the blob: no name, no
+email, just which Spanish words you know.
+
 ## Progress and backups
 
 Everything lives in `localStorage` under one key, `idioma.state.v1`, written
@@ -423,7 +485,7 @@ has a sentence whose braced form matches, that every word in the bank builds a
 card in all three bands, and that the respeller has something to say about all
 534 of them.
 
-`tests/test-ui.mjs` through `test-ui5.mjs` drive the real page in
+`tests/test-ui.mjs` through `test-ui6.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -438,6 +500,8 @@ conjugation drill and confirms it leaves every word's progress untouched.
 shown rather than asked, that Got it marks the word met without moving it,
 that the same word is tested the next time, that the five-new cap bites once
 there are met words to draw on, and that the setting turns it off.
+`test-ui6.mjs` stands up a server implementing the same two routes as the real
+one and runs two browser contexts against it as a phone and a laptop.
 
 ## Not built, by request
 
