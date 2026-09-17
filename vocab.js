@@ -51,7 +51,7 @@ const VOCAB = {
     {"id":"te","es":"te","en":["you"],"pos":"pronoun","topic":"people","note":"The object form of tú."},
     {"id":"le","es":"le","en":["to him","to her","to you"],"pos":"pronoun","topic":"people","note":"The indirect object: le dije, I told him."},
     {"id":"nos","es":"nos","en":["us"],"pos":"pronoun","topic":"people"},
-    {"id":"su","es":"su","en":["his","her","their","your"],"pos":"determiner","topic":"people","note":"One word for all of them; context decides. sus before a plural noun."},
+    {"id":"su","es":"su","en":["his","her","their","your"],"pos":"determiner","topic":"people","note":"Covers his, her, their, and the your you use with usted. 'tu' is the your that goes with tú. sus before a plural noun."},
     {"id":"ver","es":"ver","en":["to see","to watch"],"pos":"verb","topic":"verbs","note":"yo veo. Past participle visto."},
     {"id":"pensar","es":"pensar","en":["to think"],"pos":"verb","topic":"verbs","note":"e to ie: pienso. pensar en, to think about."},
     {"id":"creer","es":"creer","en":["to believe","to think"],"pos":"verb","topic":"verbs","note":"creo que is the everyday I think."},
