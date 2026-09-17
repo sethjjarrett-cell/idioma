@@ -45,7 +45,9 @@ const CONFIG = {
   WEIGHT_FLOOR: 0.5,
 
   /* Optional typo tolerance, off by default. Distance 1 catches a single
-     slip; distance 2 starts accepting genuinely different words. With it
+     slip, a swapped pair of letters included, since the distance below
+     counts a transposition as one edit; distance 2 starts accepting
+     genuinely different words. With it
      on, a slip passes outright; with it off, the same slip lands in the
      amber band below rather than being called wrong. */
   TYPO_DISTANCE: 1,
@@ -277,6 +279,8 @@ function variants(normalised) {
   return out;
 }
 
+/* Levenshtein, kept because it is the plain definition and the one the
+   distance thresholds were set against. */
 function levenshtein(a, b) {
   if (a === b) return 0;
   if (!a.length) return b.length;
@@ -291,6 +295,33 @@ function levenshtein(a, b) {
         prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
       );
     }
+    prev = row;
+  }
+  return prev[b.length];
+}
+
+/* The same, but a swapped pair of letters costs one edit rather than two.
+   Typing "hunegr" for "hunger" is one slip of the fingers and should be
+   judged as one; plain Levenshtein calls it two and sends it to the wrong
+   side of the amber threshold. This is the optimal string alignment form,
+   which does not allow a substring to be edited twice; that restriction
+   does not matter at the distances used here. */
+function damerau(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let twoBack = null;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        row[j] = Math.min(row[j], twoBack[j - 2] + 1);
+      }
+    }
+    twoBack = prev;
     prev = row;
   }
   return prev[b.length];
@@ -328,7 +359,7 @@ function nearMiss(given, want) {
   const allowance = want.length >= CONFIG.NEAR_LONG_FROM
     ? CONFIG.NEAR_DISTANCE_LONG
     : CONFIG.NEAR_DISTANCE;
-  if (levenshtein(given, want) <= allowance) return "spelling";
+  if (damerau(given, want) <= allowance) return "spelling";
   return null;
 }
 
@@ -393,7 +424,7 @@ function diffAnswer(typed, expected) {
     if (pair) {
       const typedWord = x.op === "extra" ? x.text : y.text;
       const wantWord = x.op === "missing" ? x.text : y.text;
-      if (levenshtein(normalise(typedWord), normalise(wantWord)) <= CONFIG.NEAR_DISTANCE_LONG) {
+      if (damerau(normalise(typedWord), normalise(wantWord)) <= CONFIG.NEAR_DISTANCE_LONG) {
         out.push({ op: "changed", text: wantWord, typed: typedWord, ...charParts(typedWord, wantWord) });
         k++;
         continue;
@@ -431,7 +462,7 @@ function checkAnswer(typed, accepted, options = {}) {
       const want = variants(normalise(candidate));
       for (const g of given) {
         for (const w of want) {
-          if (levenshtein(g, w) <= CONFIG.TYPO_DISTANCE) {
+          if (damerau(g, w) <= CONFIG.TYPO_DISTANCE) {
             return { ...miss, correct: true, matched: candidate, near: true };
           }
         }
@@ -448,7 +479,7 @@ function checkAnswer(typed, accepted, options = {}) {
     for (const g of given) {
       const reason = nearMiss(g, w);
       if (!reason) continue;
-      const distance = levenshtein(g, w);
+      const distance = damerau(g, w);
       if (!best || distance < best.distance) best = { candidate, reason, distance };
     }
   }
@@ -467,5 +498,5 @@ function checkAnswer(typed, accepted, options = {}) {
 window.Engine = {
   CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult,
   selectionWeight, pickRound, buildCard, normalise, fold, checkAnswer,
-  levenshtein, nearMiss, diffAnswer,
+  levenshtein, damerau, nearMiss, diffAnswer,
 };

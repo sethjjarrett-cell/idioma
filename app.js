@@ -27,6 +27,11 @@
   let cardBefore = null;
   let retypes = 0;
 
+  /* What the next round will be drawn from. null is the whole bank; a topic
+     narrows the pool; a drill replaces the pool with conjugations and is not
+     word practice at all. */
+  let pick = null;
+
   /* ------------------------------------------------------------------
      Small helpers
      ------------------------------------------------------------------ */
@@ -86,6 +91,8 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.screen === name));
     if (name === "manage") renderBank();
     if (name === "progress") renderProgress();
+    if (name === "topics") renderTopics();
+    if (name === "lessons") renderLessons();
   }
 
   $("tabs").addEventListener("click", (e) => {
@@ -166,14 +173,49 @@
      Practice
      ------------------------------------------------------------------ */
 
+  /* A word's topic: its own field if it was added here, otherwise whatever
+     topics.js files it under. */
+  const topicOf = (word) => {
+    const w = typeof word === "string" ? words().find((x) => x.id === word) : word;
+    if (!w) return null;
+    // A word carries its own topic if it has one, which everything in
+    // vocab.js and everything added here does. topics.js only has to file
+    // the seed, which predates the field.
+    if (w.topic) return w.topic;
+    const t = TOPICS.find((x) => x.words.includes(w.id));
+    return t ? t.id : null;
+  };
+  const wordsInTopic = (topicId) => words().filter((w) => topicOf(w) === topicId);
+
   function updateStartBlurb() {
-    const all = words();
-    const enabled = all.filter((w) => prog(w.id).enabled !== false);
+    const pool = pick && pick.kind === "topic" ? wordsInTopic(pick.id) : words();
+    const enabled = pool.filter((w) => prog(w.id).enabled !== false);
     const unseen = enabled.filter((w) => !prog(w.id).lastSeen).length;
+
+    $("start-picked").hidden = !pick;
+    if (pick) $("start-picked-name").textContent = pick.name;
+
+    if (pick && pick.kind === "drill") {
+      $("start-blurb").textContent =
+        `${pick.name}. ${pick.items.length} forms to run through, asked in a random order. `
+        + `Drills do not move any word's level; they are practice, not assessment.`;
+      return;
+    }
     $("start-blurb").textContent =
       `${enabled.length} words in play, ${unseen} not yet seen. `
       + `A round is ${state.settings.roundSize} cards, picked by level and by how long since you last saw them.`;
   }
+
+  /* Clearing the pick abandons whatever round is running. Nothing is lost by
+     that: every card commits as it is answered, so the round is only ever a
+     queue, never unsaved work. */
+  $("btn-clear-pick").addEventListener("click", () => {
+    pick = null;
+    round = null;
+    card = null;
+    updateStartBlurb();
+    resetPracticeView();
+  });
 
   function resetPracticeView() {
     $("card").hidden = true;
@@ -183,12 +225,21 @@
   }
 
   function startRound() {
-    const picked = Engine.pickRound(words(), (id) => prog(id), new Date().toISOString(), state.settings.roundSize);
+    let picked;
+    if (pick && pick.kind === "drill") {
+      // A drill asks every form in the table, shuffled, however many that is;
+      // the round size is about how many words to revisit, which is a
+      // different question.
+      picked = pick.items.slice().sort(() => Math.random() - 0.5);
+    } else {
+      const pool = pick ? wordsInTopic(pick.id) : words();
+      picked = Engine.pickRound(pool, (id) => prog(id), new Date().toISOString(), state.settings.roundSize);
+    }
     if (!picked.length) {
-      toast("No words are enabled, so there is nothing to practise.", true);
+      toast(pick ? `Nothing to practise in ${pick.name}.` : "No words are enabled, so there is nothing to practise.", true);
       return;
     }
-    round = { queue: picked, index: 0, results: [], movers: [] };
+    round = { queue: picked, index: 0, results: [], movers: [], drill: !!(pick && pick.kind === "drill") };
     $("round-start").hidden = true;
     $("round-end").hidden = true;
     $("round-bar").hidden = false;
@@ -197,15 +248,15 @@
 
   function nextCard() {
     if (!round || round.index >= round.queue.length) return endRound();
-    const word = round.queue[round.index];
-    card = Engine.buildCard(word, prog(word.id), sentencesFor);
+    const item = round.queue[round.index];
+    // A drill item is already a card; a word has to be built into one.
+    card = round.drill ? drillCard(item) : Engine.buildCard(item, prog(item.id), sentencesFor);
     lastResult = null;
-    cardBefore = JSON.parse(JSON.stringify(prog(word.id)));
+    cardBefore = round.drill ? null : JSON.parse(JSON.stringify(prog(item.id)));
     retypes = 0;
 
-    const p = prog(word.id);
     $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
-    $("card-level").textContent = `L${p.level}`;
+    $("card-level").textContent = round.drill ? card.levelLabel : `L${prog(item.id).level}`;
     $("card-prompt").innerHTML = card.band.key === "cloze"
       ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
       : esc(card.prompt);
@@ -224,6 +275,24 @@
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
     $("answer").focus();
     window.__card = card;   // handy for debugging and for the UI test
+  }
+
+  /* A conjugation dressed as a card, so the practice screen does not need to
+     know the difference. The answer comes straight off the table in verbs.js,
+     so the drill can only ever ask what the lesson already teaches. */
+  function drillCard(item) {
+    return {
+      drill: true,
+      word: { id: null, es: item.answer, note: item.note || "" },
+      band: { key: "drill", label: item.tenseName },
+      levelLabel: item.personLabel,
+      fellBack: false,
+      prompt: item.infinitive,
+      promptHint: `${item.gloss} \u2014 ${item.personLabel}, ${item.tenseName.toLowerCase()}`,
+      accepted: [item.answer],
+      reveal: item.answer,
+      revealContext: "",
+    };
   }
 
   $("answer-form").addEventListener("submit", (e) => {
@@ -273,10 +342,20 @@
     // near miss should never end up worse off for having bothered.
     if (retypes && outcome === "wrong") outcome = "almost";
 
-    state.progress[id] = { ...cardBefore };
-    const applied = Engine.applyResult(state.progress[id], outcome, new Date().toISOString());
-    state.progress[id] = applied.progress;
-    commit();
+    /* A drill has no word behind it, so there is no level to move. Keeping
+       conjugations out of the mastery model is deliberate: a word's level
+       means how well that word is known, and diluting it with endings drilled
+       off a table would make it mean nothing. */
+    const applied = card.drill
+      ? { result: outcome, held: false, movedUp: false, movedDown: false,
+          levelBefore: null, levelAfter: null, bandChanged: false }
+      : (() => {
+          state.progress[id] = { ...cardBefore };
+          const a = Engine.applyResult(state.progress[id], outcome, new Date().toISOString());
+          state.progress[id] = a.progress;
+          commit();
+          return a;
+        })();
 
     lastResult = { id, outcome, applied, typed, res };
     // Keyed by position rather than pushed, so re-grading the same card
@@ -284,7 +363,7 @@
     round.results[round.index] = { id, outcome };
     // Same for the movers: keep only where this word ended up.
     round.movers = round.movers.filter((m) => m.id !== id);
-    if (applied.movedUp || applied.movedDown) {
+    if (!card.drill && (applied.movedUp || applied.movedDown)) {
       round.movers.push({
         id, up: applied.movedUp, es: card.word.es,
         from: applied.levelBefore, to: applied.levelAfter,
@@ -317,6 +396,16 @@
     $("verdict-diff").hidden = !res.diff;
 
     $("verdict-answer").textContent = card.reveal;
+
+    /* How to say it, but only where the spelling would mislead an English
+       reader. "MEH-sah" under mesa is noise; "HWEH-behs" under jueves is the
+       whole point. */
+    const spanish = card.band.key === "recognition" ? card.word.es : card.reveal;
+    $("verdict-say").textContent = Pronounce.isTricky(spanish)
+      ? `Say it: ${Pronounce.respell(spanish)}`
+      : "";
+    $("verdict-say").hidden = !$("verdict-say").textContent;
+
     $("verdict-context").textContent = card.revealContext || "";
     $("verdict-context").hidden = !card.revealContext;
 
@@ -326,7 +415,8 @@
 
     // The override makes sense on anything short of a clean pass, and only
     // when something was actually typed.
-    $("btn-override").hidden = outcome === "correct" || !typed.trim();
+    // Nothing to override on a drill: there is no level for it to change.
+    $("btn-override").hidden = card.drill || outcome === "correct" || !typed.trim();
     // On an amber card the second go is the point, so it takes the primary
     // button and Next steps back.
     $("btn-retry").hidden = outcome !== "almost";
@@ -378,27 +468,34 @@
     const right = count("correct");
     const pct = n ? Math.round((right / n) * 100) : 0;
 
-    state.stats.rounds += 1;
-    state.stats.lastRoundAt = new Date().toISOString();
-    Store.saveNow(state);
+    if (!round.drill) {
+      state.stats.rounds += 1;
+      state.stats.lastRoundAt = new Date().toISOString();
+      Store.saveNow(state);
+    }
 
     $("end-stats").innerHTML = [
       stat(pct + "%", "accuracy"),
       stat(`${right}/${n}`, "correct"),
       stat(count("almost"), "almost"),
-      stat(round.movers.filter((m) => m.up).length, "levelled up"),
-      stat(round.movers.filter((m) => !m.up).length, "dropped"),
+      // Levels are a word thing, so a drill does not report them.
+      ...(round.drill ? [] : [
+        stat(round.movers.filter((m) => m.up).length, "levelled up"),
+        stat(round.movers.filter((m) => !m.up).length, "dropped"),
+      ]),
     ].join("");
 
-    $("end-movers").innerHTML = round.movers.length
-      ? round.movers.map((m) => `
-          <div class="mover ${m.up ? "up" : "down"}">
-            <span class="arrow">${m.up ? "&#9650;" : "&#9660;"}</span>
-            <span>${esc(m.es)}</span>
-            ${m.bandChanged ? '<span class="flag">new band</span>' : ""}
-            <span class="lv">L${m.from} to L${m.to}</span>
-          </div>`).join("")
-      : '<p class="muted small">No level changes this round.</p>';
+    $("end-movers").innerHTML = round.drill
+      ? '<p class="muted small">A drill is practice, not assessment, so no word has moved.</p>'
+      : round.movers.length
+        ? round.movers.map((m) => `
+            <div class="mover ${m.up ? "up" : "down"}">
+              <span class="arrow">${m.up ? "&#9650;" : "&#9660;"}</span>
+              <span>${esc(m.es)}</span>
+              ${m.bandChanged ? '<span class="flag">new band</span>' : ""}
+              <span class="lv">L${m.from} to L${m.to}</span>
+            </div>`).join("")
+        : '<p class="muted small">No level changes this round.</p>';
 
     $("round-end").hidden = false;
     updateStartBlurb();
@@ -408,6 +505,197 @@
 
   $("btn-start").addEventListener("click", startRound);
   $("btn-again").addEventListener("click", startRound);
+
+  /* ------------------------------------------------------------------
+     Topics
+     ------------------------------------------------------------------ */
+
+  /* Every topic as a pane: how far through it you are, a button that
+     practises only those words, and the list itself with the sounds on it. */
+  function renderTopics() {
+    const known = new Set(TOPICS.map((t) => t.id));
+    const extras = new Set(words().map((w) => topicOf(w)).filter((t) => t && !known.has(t)));
+    const all = TOPICS.concat([...extras].map((id) => ({ id, name: id, blurb: "Added here.", words: [] })));
+
+    $("topic-list").innerHTML = all.map((t) => {
+      const pool = wordsInTopic(t.id);
+      if (!pool.length) return "";
+      const bands = { recognition: 0, production: 0, cloze: 0 };
+      let seen = 0;
+      for (const w of pool) {
+        const pr = prog(w.id);
+        bands[Engine.bandForLevel(pr.level).key] += 1;
+        if (pr.timesSeen) seen += 1;
+      }
+      const rows = pool
+        .slice()
+        .sort((a, b) => a.es.localeCompare(b.es, "es"))
+        .map((w) => {
+          const say = Pronounce.isTricky(w.es) ? Pronounce.respell(w.es) : "";
+          return `<tr>
+            <td class="es">${esc(w.es)}</td>
+            <td class="small">${esc(w.en.join(", "))}</td>
+            <td class="say-cell small">${esc(say)}</td>
+            <td class="lvl">${prog(w.id).level}</td>
+          </tr>`;
+        }).join("");
+
+      return `
+        <div class="pane topic" data-topic="${esc(t.id)}">
+          <div class="pane-head">
+            <h2>${esc(t.name)}</h2>
+            <span class="count-chip">${seen} / ${pool.length} seen</span>
+            <button class="btn primary" data-act="practise-topic">Practise</button>
+          </div>
+          <p class="muted small blurb">${esc(t.blurb)}</p>
+          <div class="topic-bar" title="${bands.recognition} recognition, ${bands.production} production, ${bands.cloze} cloze">
+            <i class="b1" style="width:${(bands.recognition / pool.length) * 100}%"></i>
+            <i class="b2" style="width:${(bands.production / pool.length) * 100}%"></i>
+            <i class="b3" style="width:${(bands.cloze / pool.length) * 100}%"></i>
+          </div>
+          <details class="lesson">
+            <summary>The ${pool.length} words<span class="muted small">${
+              bands.production + bands.cloze} past recognition</span></summary>
+            <div class="table-wrap">
+              <table class="bank"><tbody>${rows}</tbody></table>
+            </div>
+          </details>
+        </div>`;
+    }).join("");
+  }
+
+  $("topic-list").addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-act="practise-topic"]');
+    if (!btn) return;
+    const id = btn.closest(".topic").dataset.topic;
+    const t = TOPICS.find((x) => x.id === id);
+    pick = { kind: "topic", id, name: t ? t.name : id };
+    showScreen("practice");
+    updateStartBlurb();
+    resetPracticeView();
+    startRound();
+  });
+
+  /* ------------------------------------------------------------------
+     Lessons
+     ------------------------------------------------------------------ */
+
+  const PERSONS = Verbs.VERBS.persons;
+  const FAMILIES = Verbs.VERBS.families;
+
+  /* One table of a tense across the three families, filled from the real
+     example verbs rather than shown as bare endings, because -ar -as -a is
+     hard to hold on to and hablo hablas habla is not. */
+  function tenseTable(tense) {
+    const head = FAMILIES.map((f) =>
+      `<th>${esc(f.name)}<div class="muted small">${esc(f.example)}</div></th>`).join("");
+    const rows = PERSONS.map((p) => `
+      <tr>
+        <th>${esc(p.label)}<div class="muted small">${esc(p.gloss)}</div></th>
+        ${FAMILIES.map((f) => {
+          const form = Verbs.conjugate(f.example, tense.id, p.id);
+          const ending = tense.endings[f.id][p.id];
+          const stem = form.slice(0, form.length - ending.length);
+          return `<td><span class="stem">${esc(stem)}</span><b>${esc(ending)}</b></td>`;
+        }).join("")}
+      </tr>`).join("");
+    return `<div class="table-wrap"><table class="conj">
+      <thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  function irregularTable(verb) {
+    const tenses = Verbs.VERBS.tenses.filter((t) => verb.forms[t.id]);
+    const head = tenses.map((t) => `<th>${esc(t.name)}</th>`).join("");
+    const rows = PERSONS.map((p) => `
+      <tr>
+        <th>${esc(p.label)}</th>
+        ${tenses.map((t) => `<td><b>${esc(Verbs.conjugate(verb.infinitive, t.id, p.id) || "")}</b></td>`).join("")}
+      </tr>`).join("");
+    return `<div class="table-wrap"><table class="conj">
+      <thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  function renderLessons() {
+    $("verb-tenses").innerHTML = Verbs.VERBS.tenses.map((t) => `
+      <details class="lesson" data-drill="tense:${esc(t.id)}">
+        <summary>${esc(t.name)}<span class="muted small">${esc(t.blurb)}</span></summary>
+        ${tenseTable(t)}
+        ${t.note ? `<p class="note">${esc(t.note)}</p>` : ""}
+        <button class="btn" data-act="drill">Practise this table</button>
+      </details>`).join("");
+
+    $("verb-irregulars").innerHTML = Verbs.VERBS.irregulars.map((v) => `
+      <details class="lesson" data-drill="verb:${esc(v.infinitive)}">
+        <summary>${esc(v.infinitive)}<span class="muted small">${esc(v.gloss)}
+          &middot; ${esc(Pronounce.respell(v.infinitive))}</span></summary>
+        ${irregularTable(v)}
+        ${v.note ? `<p class="note">${esc(v.note)}</p>` : ""}
+        <button class="btn" data-act="drill">Practise this verb</button>
+      </details>`).join("");
+
+    $("verb-notes").innerHTML = Verbs.VERBS.notes.map((n) => `
+      <details class="lesson">
+        <summary>${esc(n.title)}</summary>
+        <p class="lesson-body">${esc(n.body)}</p>
+      </details>`).join("");
+
+    $("pron-rules").innerHTML = Pronounce.RULES.map((r) => `
+      <details class="lesson">
+        <summary>${esc(r.letters)}<span class="muted small">says ${esc(r.says)}</span></summary>
+        <div class="examples">
+          ${r.examples.map(([es, en]) => `
+            <div class="example">
+              <b>${esc(es)}</b>
+              <span class="say-cell">${esc(Pronounce.respell(es))}</span>
+              <span class="muted small">${esc(en)}</span>
+            </div>`).join("")}
+        </div>
+        ${r.note ? `<p class="note">${esc(r.note)}</p>` : ""}
+      </details>`).join("")
+      + `<details class="lesson">
+           <summary>${esc(Pronounce.STRESS_NOTE.title)}</summary>
+           <p class="lesson-body">${esc(Pronounce.STRESS_NOTE.body)}</p>
+         </details>`;
+  }
+
+  /* Turn a table into cards. Every item's answer is read out of verbs.js, so
+     a drill cannot ask for a form the lesson does not show. */
+  function drillItems(spec) {
+    const [kind, key] = spec.split(":");
+    const items = [];
+    const push = (infinitive, gloss, tense, person, note) => {
+      const answer = Verbs.conjugate(infinitive, tense.id, person.id);
+      if (answer) {
+        items.push({ infinitive, gloss, answer, note,
+          tenseName: tense.name, personLabel: person.label });
+      }
+    };
+
+    if (kind === "tense") {
+      const tense = Verbs.VERBS.tenses.find((t) => t.id === key);
+      for (const f of FAMILIES) for (const p of PERSONS) push(f.example, f.gloss, tense, p, tense.note);
+      return { name: `${tense.name}, regular verbs`, items };
+    }
+    const verb = Verbs.VERBS.irregulars.find((v) => v.infinitive === key);
+    for (const t of Verbs.VERBS.tenses) {
+      if (!verb.forms[t.id]) continue;
+      for (const p of PERSONS) push(verb.infinitive, verb.gloss, t, p, verb.note);
+    }
+    return { name: `${verb.infinitive}, ${verb.gloss}`, items };
+  }
+
+  $("screen-lessons").addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-act="drill"]');
+    if (!btn) return;
+    const spec = btn.closest("[data-drill]").dataset.drill;
+    const built = drillItems(spec);
+    if (!built.items.length) { toast("Nothing to drill in that table.", true); return; }
+    pick = { kind: "drill", id: spec, name: built.name, items: built.items };
+    showScreen("practice");
+    updateStartBlurb();
+    resetPracticeView();
+    startRound();
+  });
 
   /* ------------------------------------------------------------------
      Manage
@@ -541,13 +829,23 @@
       es_alt: $("nw-alt").value.split(",").map((s) => s.trim()).filter(Boolean),
       en,
       pos: $("nw-pos").value.trim(),
+      // A word added here carries its own topic; topics.js only files the seed.
+      topic: $("nw-topic").value,
       note: $("nw-note").value.trim(),
     });
     commit();
     e.target.reset();
-    renderBank(); refreshWordSelect(); updateStartBlurb();
+    renderBank(); refreshTopicSelect(); refreshWordSelect(); updateStartBlurb();
     toast(`Added "${es}".`);
   });
+
+  function refreshTopicSelect() {
+    const sel = $("nw-topic");
+    const keep = sel.value;
+    sel.innerHTML = '<option value="">(none)</option>'
+      + TOPICS.map((t) => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");
+    if (keep) sel.value = keep;
+  }
 
   function refreshWordSelect() {
     const sel = $("ns-word");
@@ -644,6 +942,7 @@
 
   if (loaded.warning) toast(loaded.warning, true);
   refreshMenu();
+  refreshTopicSelect();
   refreshWordSelect();
   updateStartBlurb();
   resetPracticeView();

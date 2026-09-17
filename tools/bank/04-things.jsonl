@@ -1,0 +1,52 @@
+{"id":"casa","es":"casa","en":["house","home"],"pos":"noun","topic":"home","note":"f. en casa is at home, with no article.","sent":{"es":"Mi {casa} queda cerca del parque.","en":"My house is near the park."}}
+{"id":"puerta","es":"puerta","en":["door"],"pos":"noun","topic":"home","note":"f.","sent":{"es":"Cierra la {puerta} con llave.","en":"Lock the door."}}
+{"id":"ventana","es":"ventana","en":["window"],"pos":"noun","topic":"home","note":"f.","sent":{"es":"Abre la {ventana}, hace calor.","en":"Open the window, it is hot."}}
+{"id":"llave","es":"llave","en":["key"],"pos":"noun","topic":"home","note":"f. Also a tap in some countries.","sent":{"es":"Perdí la {llave} del apartamento.","en":"I lost the key to the flat."}}
+{"id":"silla","es":"silla","en":["chair"],"pos":"noun","topic":"home","note":"f.","sent":{"es":"Esa {silla} está rota.","en":"That chair is broken."}}
+{"id":"cocina","es":"cocina","en":["kitchen","cooker"],"pos":"noun","topic":"home","note":"f. Both the room and the stove.","sent":{"es":"La {cocina} es la parte más grande de la casa.","en":"The kitchen is the biggest part of the house."}}
+{"id":"ropa","es":"ropa","en":["clothes"],"pos":"noun","topic":"home","note":"f. and singular: la ropa está sucia.","sent":{"es":"Tengo que lavar la {ropa}.","en":"I have to wash the clothes."}}
+{"id":"luz","es":"luz","en":["light","electricity"],"pos":"noun","topic":"home","note":"f. Plural luces. Also the electricity bill.","sent":{"es":"Apaga la {luz} cuando salgas.","en":"Turn off the light when you leave."}}
+{"id":"pan","es":"pan","en":["bread"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Compré {pan} fresco esta mañana.","en":"I bought fresh bread this morning."}}
+{"id":"arroz","es":"arroz","en":["rice"],"pos":"noun","topic":"food","note":"m. On the side of almost everything in Colombia.","sent":{"es":"El almuerzo viene con {arroz} y frijoles.","en":"Lunch comes with rice and beans."}}
+{"id":"carne","es":"carne","en":["meat"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"No como {carne} los lunes.","en":"I do not eat meat on Mondays."}}
+{"id":"pollo","es":"pollo","en":["chicken"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Voy a pedir {pollo} con papas.","en":"I am going to order chicken with potatoes."}}
+{"id":"huevo","es":"huevo","en":["egg"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Quiero un {huevo} frito.","en":"I want a fried egg."}}
+{"id":"fruta","es":"fruta","en":["fruit"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"La {fruta} aquí es muy barata.","en":"The fruit here is very cheap."}}
+{"id":"leche","es":"leche","en":["milk"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"El café con {leche} me gusta más.","en":"I prefer coffee with milk."}}
+{"id":"cerveza","es":"cerveza","en":["beer"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"Dos {cervezas} bien frías, por favor.","en":"Two very cold beers, please."}}
+{"id":"jugo","es":"jugo","en":["juice"],"pos":"noun","topic":"food","note":"m. Zumo in Spain.","sent":{"es":"Un {jugo} de mango, por favor.","en":"A mango juice, please."}}
+{"id":"azucar","es":"azúcar","en":["sugar"],"pos":"noun","topic":"food","note":"m. usually, though you will hear both.","sent":{"es":"Sin {azúcar}, gracias.","en":"Without sugar, thanks."}}
+{"id":"sal","es":"sal","en":["salt"],"pos":"noun","topic":"food","note":"f. Also the tú command of salir.","sent":{"es":"Le falta {sal} a la sopa.","en":"The soup needs salt."}}
+{"id":"sopa","es":"sopa","en":["soup"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"La {sopa} está muy caliente todavía.","en":"The soup is still very hot."}}
+{"id":"desayuno","es":"desayuno","en":["breakfast"],"pos":"noun","topic":"food","note":"m. desayunar is the verb.","sent":{"es":"El {desayuno} está incluido.","en":"Breakfast is included."}}
+{"id":"almuerzo","es":"almuerzo","en":["lunch"],"pos":"noun","topic":"food","note":"m. The main meal of the day in Colombia.","sent":{"es":"El {almuerzo} del día cuesta doce mil.","en":"The set lunch costs twelve thousand."}}
+{"id":"cena","es":"cena","en":["dinner","supper"],"pos":"noun","topic":"food","note":"f. Comida can also mean the evening meal.","sent":{"es":"La {cena} es a las ocho.","en":"Dinner is at eight."}}
+{"id":"cuenta","es":"cuenta","en":["bill","account"],"pos":"noun","topic":"paying","note":"f. La cuenta, por favor is how you ask for the bill.","sent":{"es":"¿Nos trae la {cuenta}, por favor?","en":"Could you bring us the bill, please?"}}
+{"id":"dinero","es":"dinero","en":["money"],"pos":"noun","topic":"paying","note":"m. Plata is the everyday Colombian word.","sent":{"es":"No tengo {dinero} en efectivo.","en":"I do not have any cash."}}
+{"id":"plata","es":"plata","en":["money","silver"],"pos":"noun","topic":"paying","note":"f. What Colombians actually say for money.","sent":{"es":"No me alcanza la {plata}.","en":"I do not have enough money."}}
+{"id":"precio","es":"precio","en":["price"],"pos":"noun","topic":"paying","note":"m.","sent":{"es":"¿Cuál es el {precio} sin descuento?","en":"What is the price without the discount?"}}
+{"id":"tienda","es":"tienda","en":["shop","store"],"pos":"noun","topic":"paying","note":"f. A small corner shop in Colombia.","sent":{"es":"Voy a la {tienda} por leche.","en":"I am going to the shop for milk."}}
+{"id":"mercado","es":"mercado","en":["market"],"pos":"noun","topic":"paying","note":"m. Hacer mercado is to do the food shop.","sent":{"es":"El {mercado} abre los sábados.","en":"The market opens on Saturdays."}}
+{"id":"ciudad","es":"ciudad","en":["city","town"],"pos":"noun","topic":"travel","note":"f.","sent":{"es":"Esta {ciudad} me encanta.","en":"I love this city."}}
+{"id":"pais","es":"país","en":["country"],"pos":"noun","topic":"travel","note":"m. The accent breaks the vowels apart: pa-ís.","sent":{"es":"¿De qué {país} eres?","en":"What country are you from?"}}
+{"id":"mundo","es":"mundo","en":["world"],"pos":"noun","topic":"travel","note":"m. Todo el mundo means everybody.","sent":{"es":"Quiero viajar por todo el {mundo}.","en":"I want to travel all over the world."}}
+{"id":"lugar","es":"lugar","en":["place"],"pos":"noun","topic":"travel","note":"m. Sitio means the same.","sent":{"es":"Es un buen {lugar} para comer.","en":"It is a good place to eat."}}
+{"id":"carro","es":"carro","en":["car"],"pos":"noun","topic":"travel","note":"m. Coche in Spain, auto further south.","sent":{"es":"Dejé el {carro} en el parqueadero.","en":"I left the car in the car park."}}
+{"id":"bus","es":"bus","en":["bus"],"pos":"noun","topic":"travel","note":"m. Also autobús, and buseta for a small one.","sent":{"es":"El {bus} pasa cada diez minutos.","en":"The bus comes every ten minutes."}}
+{"id":"avion","es":"avión","en":["plane","aeroplane"],"pos":"noun","topic":"travel","note":"m. Plural aviones, no accent.","sent":{"es":"El {avión} sale a las seis de la mañana.","en":"The plane leaves at six in the morning."}}
+{"id":"viaje","es":"viaje","en":["trip","journey"],"pos":"noun","topic":"travel","note":"m. Buen viaje is have a good trip.","sent":{"es":"El {viaje} dura ocho horas.","en":"The journey takes eight hours."}}
+{"id":"maleta","es":"maleta","en":["suitcase","bag"],"pos":"noun","topic":"travel","note":"f.","sent":{"es":"Mi {maleta} no llegó.","en":"My suitcase did not arrive."}}
+{"id":"boleto","es":"boleto","en":["ticket"],"pos":"noun","topic":"travel","note":"m. Tiquete and pasaje are also used in Colombia.","sent":{"es":"Compré el {boleto} por internet.","en":"I bought the ticket online."}}
+{"id":"hotel","es":"hotel","en":["hotel"],"pos":"noun","topic":"travel","note":"m.","sent":{"es":"El {hotel} queda en el centro.","en":"The hotel is in the centre."}}
+{"id":"aeropuerto","es":"aeropuerto","en":["airport"],"pos":"noun","topic":"travel","note":"m.","sent":{"es":"Llegamos al {aeropuerto} muy temprano.","en":"We got to the airport very early."}}
+{"id":"trabajo","es":"trabajo","en":["work","job"],"pos":"noun","topic":"work","note":"m.","sent":{"es":"Tengo mucho {trabajo} esta semana.","en":"I have a lot of work this week."}}
+{"id":"oficina","es":"oficina","en":["office"],"pos":"noun","topic":"work","note":"f.","sent":{"es":"La {oficina} cierra a las cinco.","en":"The office closes at five."}}
+{"id":"empresa","es":"empresa","en":["company","business"],"pos":"noun","topic":"work","note":"f.","sent":{"es":"Trabajo en una {empresa} de energía.","en":"I work at an energy company."}}
+{"id":"reunion","es":"reunión","en":["meeting"],"pos":"noun","topic":"work","note":"f. Plural reuniones, no accent.","sent":{"es":"La {reunión} se movió para el jueves.","en":"The meeting was moved to Thursday."}}
+{"id":"jefe","es":"jefe","en":["boss"],"pos":"noun","topic":"work","note":"m. jefa for a woman.","sent":{"es":"Mi {jefe} está de viaje.","en":"My boss is away."}}
+{"id":"estudiar","es":"estudiar","en":["to study"],"pos":"verb","topic":"work","note":"Regular.","sent":{"es":"{Estudio} ingeniería.","en":"I study engineering."}}
+{"id":"clase","es":"clase","en":["class","lesson","kind"],"pos":"noun","topic":"work","note":"f. Also means sort: qué clase de.","sent":{"es":"La {clase} empieza a las nueve.","en":"The class starts at nine."}}
+{"id":"palabra","es":"palabra","en":["word"],"pos":"noun","topic":"work","note":"f.","sent":{"es":"No conozco esa {palabra}.","en":"I do not know that word."}}
+{"id":"pregunta","es":"pregunta","en":["question"],"pos":"noun","topic":"work","note":"f. hacer una pregunta is to ask a question.","sent":{"es":"Tengo una {pregunta} sobre el horario.","en":"I have a question about the timetable."}}
+{"id":"problema","es":"problema","en":["problem"],"pos":"noun","topic":"work","note":"m. despite the a: el problema. Same for tema and sistema.","sent":{"es":"No hay ningún {problema}.","en":"There is no problem at all."}}
+{"id":"cosa","es":"cosa","en":["thing"],"pos":"noun","topic":"glue","note":"f. Does an enormous amount of work in Spanish.","sent":{"es":"Tengo una {cosa} que contarte.","en":"I have something to tell you."}}

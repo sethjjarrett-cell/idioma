@@ -126,6 +126,16 @@ ok('two letters out of a short answer is still wrong',
   near('bano', ['casa']).almost === false);
 ok('two letters out of a long answer is amber',
   near('por supueso', ['por supuesto']).almost === true);
+ok('a swapped pair of letters costs one edit, not two',
+  E.damerau('hunegr', 'hunger') === 1 && E.levenshtein('hunegr', 'hunger') === 2);
+ok('so a transposition is amber, not wrong',
+  near('hunegr', ['hunger']).reason === 'spelling');
+ok('and it passes outright with typo tolerance on',
+  near('hunegr', ['hunger'], { typoTolerance: true }).correct === true);
+ok('a transposition in an accented word too',
+  near('habitacino', ['habitación']).almost === true);
+ok('but a genuinely mangled word is still wrong',
+  near('tsire', ['triste']).almost === false);
 
 console.log('--- the correction ---');
 const d1 = near('a glass of water', ['glass of water']).diff;

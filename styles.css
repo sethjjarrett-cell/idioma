@@ -363,6 +363,102 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
 .mover.down .arrow { color: var(--bad-deep); }
 .mover .lv { margin-left: auto; color: var(--muted); font: 700 12.5px var(--mono); }
 
+/* --------------------------- topics, lessons --------------------------- */
+
+.picked {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.pick-chip {
+  flex: 1; min-width: 140px;
+  font: 800 13px var(--round); color: var(--accent-deep);
+  background: var(--accent-soft); border: 2px solid var(--accent);
+  border-radius: 999px; padding: 8px 14px;
+}
+.count-chip {
+  font: 800 11px var(--round); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); background: var(--panel2); border: 2px solid var(--line);
+  border-radius: 999px; padding: 4px 11px; white-space: nowrap;
+}
+
+/* One bar per topic, the three bands stacked left to right, so how far
+   through a topic you are is a shape rather than three numbers. */
+.topic-bar {
+  display: flex; height: 14px; margin: 10px 0 6px;
+  background: var(--line); border-radius: 999px; overflow: hidden;
+}
+.topic-bar i { display: block; height: 100%; }
+.topic-bar i.b1 { background: var(--accent); }
+.topic-bar i.b2 { background: #ffa94d; }
+.topic-bar i.b3 { background: var(--good); }
+
+/* Eleven of these on one screen, so each is kept to a header, a line and a
+   bar; the word list is behind the fold it deserves. */
+.topic { padding: 14px 16px; margin-bottom: 10px; }
+.topic .blurb { margin: 0; }
+.topic .pane-head { margin-bottom: 6px; }
+.topic details { margin-top: 10px; }
+
+.lesson-list { display: flex; flex-direction: column; gap: 10px; }
+
+details.lesson {
+  border: 2px solid var(--line); border-radius: 16px;
+  background: var(--panel2); overflow: hidden;
+}
+details.lesson > summary {
+  cursor: pointer; list-style: none; padding: 12px 14px;
+  font: 800 15px var(--round); color: var(--text);
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+details.lesson > summary::-webkit-details-marker { display: none; }
+/* A twisty drawn rather than borrowed, so it turns the same way everywhere. */
+details.lesson > summary::before {
+  content: ""; flex: none; width: 0; height: 0;
+  border: 5px solid transparent; border-left-color: var(--accent);
+  transition: transform .15s; transform-origin: 3px 50%;
+}
+details.lesson[open] > summary::before { transform: rotate(90deg); }
+details.lesson > summary .small { font-weight: 500; flex: 1; }
+details.lesson > summary:hover { background: var(--accent-soft); }
+details.lesson > *:not(summary) { margin: 0 14px 14px; }
+details.lesson .table-wrap { margin: 0 0 12px; padding: 0 14px; }
+.lesson-body { font-size: 14px; line-height: 1.6; }
+
+table.conj { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 420px; }
+table.conj th, table.conj td {
+  padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--line);
+  white-space: nowrap;
+}
+table.conj thead th {
+  font: 800 11px var(--round); letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--muted);
+}
+table.conj tbody th { font: 700 13px var(--round); color: var(--muted); }
+table.conj tbody th .small { font-weight: 500; }
+table.conj td { font-weight: 700; }
+/* The stem is context; the ending is the lesson, so only the ending is loud. */
+table.conj .stem { color: var(--muted); font-weight: 500; }
+table.conj td b { color: var(--accent-deep); }
+
+.examples { display: flex; flex-direction: column; gap: 8px; }
+.example {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 8px 11px; background: var(--panel); border: 2px solid var(--line);
+  border-radius: 12px;
+}
+.example b { font-size: 15px; min-width: 110px; }
+
+/* The respelling, wherever it appears: monospaced so the capitals that mark
+   the stress line up and read as emphasis rather than as shouting. */
+.say-cell, .say {
+  font-family: var(--mono); font-size: 12.5px; color: var(--accent-deep);
+  letter-spacing: 0.01em;
+}
+.say { margin: 8px 0 0; font-size: 13px; }
+.card.correct .say { color: var(--good-deep); }
+.card.wrong .say { color: var(--bad-deep); }
+.card.almost .say { color: var(--warn-deep); }
+
 /* ------------------------------ manage ------------------------------ */
 
 .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -433,7 +529,13 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
      wide tracking, so all three still fit without a sideways scroll. */
   .brand span { display: none; }
   .top { gap: 8px; padding: 0 10px; }
-  .tab { padding: 6px 10px; font-size: 11.5px; letter-spacing: 0.02em; }
+  .tab { padding: 6px 9px; font-size: 11px; letter-spacing: 0.01em; }
+  /* Five tabs will not fit a phone, so the strip scrolls sideways and says
+     so with a fade at the edge rather than just cutting a word in half. */
+  .tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+          mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  table.conj { min-width: 380px; font-size: 13px; }
+  .example b { min-width: 0; }
 }
 
 /* Below about 380px the three tabs and the brand cannot both fit, and a
