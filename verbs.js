@@ -277,6 +277,10 @@ const VERBS = {
       body: "Vosotros is Spain only. Latin America uses ustedes for every you-plural, polite or not, so these tables leave vosotros out. In Medellín and much of Antioquia you will hear vos instead of tú, with its own present forms (vos tenés, vos podés, vos sos). Understanding it matters more than using it; tú and usted are both understood everywhere.",
     },
     {
+      title: "Whose: mi, tu, su",
+      body: "Possessives agree with the thing owned, not the owner: mi carro, mis carros, tu casa, tus casas. Both tu and su mean your. Tu is the your that goes with tú, su is the your that goes with usted, and su is also his, her and their. Colombia uses usted far more than most of Latin America, so su is the safer default with anyone you have just met. Neither takes an accent: tu is your, tú is you. Su doing four jobs at once means su carro is ambiguous on its own, and when it matters you say el carro de ella instead. Nuestro is the odd one out and agrees in gender as well: nuestro carro, nuestra casa.",
+    },
+    {
       title: "Preterite against imperfect",
       body: "The commonest tangle in Spanish. Preterite is a finished event, imperfect is a state or a habit. Comí a la una is I ate at one; comía a la una is I used to eat at one. When a story has both, the imperfect sets the scene and the preterite is what happened.",
     },
