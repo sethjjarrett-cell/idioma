@@ -1,0 +1,365 @@
+{"sentenceOnly": true, "wordId": "habitacion", "sent": {"es": "¡Sal de mi {habitación}!", "en": "Get out of my room!"}}
+{"sentenceOnly": true, "wordId": "dormitorio", "sent": {"es": "Limpió su {dormitorio}.", "en": "He cleaned his room."}}
+{"sentenceOnly": true, "wordId": "bano", "sent": {"es": "Hay {baño} aquí.", "en": "There is a bathroom here."}}
+{"sentenceOnly": true, "wordId": "cama", "sent": {"es": "Sal de mi {cama}.", "en": "Get out of my bed."}}
+{"sentenceOnly": true, "wordId": "comida", "sent": {"es": "No hay {comida}.", "en": "There's no food."}}
+{"sentenceOnly": true, "wordId": "agua", "sent": {"es": "No hay {agua}.", "en": "There is no water."}}
+{"sentenceOnly": true, "wordId": "bolsa", "sent": {"es": "Hay algo de azúcar en la {bolsa}.", "en": "There is some sugar in the bag."}}
+{"sentenceOnly": true, "wordId": "calle", "sent": {"es": "Hable ahora o {calle} para siempre.", "en": "Speak now or forever hold your peace."}}
+{"sentenceOnly": true, "wordId": "mesa", "sent": {"es": "¿Hay {mesa} libre para dos el viernes?", "en": "Is there a table available for two on Friday?"}}
+{"sentenceOnly": true, "wordId": "plato", "sent": {"es": "Cómete todo lo que hay en tu {plato}.", "en": "Eat everything on your plate."}}
+{"sentenceOnly": true, "wordId": "tinto", "sent": {"es": "No hay más vino {tinto}.", "en": "There isn't any more red wine."}}
+{"sentenceOnly": true, "wordId": "cambio", "sent": {"es": "Corto y {cambio}.", "en": "Over and out."}}
+{"sentenceOnly": true, "wordId": "punto", "sent": {"es": "No hay {punto} en intentar hacer eso hoy.", "en": "There's no point in trying to do that today."}}
+{"sentenceOnly": true, "wordId": "pinta", "sent": {"es": "Esto {pinta} bien.", "en": "This looks good."}}
+{"sentenceOnly": true, "wordId": "vez", "sent": {"es": "¡Cada {vez} mejor!", "en": "Better and better!"}}
+{"sentenceOnly": true, "wordId": "camino", "sent": {"es": "¡Sal de mi {camino}!", "en": "Get out of my way."}}
+{"sentenceOnly": true, "wordId": "nuestro", "sent": {"es": "No hay nada que hacer en {nuestra} ciudad.", "en": "There's nothing to do in our city."}}
+{"sentenceOnly": true, "wordId": "mi", "sent": {"es": "{Mi} madre cocina bien.", "en": "My mother cooks well."}}
+{"sentenceOnly": true, "wordId": "tu", "sent": {"es": "¡Y {tu} hermana!", "en": "And your sister!"}}
+{"sentenceOnly": true, "wordId": "nosotros", "sent": {"es": "Cená con {nosotros}.", "en": "Have dinner with us."}}
+{"sentenceOnly": true, "wordId": "abierto", "sent": {"es": "Mi puerta siempre está {abierta} para él.", "en": "My door's always open for him."}}
+{"sentenceOnly": true, "wordId": "cerrado", "sent": {"es": "El partido se jugó a puerta {cerrada}.", "en": "The match was played behind closed doors."}}
+{"sentenceOnly": true, "wordId": "cansado", "sent": {"es": "Estoy muy {cansado} de trabajar todo el día.", "en": "I'm very tired from working all day."}}
+{"sentenceOnly": true, "wordId": "feliz", "sent": {"es": "Se rio {feliz}.", "en": "She laughed a merry laugh."}}
+{"sentenceOnly": true, "wordId": "triste", "sent": {"es": "Me siento {triste} de vez en cuando.", "en": "I feel sad every now and then."}}
+{"sentenceOnly": true, "wordId": "fuerte", "sent": {"es": "Más rápido, más alto, más {fuerte}.", "en": "Faster, higher, stronger."}}
+{"sentenceOnly": true, "wordId": "debil", "sent": {"es": "¡No te dejaré encontrar mi punto {débil}!", "en": "I won't let you find my weak spot!"}}
+{"sentenceOnly": true, "wordId": "mismo", "sent": {"es": "Sal ahora {mismo}.", "en": "Set off right now."}}
+{"sentenceOnly": true, "wordId": "diferente", "sent": {"es": "¿Lo podría cambiar por otro {diferente}?", "en": "Could you exchange it with a different one?"}}
+{"sentenceOnly": true, "wordId": "mejor", "sent": {"es": "Cuanto más, {mejor}.", "en": "The more, the better."}}
+{"sentenceOnly": true, "wordId": "peor", "sent": {"es": "Cuanto {peor} mejor.", "en": "The worse the better."}}
+{"sentenceOnly": true, "wordId": "listo", "sent": {"es": "¿{Listo} para salir?", "en": "Are you ready to go?"}}
+{"sentenceOnly": true, "wordId": "pleno", "sent": {"es": "Tengo {plena} confianza en mi médico.", "en": "I have complete faith in my doctor."}}
+{"sentenceOnly": true, "wordId": "lleno", "sent": {"es": "El vaso está {lleno} de agua.", "en": "The glass is full of water."}}
+{"sentenceOnly": true, "wordId": "casi", "sent": {"es": "No sé {casi} nada.", "en": "I know next to nothing."}}
+{"sentenceOnly": true, "wordId": "arriba", "sent": {"es": "Desde {arriba} se veía el río.", "en": "From above, one could see the river."}}
+{"sentenceOnly": true, "wordId": "abajo", "sent": {"es": "No hay nada allí {abajo}.", "en": "There's nothing down there."}}
+{"sentenceOnly": true, "wordId": "alli", "sent": {"es": "¿Hay alguien {allí}?", "en": "Is anybody there?"}}
+{"sentenceOnly": true, "wordId": "aqui", "sent": {"es": "¿Hay alguien {aquí}?", "en": "Is anybody here?"}}
+{"sentenceOnly": true, "wordId": "afuera", "sent": {"es": "Siempre como {afuera}.", "en": "I always eat out."}}
+{"sentenceOnly": true, "wordId": "adentro", "sent": {"es": "Hay alguien {adentro}.", "en": "There's someone inside."}}
+{"sentenceOnly": true, "wordId": "izquierda", "sent": {"es": "Su madre se sentó a su {izquierda}.", "en": "On his left sat his mother."}}
+{"sentenceOnly": true, "wordId": "derecha", "sent": {"es": "Miró a izquierda y {derecha}.", "en": "He looked left and right."}}
+{"sentenceOnly": true, "wordId": "enfrente", "sent": {"es": "¿Quién es el niño de {enfrente}?", "en": "Who is the child in front?"}}
+{"sentenceOnly": true, "wordId": "cerca", "sent": {"es": "¿Hay alguna oficina de correos {cerca} de aquí?", "en": "Is there a post office around here?"}}
+{"sentenceOnly": true, "wordId": "lejos", "sent": {"es": "¿Cuánto más {lejos}?", "en": "How much farther?"}}
+{"sentenceOnly": true, "wordId": "lunes", "sent": {"es": "¡Hasta el {lunes}!", "en": "See you Monday."}}
+{"sentenceOnly": true, "wordId": "martes", "sent": {"es": "Lunes, {martes}, miércoles, jueves, viernes, sábado, domingo.", "en": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."}}
+{"sentenceOnly": true, "wordId": "miercoles", "sent": {"es": "Lunes, martes, {miércoles}, jueves, viernes, sábado, domingo.", "en": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."}}
+{"sentenceOnly": true, "wordId": "jueves", "sent": {"es": "¡Hasta el {jueves}!", "en": "Until Thursday!"}}
+{"sentenceOnly": true, "wordId": "viernes", "sent": {"es": "Lunes, martes, miércoles, jueves, {viernes}, sábado, domingo.", "en": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."}}
+{"sentenceOnly": true, "wordId": "sabado", "sent": {"es": "Lunes, martes, miércoles, jueves, viernes, {sábado}, domingo.", "en": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."}}
+{"sentenceOnly": true, "wordId": "domingo", "sent": {"es": "¡Hasta el {domingo}!", "en": "See you on Sunday!"}}
+{"sentenceOnly": true, "wordId": "quien", "sent": {"es": "{¿Quién} de ustedes no estaba en el bus?", "en": "Which one of you wasn't on the bus?"}}
+{"sentenceOnly": true, "wordId": "que", "sent": {"es": "{¿Qué} tal mañana?", "en": "How about tomorrow?"}}
+{"sentenceOnly": true, "wordId": "donde", "sent": {"es": "{¿Dónde} está el té con leche?", "en": "Where is the tea with milk?"}}
+{"sentenceOnly": true, "wordId": "cuando", "sent": {"es": "{¿Cuándo} se casa tu hermano?", "en": "When is your brother getting married?"}}
+{"sentenceOnly": true, "wordId": "como", "sent": {"es": "{¿Cómo} de grande?", "en": "How big?"}}
+{"sentenceOnly": true, "wordId": "cuanto", "sent": {"es": "{¿Cuánto} más lejos?", "en": "How much farther?"}}
+{"sentenceOnly": true, "wordId": "cuantos", "sent": {"es": "{¿Cuántos} más hay?", "en": "How many more are there?"}}
+{"sentenceOnly": true, "wordId": "alguna", "sent": {"es": "¿Hay {alguna} pregunta?", "en": "Are there any questions?"}}
+{"sentenceOnly": true, "wordId": "asimismo", "sent": {"es": "{Asimismo}, yo te bendigo este día.", "en": "I likewise bless you this day."}}
+{"sentenceOnly": true, "wordId": "entonces", "sent": {"es": "Si no ahora, ¿{entonces} cuándo?", "en": "Not now, then when?"}}
+{"sentenceOnly": true, "wordId": "esto", "sent": {"es": "Gracias por {esto}.", "en": "Thank you for this."}}
+{"sentenceOnly": true, "wordId": "eso", "sent": {"es": "De {eso} nada.", "en": "No way."}}
+{"sentenceOnly": true, "wordId": "desde", "sent": {"es": "No sé de ella {desde} entonces.", "en": "I have not heard from her since then."}}
+{"sentenceOnly": true, "wordId": "para", "sent": {"es": "Ver {para} creer.", "en": "To see is to believe."}}
+{"sentenceOnly": true, "wordId": "por", "sent": {"es": "¿Pero {por} qué?", "en": "But why?"}}
+{"sentenceOnly": true, "wordId": "placer", "sent": {"es": "Primero el trabajo, después el {placer}.", "en": "Business before pleasure."}}
+{"sentenceOnly": true, "wordId": "dime", "sent": {"es": "{Dime} qué hacer.", "en": "Tell me what to do."}}
+{"sentenceOnly": true, "wordId": "llamando", "sent": {"es": "Estaba {llamando} a mi amigo.", "en": "I was calling my friend."}}
+{"sentenceOnly": true, "wordId": "salida", "sent": {"es": "No hay {salida}.", "en": "There's no way out."}}
+{"sentenceOnly": true, "wordId": "pedir", "sent": {"es": "No sé qué {pedir}.", "en": "I don't know what to order."}}
+{"sentenceOnly": true, "wordId": "poder", "sent": {"es": "Yo trabajo hasta más no {poder}.", "en": "I work until I can't anymore."}}
+{"sentenceOnly": true, "wordId": "viajar", "sent": {"es": "No hay nada como {viajar} en avión.", "en": "There is nothing like air travel."}}
+{"sentenceOnly": true, "wordId": "trabajar", "sent": {"es": "Desayuno antes de {trabajar}.", "en": "I eat breakfast before work."}}
+{"sentenceOnly": true, "wordId": "alquilar", "sent": {"es": "Él decidió {alquilar} su propiedad a esa empresa.", "en": "He decided to rent his property to that company."}}
+{"sentenceOnly": true, "wordId": "aprender", "sent": {"es": "Todavía hay mucho por {aprender}.", "en": "There's still a lot to learn."}}
+{"sentenceOnly": true, "wordId": "salir", "sent": {"es": "¿Listo para {salir}?", "en": "Are you ready to go?"}}
+{"sentenceOnly": true, "wordId": "llegar", "sent": {"es": "{Llegar} a casa.", "en": "Arrive home."}}
+{"sentenceOnly": true, "wordId": "usar", "sent": {"es": "Yo sé {usar} esto.", "en": "I know how to use this."}}
+{"sentenceOnly": true, "wordId": "extender", "sent": {"es": "Me gustaría {extender} mi estancia hasta el domingo.", "en": "I'd like to extend my stay through Sunday."}}
+{"sentenceOnly": true, "wordId": "conseguir", "sent": {"es": "Hoy no se puede {conseguir} nada sin dinero.", "en": "Nowadays you can't get anything without money."}}
+{"sentenceOnly": true, "wordId": "caminar", "sent": {"es": "Solía {caminar} a lo largo de ese río.", "en": "I used to often take walks along that river."}}
+{"sentenceOnly": true, "wordId": "esperar", "sent": {"es": "Gracias por {esperar}.", "en": "Thanks for waiting."}}
+{"sentenceOnly": true, "wordId": "ser", "sent": {"es": "¿{Ser} o no ser?", "en": "To be or not to be?"}}
+{"sentenceOnly": true, "wordId": "estar", "sent": {"es": "No sé si {estar} contento o no.", "en": "I don't know whether to be happy or not."}}
+{"sentenceOnly": true, "wordId": "hacer", "sent": {"es": "Dime qué {hacer}.", "en": "Tell me what to do."}}
+{"sentenceOnly": true, "wordId": "tener", "sent": {"es": "¿Hay manera de ganar dinero sin {tener} que trabajar?", "en": "Is there a way to make money without having to work?"}}
+{"sentenceOnly": true, "wordId": "ir", "sent": {"es": "No sé si {ir} a casa.", "en": "I do not know whether to go home."}}
+{"sentenceOnly": true, "wordId": "hablar", "sent": {"es": "Mejor no {hablar}.", "en": "You'd better not speak."}}
+{"sentenceOnly": true, "wordId": "coger", "sent": {"es": "¿Dónde puedo {coger} mi pasaje de avión?", "en": "Where can I pick up my airplane ticket?"}}
+{"sentenceOnly": true, "wordId": "vivir", "sent": {"es": "Como para {vivir}.", "en": "I eat to live."}}
+{"sentenceOnly": true, "wordId": "traer", "sent": {"es": "Me olvidé de {traer} algo con que escribir.", "en": "I forgot to bring something to write with."}}
+{"sentenceOnly": true, "wordId": "beber", "sent": {"es": "¿Qué hay para {beber}?", "en": "What's there to drink?"}}
+{"sentenceOnly": true, "wordId": "necesitar", "sent": {"es": "Voy a {necesitar} más dinero que esto.", "en": "I'm going to need more money than this."}}
+{"sentenceOnly": true, "wordId": "tocar", "sent": {"es": "Yo no sé {tocar} el piano, pero ella sí.", "en": "I can't play the piano, but she can."}}
+{"sentenceOnly": true, "wordId": "querer", "sent": {"es": "¿Qué hay de mal {querer} dormir para siempre?", "en": "What's wrong with wanting to sleep forever?"}}
+{"sentenceOnly": true, "wordId": "deber", "sent": {"es": "Mi {deber} siempre se antepone a mí.", "en": "My duty is always before me."}}
+{"sentenceOnly": true, "wordId": "poner", "sent": {"es": "Me tengo que {poner} mi ropa de trabajo.", "en": "I have to change into my work clothes."}}
+{"sentenceOnly": true, "wordId": "buscar", "sent": {"es": "Ya no sé dónde {buscar}.", "en": "I don't know where to look anymore."}}
+{"sentenceOnly": true, "wordId": "encontrar", "sent": {"es": "Sé dónde {encontrar} agua.", "en": "I know where to find water."}}
+{"sentenceOnly": true, "wordId": "dormir", "sent": {"es": "Siempre me baño antes de {dormir}.", "en": "I always take a bath before going to bed."}}
+{"sentenceOnly": true, "wordId": "saber", "sent": {"es": "Antes de hacer eso, hay algo que necesitas {saber}.", "en": "Before you do that, there is something you need to know."}}
+{"sentenceOnly": true, "wordId": "dar", "sent": {"es": "Dime si se lo vas a {dar} o no.", "en": "Tell me if you're going to give it to him or not."}}
+{"sentenceOnly": true, "wordId": "comer", "sent": {"es": "Hora de {comer}.", "en": "It's time to eat."}}
+{"sentenceOnly": true, "wordId": "venir", "sent": {"es": "Gracias por {venir}.", "en": "Thank you for coming."}}
+{"sentenceOnly": true, "wordId": "decir", "sent": {"es": "No sé qué {decir}.", "en": "I don't know what to say."}}
+{"sentenceOnly": true, "wordId": "prestar", "sent": {"es": "¿Le podrías {prestar} dinero a mi hermano?", "en": "Could you loan money to my brother?"}}
+{"sentenceOnly": true, "wordId": "hambre", "sent": {"es": "No hay mejor salsa que el {hambre}.", "en": "Hunger is the best sauce."}}
+{"sentenceOnly": true, "wordId": "hombre", "sent": {"es": "Él es el último {hombre} en hacer algo así.", "en": "He is the last man to do such a thing."}}
+{"sentenceOnly": true, "wordId": "mujer", "sent": {"es": "En el mundo, hay más {mujeres} que hombres.", "en": "There are more women than men in the world."}}
+{"sentenceOnly": true, "wordId": "nino", "sent": {"es": "Tú también, {niño}.", "en": "You as well, child."}}
+{"sentenceOnly": true, "wordId": "nina", "sent": {"es": "Solo hay tres {niñas} en la clase.", "en": "There are only three girls in the class."}}
+{"sentenceOnly": true, "wordId": "gente", "sent": {"es": "No hay sólo {gente} amable en el mundo.", "en": "There aren't only nice people in the world."}}
+{"sentenceOnly": true, "wordId": "persona", "sent": {"es": "Cada {persona} cuenta.", "en": "Every person counts."}}
+{"sentenceOnly": true, "wordId": "amigo", "sent": {"es": "¡Hola, viejo {amigo}!", "en": "Hello, old friend!"}}
+{"sentenceOnly": true, "wordId": "familia", "sent": {"es": "¿Qué tal tu {familia}?", "en": "How's your family?"}}
+{"sentenceOnly": true, "wordId": "madre", "sent": {"es": "Mi {madre} cocina bien.", "en": "My mother cooks well."}}
+{"sentenceOnly": true, "wordId": "padre", "sent": {"es": "Mi {padre} nada muy bien.", "en": "My father swims very well."}}
+{"sentenceOnly": true, "wordId": "hijo", "sent": {"es": "¡Tú también, {hijo}!", "en": "You are too, son!"}}
+{"sentenceOnly": true, "wordId": "hermano", "sent": {"es": "Mi {hermano} nada bien.", "en": "My brother swims well."}}
+{"sentenceOnly": true, "wordId": "hermana", "sent": {"es": "¡Y tu {hermana}!", "en": "And your sister!"}}
+{"sentenceOnly": true, "wordId": "esposo", "sent": {"es": "Yo sé que tú quieres mucho a tu {esposo}.", "en": "I know that you love your husband a lot."}}
+{"sentenceOnly": true, "wordId": "novio", "sent": {"es": "Trabajo con su {novio}.", "en": "I work with her boyfriend."}}
+{"sentenceOnly": true, "wordId": "abuelo", "sent": {"es": "El padre de mi padre es mi {abuelo}.", "en": "My father's father is my grandfather."}}
+{"sentenceOnly": true, "wordId": "senor", "sent": {"es": "Por aquí, {señor}.", "en": "Over here, sir."}}
+{"sentenceOnly": true, "wordId": "senora", "sent": {"es": "Por aquí, {señora}.", "en": "Over here, ma'am."}}
+{"sentenceOnly": true, "wordId": "vecino", "sent": {"es": "El perro de mi {vecino} ladra.", "en": "My neighbour's dog barks."}}
+{"sentenceOnly": true, "wordId": "yo", "sent": {"es": "{Yo} no trabajo.", "en": "I do not work."}}
+{"sentenceOnly": true, "wordId": "el-pron", "sent": {"es": "{Él} se rio.", "en": "He laughed."}}
+{"sentenceOnly": true, "wordId": "ella", "sent": {"es": "{Ella} cocina bien.", "en": "She cooks well."}}
+{"sentenceOnly": true, "wordId": "ellos", "sent": {"es": "Hay que hablar con {ellos}.", "en": "You have to talk to them."}}
+{"sentenceOnly": true, "wordId": "usted", "sent": {"es": "¿{Usted} de nuevo?", "en": "You again?"}}
+{"sentenceOnly": true, "wordId": "ustedes", "sent": {"es": "¿Qué debo decir si ella pregunta por {ustedes}?", "en": "How should I answer if she inquires after you?"}}
+{"sentenceOnly": true, "wordId": "me", "sent": {"es": "{Me} baño cada mañana.", "en": "I take a bath every morning."}}
+{"sentenceOnly": true, "wordId": "te", "sent": {"es": "{Te} quiero más que a nada en el mundo.", "en": "I love you more than anything in the world."}}
+{"sentenceOnly": true, "wordId": "le", "sent": {"es": "A mi padre no {le} importa nada el dinero.", "en": "My father doesn't care about money at all."}}
+{"sentenceOnly": true, "wordId": "nos", "sent": {"es": "Nunca {nos} cuenta nada.", "en": "She never tells us anything."}}
+{"sentenceOnly": true, "wordId": "su", "sent": {"es": "Limpió {su} dormitorio.", "en": "He cleaned his room."}}
+{"sentenceOnly": true, "wordId": "ver", "sent": {"es": "{Ver} para creer.", "en": "To see is to believe."}}
+{"sentenceOnly": true, "wordId": "pensar", "sent": {"es": "Dime qué {pensar}.", "en": "Tell me what to think."}}
+{"sentenceOnly": true, "wordId": "creer", "sent": {"es": "Ver para {creer}.", "en": "To see is to believe."}}
+{"sentenceOnly": true, "wordId": "gustar", "sent": {"es": "A ella no le va a {gustar} mucho esto.", "en": "She is not going to like this very much."}}
+{"sentenceOnly": true, "wordId": "empezar", "sent": {"es": "Dime cuándo {empezar}.", "en": "Tell me when to begin."}}
+{"sentenceOnly": true, "wordId": "terminar", "sent": {"es": "Yo quiero {terminar} el trabajo por mi cuenta.", "en": "I want to finish the work on my own."}}
+{"sentenceOnly": true, "wordId": "seguir", "sent": {"es": "No sé qué camino {seguir} para conseguirlo.", "en": "I don't know how to go about getting it."}}
+{"sentenceOnly": true, "wordId": "volver", "sent": {"es": "¿Hay que {volver}?", "en": "Do we have to go back?"}}
+{"sentenceOnly": true, "wordId": "llevar", "sent": {"es": "¿Para {llevar} o para comer aquí?", "en": "For here or to go?"}}
+{"sentenceOnly": true, "wordId": "dejar", "sent": {"es": "No puedo {dejar} de pensar en lo de ayer.", "en": "I can't stop thinking about yesterday."}}
+{"sentenceOnly": true, "wordId": "pasar", "sent": {"es": "No sé lo que te va a {pasar}.", "en": "I don't know what's going to happen to you."}}
+{"sentenceOnly": true, "wordId": "quedar", "sent": {"es": "Me voy a {quedar} en casa de mi amigo.", "en": "I'm staying over at my friend's place."}}
+{"sentenceOnly": true, "wordId": "parecer", "sent": {"es": "Acabo de cambiar de {parecer}.", "en": "I've just changed my mind."}}
+{"sentenceOnly": true, "wordId": "sentir", "sent": {"es": "No te tienes que {sentir} mal por eso.", "en": "You don't have to feel bad for that."}}
+{"sentenceOnly": true, "wordId": "entender", "sent": {"es": "Gracias por {entender}.", "en": "Thank you for your understanding."}}
+{"sentenceOnly": true, "wordId": "escribir", "sent": {"es": "Él nunca olvida {escribir} a su madre cada semana.", "en": "He never forgets to write to his mother every week."}}
+{"sentenceOnly": true, "wordId": "leer", "sent": {"es": "No sé {leer}.", "en": "I can not read."}}
+{"sentenceOnly": true, "wordId": "escuchar", "sent": {"es": "Gracias por {escuchar}.", "en": "Thank you for listening."}}
+{"sentenceOnly": true, "wordId": "mirar", "sent": {"es": "No me atreví a {mirar}.", "en": "I didn't dare to look."}}
+{"sentenceOnly": true, "wordId": "abrir", "sent": {"es": "Me obligaron a {abrir} mi maleta.", "en": "I was made to open my briefcase."}}
+{"sentenceOnly": true, "wordId": "cerrar", "sent": {"es": "Gracias por {cerrar} la puerta.", "en": "Thank you for closing the door."}}
+{"sentenceOnly": true, "wordId": "comprar", "sent": {"es": "¿Para qué {comprar} algo que nunca vas a usar?", "en": "Why buy something you'll never use?"}}
+{"sentenceOnly": true, "wordId": "vender", "sent": {"es": "¿Le vas a {vender} tu casa a él?", "en": "Will you sell your house to him?"}}
+{"sentenceOnly": true, "wordId": "pagar", "sent": {"es": "En ese hotel hay que {pagar} por adelantado.", "en": "You have to pay in advance at that hotel."}}
+{"sentenceOnly": true, "wordId": "ayudar", "sent": {"es": "¿No hay algo que puedas hacer para {ayudar}?", "en": "Isn't there something you can do to help?"}}
+{"sentenceOnly": true, "wordId": "jugar", "sent": {"es": "No sé quién va a {jugar} en su lugar.", "en": "I don't know who will play in his place."}}
+{"sentenceOnly": true, "wordId": "cocinar", "sent": {"es": "No sé {cocinar}.", "en": "I don't know how to cook."}}
+{"sentenceOnly": true, "wordId": "correr", "sent": {"es": "Él puede {correr} más rápido que yo.", "en": "He is able to run faster than I am."}}
+{"sentenceOnly": true, "wordId": "llorar", "sent": {"es": "Para de {llorar}.", "en": "Now stop crying."}}
+{"sentenceOnly": true, "wordId": "reir", "sent": {"es": "No sé si {reír} o llorar.", "en": "I don't know whether to cry or to laugh."}}
+{"sentenceOnly": true, "wordId": "olvidar", "sent": {"es": "¿Por qué no te emborrachas para {olvidar}?", "en": "Why don't you get drunk to forget?"}}
+{"sentenceOnly": true, "wordId": "recordar", "sent": {"es": "Lo importante es {recordar} esto.", "en": "What is important is to keep this in mind."}}
+{"sentenceOnly": true, "wordId": "cambiar", "sent": {"es": "No hay nada que pueda hacer para {cambiar} eso.", "en": "There is nothing I can do to change that."}}
+{"sentenceOnly": true, "wordId": "mandar", "sent": {"es": "Voy a {mandar} a mi hijo a la universidad.", "en": "I am going to send my son to college."}}
+{"sentenceOnly": true, "wordId": "preguntar", "sent": {"es": "Gracias por {preguntar}.", "en": "Thanks for asking."}}
+{"sentenceOnly": true, "wordId": "contestar", "sent": {"es": "Tu pregunta es difícil de {contestar} para mí.", "en": "Your question is hard for me to answer."}}
+{"sentenceOnly": true, "wordId": "aguardar", "sent": {"es": "No me haga usted {aguardar} mucho.", "en": "Don't make me wait long."}}
+{"sentenceOnly": true, "wordId": "intentar", "sent": {"es": "No hay punto en {intentar} hacer eso hoy.", "en": "There's no point in trying to do that today."}}
+{"sentenceOnly": true, "wordId": "ganar", "sent": {"es": "¿Hay manera de {ganar} dinero sin tener que trabajar?", "en": "Is there a way to make money without having to work?"}}
+{"sentenceOnly": true, "wordId": "perder", "sent": {"es": "Tienes poco que ganar y mucho que {perder}.", "en": "You have little to gain and much to lose."}}
+{"sentenceOnly": true, "wordId": "y", "sent": {"es": "¿{Y} el amarillo?", "en": "And the yellow one?"}}
+{"sentenceOnly": true, "wordId": "o", "sent": {"es": "¿Sí {o} no?", "en": "Yes or no?"}}
+{"sentenceOnly": true, "wordId": "pero", "sent": {"es": "¿{Pero} por qué?", "en": "But why?"}}
+{"sentenceOnly": true, "wordId": "porque", "sent": {"es": "Él lo logró {porque} trabajó mucho.", "en": "He succeeded because he worked hard."}}
+{"sentenceOnly": true, "wordId": "si-cond", "sent": {"es": "{Si} no ahora, ¿entonces cuándo?", "en": "Not now, then when?"}}
+{"sentenceOnly": true, "wordId": "aunque", "sent": {"es": "Conozco a su padre, {aunque} no a ella.", "en": "I know her father, though I know not her."}}
+{"sentenceOnly": true, "wordId": "tambien", "sent": {"es": "¡Tú {también}, hijo!", "en": "You are too, son!"}}
+{"sentenceOnly": true, "wordId": "tampoco", "sent": {"es": "Yo {tampoco} sé.", "en": "I don't know either."}}
+{"sentenceOnly": true, "wordId": "muy", "sent": {"es": "{Muy} bien, gracias.", "en": "Very good, thank you."}}
+{"sentenceOnly": true, "wordId": "mucho", "sent": {"es": "Hay {mucho} dinero.", "en": "There is a lot of money."}}
+{"sentenceOnly": true, "wordId": "poco", "sent": {"es": "¿A {poco} sí?", "en": "Is that right?"}}
+{"sentenceOnly": true, "wordId": "mas", "sent": {"es": "Nada {más}, gracias.", "en": "Nothing more, thanks."}}
+{"sentenceOnly": true, "wordId": "menos", "sent": {"es": "Más o {menos}.", "en": "More or less."}}
+{"sentenceOnly": true, "wordId": "tanto", "sent": {"es": "¡Hay {tanto} que hacer!", "en": "There's too much to do!"}}
+{"sentenceOnly": true, "wordId": "siempre", "sent": {"es": "{Siempre} como afuera.", "en": "I always eat out."}}
+{"sentenceOnly": true, "wordId": "nunca", "sent": {"es": "No como {nunca}.", "en": "I never eat."}}
+{"sentenceOnly": true, "wordId": "ya", "sent": {"es": "{Ya} lo sé.", "en": "I know how it is."}}
+{"sentenceOnly": true, "wordId": "todavia", "sent": {"es": "{Todavía} no lo sé.", "en": "I don't know yet."}}
+{"sentenceOnly": true, "wordId": "solo", "sent": {"es": "No, {solo} uno.", "en": "No, just one."}}
+{"sentenceOnly": true, "wordId": "bien", "sent": {"es": "Muy {bien}, gracias.", "en": "Very good, thank you."}}
+{"sentenceOnly": true, "wordId": "mal", "sent": {"es": "Nada {mal} para empezar.", "en": "Not bad for a start."}}
+{"sentenceOnly": true, "wordId": "asi", "sent": {"es": "No hay que pensar {así}.", "en": "Let's not think like that."}}
+{"sentenceOnly": true, "wordId": "sin", "sent": {"es": "Como pollo {sin} cabeza.", "en": "Like a chicken with its head cut off."}}
+{"sentenceOnly": true, "wordId": "con", "sent": {"es": "Trabajo {con} él.", "en": "I work with him."}}
+{"sentenceOnly": true, "wordId": "sobre", "sent": {"es": "No sé nada {sobre} ella.", "en": "I know nothing about her."}}
+{"sentenceOnly": true, "wordId": "entre", "sent": {"es": "No {entre} usted.", "en": "Don't go in."}}
+{"sentenceOnly": true, "wordId": "hasta", "sent": {"es": "{Hasta} ahora bien.", "en": "So far, so good."}}
+{"sentenceOnly": true, "wordId": "durante", "sent": {"es": "Nos hicieron trabajar {durante} todo el día.", "en": "They made us work all day long."}}
+{"sentenceOnly": true, "wordId": "antes", "sent": {"es": "Cuanto {antes} mejor.", "en": "The sooner, the better."}}
+{"sentenceOnly": true, "wordId": "despues", "sent": {"es": "{Después} de usted.", "en": "After you."}}
+{"sentenceOnly": true, "wordId": "nada", "sent": {"es": "{Nada} más, gracias.", "en": "Nothing more, thanks."}}
+{"sentenceOnly": true, "wordId": "nadie", "sent": {"es": "{Nadie} se rió.", "en": "No one laughed."}}
+{"sentenceOnly": true, "wordId": "algo", "sent": {"es": "¿Hay {algo} importante?", "en": "Is it something important?"}}
+{"sentenceOnly": true, "wordId": "alguien", "sent": {"es": "¿Hay {alguien} aquí?", "en": "Is anybody here?"}}
+{"sentenceOnly": true, "wordId": "todo", "sent": {"es": "Lo sé {todo}.", "en": "I know everything."}}
+{"sentenceOnly": true, "wordId": "otro", "sent": {"es": "¿Y el {otro}?", "en": "What about the other one?"}}
+{"sentenceOnly": true, "wordId": "cada", "sent": {"es": "{Cada} persona cuenta.", "en": "Every person counts."}}
+{"sentenceOnly": true, "wordId": "mientras", "sent": {"es": "Bebe el té {mientras} esté caliente.", "en": "Drink the tea while it's hot."}}
+{"sentenceOnly": true, "wordId": "claro", "sent": {"es": "¡{Claro} que sí!", "en": "Of course!"}}
+{"sentenceOnly": true, "wordId": "casa", "sent": {"es": "Llegar a {casa}.", "en": "Arrive home."}}
+{"sentenceOnly": true, "wordId": "puerta", "sent": {"es": "¿Qué le pasó a mi {puerta}?", "en": "What happened to my door?"}}
+{"sentenceOnly": true, "wordId": "ventana", "sent": {"es": "Hay una {ventana} a tu izquierda.", "en": "There is a window on your left."}}
+{"sentenceOnly": true, "wordId": "llave", "sent": {"es": "Perdí mi {llave} cerca de aquí.", "en": "I lost my key about here."}}
+{"sentenceOnly": true, "wordId": "silla", "sent": {"es": "No te apoyes en mi {silla}.", "en": "Don't lean on my chair."}}
+{"sentenceOnly": true, "wordId": "cocina", "sent": {"es": "Ella {cocina} bien.", "en": "She cooks well."}}
+{"sentenceOnly": true, "wordId": "ropa", "sent": {"es": "No hay más que {ropa} aquí.", "en": "There is nothing here but clothing."}}
+{"sentenceOnly": true, "wordId": "luz", "sent": {"es": "No hay {luces}.", "en": "There're no lights."}}
+{"sentenceOnly": true, "wordId": "pan", "sent": {"es": "Me gusta el arroz más que el {pan}.", "en": "I like rice more than bread."}}
+{"sentenceOnly": true, "wordId": "arroz", "sent": {"es": "Cocina el {arroz}.", "en": "Cook the rice."}}
+{"sentenceOnly": true, "wordId": "carne", "sent": {"es": "No como {carne}.", "en": "I don't eat meat."}}
+{"sentenceOnly": true, "wordId": "pollo", "sent": {"es": "Como {pollo} sin cabeza.", "en": "Like a chicken with its head cut off."}}
+{"sentenceOnly": true, "wordId": "huevo", "sent": {"es": "Siempre desayuno {huevos}.", "en": "I always eat eggs for breakfast."}}
+{"sentenceOnly": true, "wordId": "fruta", "sent": {"es": "No como {fruta}.", "en": "I don't eat fruit."}}
+{"sentenceOnly": true, "wordId": "leche", "sent": {"es": "No hay nada de {leche} en el vaso.", "en": "There isn't any milk in the glass."}}
+{"sentenceOnly": true, "wordId": "cerveza", "sent": {"es": "Aquí no hay {cerveza}.", "en": "There's no beer here."}}
+{"sentenceOnly": true, "wordId": "jugo", "sent": {"es": "Quisiera {jugo} de fruta.", "en": "I would like fruit juice."}}
+{"sentenceOnly": true, "wordId": "azucar", "sent": {"es": "No hay {azúcar}.", "en": "There's no sugar."}}
+{"sentenceOnly": true, "wordId": "sal", "sent": {"es": "{Sal} ahora mismo.", "en": "Set off right now."}}
+{"sentenceOnly": true, "wordId": "sopa", "sent": {"es": "Me gusta comer {sopa} caliente.", "en": "I enjoy eating hot soup."}}
+{"sentenceOnly": true, "wordId": "desayuno", "sent": {"es": "{Desayuno} antes de trabajar.", "en": "I eat breakfast before work."}}
+{"sentenceOnly": true, "wordId": "almuerzo", "sent": {"es": "¿Desayuno, {almuerzo} o cena?", "en": "Breakfast, lunch, or dinner?"}}
+{"sentenceOnly": true, "wordId": "cena", "sent": {"es": "¿Con quién {cena} usted?", "en": "With whom are you eating dinner?"}}
+{"sentenceOnly": true, "wordId": "cuenta", "sent": {"es": "Cada persona {cuenta}.", "en": "Every person counts."}}
+{"sentenceOnly": true, "wordId": "dinero", "sent": {"es": "Hay mucho {dinero}.", "en": "There is a lot of money."}}
+{"sentenceOnly": true, "wordId": "plata", "sent": {"es": "Él siempre está corto de {plata}.", "en": "He's always short of money."}}
+{"sentenceOnly": true, "wordId": "precio", "sent": {"es": "Dime tu {precio}.", "en": "Just name your price."}}
+{"sentenceOnly": true, "wordId": "tienda", "sent": {"es": "No hay {tiendas} cerca de mi casa.", "en": "There is not a store near my house."}}
+{"sentenceOnly": true, "wordId": "mercado", "sent": {"es": "En este {mercado} hay fruta y hay carne.", "en": "There's fruit and meat in this market."}}
+{"sentenceOnly": true, "wordId": "ciudad", "sent": {"es": "¡Qué {ciudad} más grande!", "en": "What a large town!"}}
+{"sentenceOnly": true, "wordId": "pais", "sent": {"es": "¿Cuántos {países} hay en el mundo?", "en": "How many countries are there in the world?"}}
+{"sentenceOnly": true, "wordId": "mundo", "sent": {"es": "¿Qué tal todo el {mundo}?", "en": "How is everybody?"}}
+{"sentenceOnly": true, "wordId": "lugar", "sent": {"es": "Sal de este {lugar}.", "en": "Leave this place."}}
+{"sentenceOnly": true, "wordId": "carro", "sent": {"es": "No tengo {carro}, pero mi hermana sí.", "en": "I don't have a car, but my sister does."}}
+{"sentenceOnly": true, "wordId": "bus", "sent": {"es": "Va a trabajar a su oficina en {bus}.", "en": "He commutes to his office by bus."}}
+{"sentenceOnly": true, "wordId": "avion", "sent": {"es": "No hay nada como viajar en {avión}.", "en": "There is nothing like air travel."}}
+{"sentenceOnly": true, "wordId": "viaje", "sent": {"es": "¿Qué tal el {viaje}?", "en": "How was the trip?"}}
+{"sentenceOnly": true, "wordId": "maleta", "sent": {"es": "Me obligaron a abrir mi {maleta}.", "en": "I was made to open my briefcase."}}
+{"sentenceOnly": true, "wordId": "boleto", "sent": {"es": "Ella consiguió el {boleto} para nada.", "en": "She got the ticket in vain."}}
+{"sentenceOnly": true, "wordId": "hotel", "sent": {"es": "Ellos se van a encontrar mañana en el {hotel}.", "en": "They are going to meet at the hotel tomorrow."}}
+{"sentenceOnly": true, "wordId": "aeropuerto", "sent": {"es": "Trabajo en el {aeropuerto}.", "en": "I work at the airport."}}
+{"sentenceOnly": true, "wordId": "trabajo", "sent": {"es": "Yo no {trabajo}.", "en": "I do not work."}}
+{"sentenceOnly": true, "wordId": "oficina", "sent": {"es": "¡Sal de mi {oficina}!", "en": "Get out of my office."}}
+{"sentenceOnly": true, "wordId": "empresa", "sent": {"es": "Yo trabajo en esta {empresa}.", "en": "I work at this company."}}
+{"sentenceOnly": true, "wordId": "reunion", "sent": {"es": "Ellos asisten a cada {reunión}.", "en": "They attend every meeting."}}
+{"sentenceOnly": true, "wordId": "jefe", "sent": {"es": "Ella ve a su {jefe} como a su padre.", "en": "She thinks of her boss as a father."}}
+{"sentenceOnly": true, "wordId": "estudiar", "sent": {"es": "¡Para de {estudiar}!", "en": "Stop studying!"}}
+{"sentenceOnly": true, "wordId": "clase", "sent": {"es": "¿Hay {clases} mañana?", "en": "Is there school tomorrow?"}}
+{"sentenceOnly": true, "wordId": "palabra", "sent": {"es": "Cada {palabra} cuenta.", "en": "Every word counts."}}
+{"sentenceOnly": true, "wordId": "pregunta", "sent": {"es": "¿Hay alguna {pregunta}?", "en": "Are there any questions?"}}
+{"sentenceOnly": true, "wordId": "problema", "sent": {"es": "¡No hay {problema}!", "en": "No problem!"}}
+{"sentenceOnly": true, "wordId": "cosa", "sent": {"es": "Yo sé {cosas}.", "en": "I know things."}}
+{"sentenceOnly": true, "wordId": "bueno", "sent": {"es": "{Bueno}, como siempre.", "en": "Good, as always."}}
+{"sentenceOnly": true, "wordId": "malo", "sent": {"es": "¿Qué hay de {malo} en eso?", "en": "What was wrong with that?"}}
+{"sentenceOnly": true, "wordId": "grande", "sent": {"es": "¿Cómo de {grande}?", "en": "How big?"}}
+{"sentenceOnly": true, "wordId": "pequeno", "sent": {"es": "Mi hermano {pequeño} no ayuda nunca en casa.", "en": "My little brother never helps around the house."}}
+{"sentenceOnly": true, "wordId": "nuevo", "sent": {"es": "¿Usted de {nuevo}?", "en": "You again?"}}
+{"sentenceOnly": true, "wordId": "viejo", "sent": {"es": "¡Hola, {viejo} amigo!", "en": "Hello, old friend!"}}
+{"sentenceOnly": true, "wordId": "joven", "sent": {"es": "Por ser {joven}, puede trabajar todo el día.", "en": "Being young, he can work all day long."}}
+{"sentenceOnly": true, "wordId": "largo", "sent": {"es": "¡{Largo} de aquí, ahora!", "en": "Get out of here now!"}}
+{"sentenceOnly": true, "wordId": "corto", "sent": {"es": "{Corto} y cambio.", "en": "Over and out."}}
+{"sentenceOnly": true, "wordId": "alto", "sent": {"es": "Más rápido, más {alto}, más fuerte.", "en": "Faster, higher, stronger."}}
+{"sentenceOnly": true, "wordId": "bajo", "sent": {"es": "Él todavía no {baja}.", "en": "He is not down yet."}}
+{"sentenceOnly": true, "wordId": "caro", "sent": {"es": "Lo {caro} no siempre es mejor que lo barato.", "en": "Expensive is not always better than inexpensive."}}
+{"sentenceOnly": true, "wordId": "barato", "sent": {"es": "¿Hay algo {barato} aquí?", "en": "Is there anything cheap in here?"}}
+{"sentenceOnly": true, "wordId": "facil", "sent": {"es": "Hoy en día no es {fácil} encontrar trabajo.", "en": "It's not easy to find work nowadays."}}
+{"sentenceOnly": true, "wordId": "dificil", "sent": {"es": "Tu pregunta es {difícil} de contestar para mí.", "en": "Your question is hard for me to answer."}}
+{"sentenceOnly": true, "wordId": "rapido", "sent": {"es": "{Rápido}, a casa.", "en": "Hurry home."}}
+{"sentenceOnly": true, "wordId": "lento", "sent": {"es": "{Lento} pero seguro.", "en": "Slow and steady wins the race."}}
+{"sentenceOnly": true, "wordId": "caliente", "sent": {"es": "¿Hay agua {caliente}?", "en": "Is there hot water?"}}
+{"sentenceOnly": true, "wordId": "frio", "sent": {"es": "¿Hay alguien en quien confiar en este {frío} lugar?", "en": "Is there anyone you can trust in this cold place?"}}
+{"sentenceOnly": true, "wordId": "limpio", "sent": {"es": "{Limpia} tu habitación.", "en": "Clean your room."}}
+{"sentenceOnly": true, "wordId": "sucio", "sent": {"es": "¡No bebas agua en el vaso {sucio}!", "en": "Do not drink the water in the dirty glass!"}}
+{"sentenceOnly": true, "wordId": "bonito", "sent": {"es": "Ella no es más {bonita} que su madre.", "en": "She's not prettier than her mother."}}
+{"sentenceOnly": true, "wordId": "feo", "sent": {"es": "¡Qué gato {feo}!", "en": "What an ugly cat."}}
+{"sentenceOnly": true, "wordId": "importante", "sent": {"es": "¿Hay algo {importante}?", "en": "Is it something important?"}}
+{"sentenceOnly": true, "wordId": "posible", "sent": {"es": "Uno tiene que hacer todo lo mejor {posible}.", "en": "One has to do one's best in everything."}}
+{"sentenceOnly": true, "wordId": "seguro", "sent": {"es": "Lento pero {seguro}.", "en": "Slow and steady wins the race."}}
+{"sentenceOnly": true, "wordId": "amarillo", "sent": {"es": "¿Y el {amarillo}?", "en": "And the yellow one?"}}
+{"sentenceOnly": true, "wordId": "rojo", "sent": {"es": "El verde no casa con el {rojo}.", "en": "Green doesn't go with red."}}
+{"sentenceOnly": true, "wordId": "verde", "sent": {"es": "El {verde} no casa con el rojo.", "en": "Green doesn't go with red."}}
+{"sentenceOnly": true, "wordId": "azul", "sent": {"es": "¿Quieres el verde o el {azul}?", "en": "Do you want the green or the blue?"}}
+{"sentenceOnly": true, "wordId": "negro", "sent": {"es": "En mi dormitorio todo es blanco y {negro}.", "en": "Everything is black and white in my bedroom."}}
+{"sentenceOnly": true, "wordId": "blanco", "sent": {"es": "Solo como carne {blanca}.", "en": "I only eat white meat."}}
+{"sentenceOnly": true, "wordId": "contento", "sent": {"es": "No sé si estar {contento} o no.", "en": "I don't know whether to be happy or not."}}
+{"sentenceOnly": true, "wordId": "enojado", "sent": {"es": "Su novio estaba muy {enojado} con ella.", "en": "Her boyfriend was really angry at her."}}
+{"sentenceOnly": true, "wordId": "preocupado", "sent": {"es": "Él no parecía estar {preocupado} por eso.", "en": "He didn't seem to be worried about this."}}
+{"sentenceOnly": true, "wordId": "nervioso", "sent": {"es": "Estoy muy {nervioso} como para comer algo.", "en": "I'm too nervous to eat anything."}}
+{"sentenceOnly": true, "wordId": "aburrido", "sent": {"es": "Él estaba {aburrido} de su familia.", "en": "He was bored with his family."}}
+{"sentenceOnly": true, "wordId": "enfermo", "sent": {"es": "¡Aquí hay gente muy {enferma}!", "en": "There are very sick people here!"}}
+{"sentenceOnly": true, "wordId": "dolor", "sent": {"es": "Ya se me quitó el {dolor} de cabeza.", "en": "My headache has gone."}}
+{"sentenceOnly": true, "wordId": "cabeza", "sent": {"es": "Como pollo sin {cabeza}.", "en": "Like a chicken with its head cut off."}}
+{"sentenceOnly": true, "wordId": "mano", "sent": {"es": "Esa casa ya cambió de {mano} el año pasado.", "en": "This house already changed hands last year."}}
+{"sentenceOnly": true, "wordId": "ojo", "sent": {"es": "{Ojo} con ella.", "en": "Keep an eye on her."}}
+{"sentenceOnly": true, "wordId": "pie", "sent": {"es": "Viajé a {pie}.", "en": "I traveled on foot."}}
+{"sentenceOnly": true, "wordId": "doler", "sent": {"es": "Te prometo que no te va a {doler}.", "en": "It won't hurt, I promise."}}
+{"sentenceOnly": true, "wordId": "medico", "sent": {"es": "¿Te dio el {médico} algo para el dolor?", "en": "Did the doctor give you anything for the pain?"}}
+{"sentenceOnly": true, "wordId": "uno", "sent": {"es": "No, solo {uno}.", "en": "No, just one."}}
+{"sentenceOnly": true, "wordId": "dos", "sent": {"es": "¡Uno, {dos}, tres!", "en": "One, two, three!"}}
+{"sentenceOnly": true, "wordId": "tres", "sent": {"es": "¡Uno, dos, {tres}!", "en": "One, two, three!"}}
+{"sentenceOnly": true, "wordId": "cuatro", "sent": {"es": "Uno, dos, tres, {cuatro}, cinco.", "en": "One, two, three, four, five."}}
+{"sentenceOnly": true, "wordId": "cinco", "sent": {"es": "Uno, dos, tres, cuatro, {cinco}.", "en": "One, two, three, four, five."}}
+{"sentenceOnly": true, "wordId": "diez", "sent": {"es": "Cuenta de uno a {diez}.", "en": "Count from one to ten."}}
+{"sentenceOnly": true, "wordId": "veinte", "sent": {"es": "No me cayó el {veinte} hasta mucho después.", "en": "I didn't realise it until much later."}}
+{"sentenceOnly": true, "wordId": "cien", "sent": {"es": "Cuenta hasta {cien}.", "en": "Count to one hundred."}}
+{"sentenceOnly": true, "wordId": "mil", "sent": {"es": "Fue en el año dos {mil}.", "en": "This was in year two thousand."}}
+{"sentenceOnly": true, "wordId": "primero", "sent": {"es": "No sé qué hacer {primero}.", "en": "I don't know what to do first."}}
+{"sentenceOnly": true, "wordId": "ultimo", "sent": {"es": "Lo {último} pero no menos importante ....", "en": "Last but not least ...."}}
+{"sentenceOnly": true, "wordId": "medio", "sent": {"es": "Ella volvió después de más o menos {media} hora.", "en": "She came back in about thirty minutes."}}
+{"sentenceOnly": true, "wordId": "ahora", "sent": {"es": "Sal {ahora} mismo.", "en": "Set off right now."}}
+{"sentenceOnly": true, "wordId": "hoy", "sent": {"es": "Gracias por {hoy}.", "en": "Thank you for today."}}
+{"sentenceOnly": true, "wordId": "manana", "sent": {"es": "¿Qué tal {mañana}?", "en": "How about tomorrow?"}}
+{"sentenceOnly": true, "wordId": "ayer", "sent": {"es": "Gracias por lo de {ayer}.", "en": "Thanks for yesterday."}}
+{"sentenceOnly": true, "wordId": "noche", "sent": {"es": "¿Qué tal tu {noche}?", "en": "How was your night?"}}
+{"sentenceOnly": true, "wordId": "dia", "sent": {"es": "¡Pero qué {día}!", "en": "What a day!"}}
+{"sentenceOnly": true, "wordId": "semana", "sent": {"es": "Él nunca olvida escribir a su madre cada {semana}.", "en": "He never forgets to write to his mother every week."}}
+{"sentenceOnly": true, "wordId": "mes", "sent": {"es": "Yo le escribí a ella el {mes} pasado.", "en": "I wrote to her last month."}}
+{"sentenceOnly": true, "wordId": "ano", "sent": {"es": "Feliz {año} nuevo.", "en": "Happy New Year!"}}
+{"sentenceOnly": true, "wordId": "hora", "sent": {"es": "¿A qué {hora}?", "en": "What time?"}}
+{"sentenceOnly": true, "wordId": "minuto", "sent": {"es": "Cada {minuto} cuenta.", "en": "Every minute counts."}}
+{"sentenceOnly": true, "wordId": "temprano", "sent": {"es": "Gracias por venir {temprano}.", "en": "Thank you for coming early."}}
+{"sentenceOnly": true, "wordId": "tarde", "sent": {"es": "Perdón por llegar {tarde}.", "en": "Excuse me for being late."}}
+{"sentenceOnly": true, "wordId": "proximo", "sent": {"es": "El {próximo} viaje será de placer, no de trabajo.", "en": "Our next trip is for pleasure, not for work."}}
+{"sentenceOnly": true, "wordId": "pasado", "sent": {"es": "No sabemos nada de él desde el año {pasado}.", "en": "We have not heard from him since last year."}}
+{"sentenceOnly": true, "wordId": "lluvia", "sent": {"es": "Me pilló la {lluvia} de camino a casa.", "en": "I was caught in the rain on my way home."}}
+{"sentenceOnly": true, "wordId": "sol", "sent": {"es": "Nada nuevo bajo el {sol}.", "en": "Nothing new under the sun."}}
+{"sentenceOnly": true, "wordId": "clima", "sent": {"es": "El {clima} se ponía cada vez peor.", "en": "The weather was getting worse and worse."}}
+{"sentenceOnly": true, "wordId": "rio", "sent": {"es": "Él nada en el {río}.", "en": "He swims in the river."}}
+{"sentenceOnly": true, "wordId": "montana", "sent": {"es": "Se bajó de la {montaña}.", "en": "He descended from the mountain."}}
+{"sentenceOnly": true, "wordId": "playa", "sent": {"es": "Dime cómo llegar a la {playa}.", "en": "Tell me how to get to the beach."}}
+{"sentenceOnly": true, "wordId": "arbol", "sent": {"es": "Mira a lo alto de ese {árbol}.", "en": "Look at the top of that tree."}}
+{"sentenceOnly": true, "wordId": "perro", "sent": {"es": "¡Qué {perro} más grande!", "en": "What a big dog!"}}
+{"sentenceOnly": true, "wordId": "gato", "sent": {"es": "¡Qué {gato} feo!", "en": "What an ugly cat."}}
+{"sentenceOnly": true, "wordId": "gracias", "sent": {"es": "Nada más, {gracias}.", "en": "Nothing more, thanks."}}
+{"sentenceOnly": true, "wordId": "perdon", "sent": {"es": "{Perdón} por llegar tarde.", "en": "Excuse me for being late."}}
+{"sentenceOnly": true, "wordId": "hola", "sent": {"es": "{Hola}, ¿qué tal?", "en": "Hello, how are you?"}}
+{"sentenceOnly": true, "wordId": "adios", "sent": {"es": "{Adiós}, y gracias.", "en": "Good bye, and thanks."}}
+{"sentenceOnly": true, "wordId": "de", "sent": {"es": "{De} eso nada.", "en": "No way."}}
+{"sentenceOnly": true, "wordId": "en", "sent": {"es": "¿Hay alguien {en} casa?", "en": "Is anybody home?"}}
+{"sentenceOnly": true, "wordId": "a", "sent": {"es": "Sé {a} sal.", "en": "I taste of salt."}}
+{"sentenceOnly": true, "wordId": "no", "sent": {"es": "Yo {no} trabajo.", "en": "I do not work."}}
+{"sentenceOnly": true, "wordId": "hay", "sent": {"es": "¿{Hay} algo importante?", "en": "Is it something important?"}}
+{"sentenceOnly": true, "wordId": "lo", "sent": {"es": "{Lo} sé todo.", "en": "I know everything."}}
+{"sentenceOnly": true, "wordId": "se", "sent": {"es": "Él {se} rio.", "en": "He laughed."}}
+{"sentenceOnly": true, "wordId": "este", "sent": {"es": "Sal de {este} lugar.", "en": "Leave this place."}}
+{"sentenceOnly": true, "wordId": "ese", "sent": {"es": "A {ese} precio no se puede comprar el pollo.", "en": "You can't buy chicken at that price."}}

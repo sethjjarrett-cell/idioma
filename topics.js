@@ -137,6 +137,24 @@ const TOPICS = [
     words: [],
   },
   {
+    id: "leisure",
+    name: "Music, film and sport",
+    blurb: "What people do when they are not working.",
+    words: [],
+  },
+  {
+    id: "clothes",
+    name: "Clothes",
+    blurb: "What you are wearing, and what you are buying.",
+    words: [],
+  },
+  {
+    id: "tech",
+    name: "Phones and screens",
+    blurb: "The handful of words that did not exist a century ago.",
+    words: [],
+  },
+  {
     id: "feelings",
     name: "Feelings",
     blurb: "How someone is, as opposed to what they are like.",

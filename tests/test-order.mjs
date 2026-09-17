@@ -59,8 +59,10 @@ ok('and it is the first words in the list',
 function walk(hitRate, rounds) {
   const prg = {}; const f = (id) => (prg[id] ||= E.freshProgress());
   let met = 0, shortest = 99, overCap = 0, newWhileFull = 0, lateArrivals = 0;
+  let endedFull = false;
   for (let r = 0; r < rounds; r++) {
     const settlingBefore = E.stillSettling(bank, f);
+    if (r === rounds - 1) endedFull = settlingBefore >= E.CONFIG.LEARNING_CAP;
     const round = E.pickRound(bank, f, '2026-09-17T12:00:00Z', 15, { rankOf });
     const fresh = round.filter(w => !f(w.id).timesSeen).length;
     if (r > 3) shortest = Math.min(shortest, round.length);
@@ -74,7 +76,7 @@ function walk(hitRate, rounds) {
         : (Math.random() < hitRate ? 'correct' : 'wrong'), '2026-09-17T12:00:00Z').progress;
     }
   }
-  return { met, shortest, overCap, newWhileFull, lateArrivals };
+  return { met, shortest, overCap, newWhileFull, lateArrivals, endedFull };
 }
 
 console.log('--- a learner walking through it ---');
@@ -84,8 +86,20 @@ for (const rate of [0.9, 0.7, 0.5]) {
     + ` (${(w.met / 60).toFixed(1)} a round)`);
   ok(`at ${rate * 100}% right, never more new in a round than the cap allows`, w.overCap === 0);
   ok(`at ${rate * 100}% right, none arrive while a capful is unsettled`, w.newWhileFull === 0);
-  ok(`at ${rate * 100}% right, it never stalls for good`, w.lateArrivals > 0,
-    'nothing new in the last ten rounds');
+  /* A learner getting half of everything wrong will fill the cap and stop
+     receiving new words, and that is the rule working rather than failing:
+     a twenty-first word helps nobody who cannot get past twenty. So the
+     assertion is that new words keep coming OR the cap is genuinely full,
+     not that they always keep coming. Anything else would be asserting a
+     wish. At 70% and above it must not stall at all. */
+  if (rate >= 0.7) {
+    ok(`at ${rate * 100}% right, new words keep coming`, w.lateArrivals > 0,
+      'nothing new in the last ten rounds');
+  } else {
+    ok(`at ${rate * 100}% right, it only stops when the learner is full up`,
+      w.lateArrivals > 0 || w.endedFull,
+      'stopped without the cap being full, which would be a bug');
+  }
   ok(`at ${rate * 100}% right, rounds reach full length`, w.shortest === 15,
     'shortest was ' + w.shortest);
 }
