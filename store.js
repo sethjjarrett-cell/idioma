@@ -4,7 +4,7 @@
    Shape of the saved state:
      {
        version, savedAt,
-       settings: { typoTolerance, roundSize },
+       settings: { typoTolerance, introduceNew, roundSize },
        progress: { [wordId]: { level, correctStreak, totalCorrect,
                                totalWrong, lastSeen, timesSeen, enabled } },
        customWords: [ ...same shape as a seed word ],
@@ -27,6 +27,7 @@ function defaultState() {
     savedAt: null,
     settings: {
       typoTolerance: false,          // off by default, as the brief asks
+      introduceNew: true,            // a word you have not met is shown first
       roundSize: Engine.CONFIG.ROUND_SIZE,
     },
     progress: {},

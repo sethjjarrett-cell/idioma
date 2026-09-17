@@ -23,6 +23,18 @@ const CONFIG = {
 
   ROUND_SIZE: 15,
 
+  /* A word you have never met cannot be tested, only guessed at, so the
+     first time it comes up it is shown rather than asked: the word, what it
+     means, how to say it, and a sentence with it still in place. Testing
+     starts the time after.
+
+     The cap stops a round becoming all teaching. Five new words and ten you
+     have already met is a round you can actually do; fifteen words you have
+     never seen is a vocabulary list. On a fresh bank there is nothing seen
+     to fill up with, so the cap gives way rather than shortening the round. */
+  INTRODUCE_UNTIL_SEEN: 1,
+  MAX_NEW_PER_ROUND: 5,
+
   /* Selection weight = level part + recency part, floored.
 
      The level part gives a struggling word up to ten times the pull of a
@@ -74,6 +86,7 @@ const CONFIG = {
 };
 
 const BANDS = {
+  intro: { key: "intro", label: "New word", blurb: "Shown, not asked" },
   recognition: { key: "recognition", label: "Recognition", blurb: "Spanish shown, type the English" },
   production: { key: "production", label: "Production", blurb: "English shown, type the Spanish" },
   cloze: { key: "cloze", label: "Cloze", blurb: "Sentence shown, type the missing word" },
@@ -127,6 +140,9 @@ function applyResult(progress, outcome, now) {
     // word stays put and keeps its streak, so the next right answer moves it.
     const heldAtBoundary = isBoundaryLevel(p.level) && p.correctStreak < CONFIG.BOUNDARY_STREAK;
     if (!heldAtBoundary) p.level = Math.min(CONFIG.LEVEL_CEILING, p.level + 1);
+  } else if (result === "seen") {
+    // An introduction is not an answer. It marks the word met, so it is not
+    // introduced again, and touches nothing else.
   } else if (result === "almost") {
     // An answer one slip from the mark should not cost a level, and should
     // not buy one either: the word holds exactly where it was. The streak
@@ -170,12 +186,9 @@ function selectionWeight(progress, now) {
   return Math.max(CONFIG.WEIGHT_FLOOR, levelPart + recencyPart);
 }
 
-/* Draw `count` distinct words by weight. Drawing without replacement
-   stops one heavily weighted word filling the round on its own. */
-function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE) {
-  const pool = words
-    .filter((w) => progressFor(w.id).enabled !== false)
-    .map((w) => ({ word: w, weight: selectionWeight(progressFor(w.id), now) }));
+/* Draw `count` distinct words by weight, without replacement so that one
+   heavily weighted word cannot fill the round on its own. */
+function drawFrom(pool, count) {
   const picked = [];
   const remaining = pool.slice();
   const n = Math.min(count, remaining.length);
@@ -194,6 +207,31 @@ function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE) {
   return picked;
 }
 
+/* A round, with at most `maxNew` words in it that have never been seen.
+
+   Drawn in three passes: the new words up to the cap, then the words already
+   met, then back to the new ones if there were not enough of the others. The
+   last pass is what keeps a round full-length on a fresh bank, where every
+   word is new and a cap with nothing to fall back on would just make the
+   round short. */
+function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE, options = {}) {
+  const maxNew = options.maxNew === undefined ? CONFIG.MAX_NEW_PER_ROUND : options.maxNew;
+  const entry = (w) => ({ word: w, weight: selectionWeight(progressFor(w.id), now) });
+  const enabled = words.filter((w) => progressFor(w.id).enabled !== false);
+  const isNew = (w) => !progressFor(w.id).timesSeen;
+
+  const fresh = enabled.filter(isNew).map(entry);
+  const met = enabled.filter((w) => !isNew(w)).map(entry);
+
+  const picked = drawFrom(fresh, Math.min(maxNew, count));
+  const taken = new Set(picked.map((w) => w.id));
+  picked.push(...drawFrom(met, count - picked.length));
+  if (picked.length < count) {
+    picked.push(...drawFrom(fresh.filter((e) => !taken.has(e.word.id)), count - picked.length));
+  }
+  return picked;
+}
+
 /* ---------------------------------------------------------------
    Building a card
    --------------------------------------------------------------- */
@@ -201,7 +239,11 @@ function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE) {
 /* Decide what to ask for a word at its current level. A cloze word with
    no sentence falls back to production and says so, which is what the
    Manage screen flags. */
-function buildCard(word, progress, sentencesForWord) {
+function buildCard(word, progress, sentencesForWord, options = {}) {
+  // A word not yet met is shown rather than asked, whatever level it is at.
+  if (options.introduce !== false && progress.timesSeen < CONFIG.INTRODUCE_UNTIL_SEEN) {
+    return introCard(word, sentencesForWord);
+  }
   const band = bandForLevel(progress.level);
 
   if (band.key === BANDS.cloze.key) {
@@ -231,6 +273,23 @@ function buildCard(word, progress, sentencesForWord) {
     accepted: word.en.slice(),
     reveal: word.en.join(", "),
     revealContext: word.es,
+  };
+}
+
+/* The teaching card: everything about the word at once, and nothing to type.
+   The sentence keeps the word in place rather than blanking it, because the
+   point here is to show the word working, not to test whether it is known. */
+function introCard(word, sentencesForWord) {
+  const pool = sentencesForWord(word.id);
+  const s = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  return {
+    word, band: BANDS.intro, intro: true, fellBack: false, sentence: s,
+    prompt: word.es,
+    promptHint: word.pos,
+    accepted: [],                       // there is nothing to answer
+    reveal: word.en.join(", "),
+    revealContext: "",
+    example: s ? { es: s.es.replace(/\{([^}]*)\}/, "$1"), en: s.en, target: s.answer } : null,
   };
 }
 
@@ -497,6 +556,6 @@ function checkAnswer(typed, accepted, options = {}) {
    step and no module loader, which is the point. */
 window.Engine = {
   CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult,
-  selectionWeight, pickRound, buildCard, normalise, fold, checkAnswer,
+  selectionWeight, pickRound, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
 };

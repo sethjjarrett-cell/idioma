@@ -75,10 +75,13 @@ ok('no sentence id collides with a seeded one',
 
 console.log('--- the app can build a card from any of it ---');
 const sentencesFor = (id) => sentences.filter(s => s.wordId === id);
+// Met at least once: a word that has not been is introduced rather than
+// asked, and is checked separately below.
+const met = (level) => ({ ...E.freshProgress(), level, timesSeen: 1 });
 let built = 0;
 for (const w of words) {
   for (const level of [1, 5, 9]) {
-    const card = E.buildCard(w, { ...E.freshProgress(), level }, sentencesFor);
+    const card = E.buildCard(w, met(level), sentencesFor);
     if (!card.prompt || !card.accepted.length || !card.accepted[0]) {
       ok(`card for ${w.es} at L${level}`, false, JSON.stringify(card).slice(0, 120));
       built = -1e9;
@@ -88,8 +91,29 @@ for (const w of words) {
 }
 ok(`every word builds a card in all three bands (${built} cards)`, built === words.length * 3);
 ok('a cloze card blanks the target out',
-  E.buildCard(words.find(w => sentencesFor(w.id).length), { ...E.freshProgress(), level: 9 }, sentencesFor)
+  E.buildCard(words.find(w => sentencesFor(w.id).length), met(9), sentencesFor)
     .prompt.includes('_____'));
+ok('no word ever falls back out of cloze, because they all have a sentence',
+  !words.some(w => E.buildCard(w, met(9), sentencesFor).fellBack),
+  words.filter(w => E.buildCard(w, met(9), sentencesFor).fellBack).map(w => w.es).join(', '));
+
+console.log('--- and can introduce any of it ---');
+let intros = 0;
+for (const w of words) {
+  const c = E.buildCard(w, E.freshProgress(), sentencesFor);
+  if (!c.intro || !c.prompt || !c.reveal || !c.example) {
+    ok(`introduction for ${w.es}`, false, JSON.stringify(c).slice(0, 140));
+    intros = -1e9;
+  }
+  intros++;
+}
+ok(`every word introduces with a meaning and an example (${intros})`, intros === words.length);
+ok('the example keeps the word in place rather than blanking it',
+  words.every(w => {
+    const c = E.buildCard(w, E.freshProgress(), sentencesFor);
+    return !c.example.es.includes('_____') && !c.example.es.includes('{')
+      && c.example.es.includes(c.example.target);
+  }));
 ok('typing the sentence form back answers the cloze card',
   VOCAB.sentences.every(s => E.checkAnswer(s.answer, [s.answer]).correct));
 

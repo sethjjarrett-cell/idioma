@@ -245,6 +245,10 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
   background: var(--accent-soft); border-radius: 999px; padding: 4px 11px;
 }
 .card-head .mono { margin-left: auto; font-weight: 700; }
+/* A new word is not a band you have climbed to, so it is not badged like one. */
+.card.teaching .band {
+  color: var(--text); background: var(--line); border-color: var(--line2);
+}
 
 .prompt { font: 800 28px/1.3 var(--round); margin: 0 0 6px; word-break: break-word; letter-spacing: -0.4px; }
 .prompt .blank { color: var(--accent); letter-spacing: 2px; }
@@ -252,6 +256,26 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
 #answer-form { display: flex; gap: 10px; margin-top: 18px; }
 #answer { font-size: 17px; font-weight: 600; }
 #answer-form .btn { flex: none; }
+
+/* The teaching card. Quieter than a verdict: nothing has happened yet, so
+   nothing is coloured right or wrong. The meaning is the loud part, because
+   it is the thing being taught. */
+.teach { margin-top: 14px; }
+.teach-meaning {
+  font: 800 21px/1.4 var(--round); margin: 0 0 6px; color: var(--accent-deep);
+  word-break: break-word;
+}
+.teach .say { margin: 0 0 10px; }
+.teach .note { margin: 0 0 12px; }
+.teach-example {
+  background: var(--panel2); border: 2px solid var(--line);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
+}
+.teach-es { font: 600 17px/1.5 var(--round); margin: 0 0 4px; }
+/* The word itself, picked out of the sentence so the eye lands on it. */
+.teach-es b { color: var(--accent-deep); background: var(--accent-soft);
+  border-radius: 6px; padding: 1px 5px; }
+.teach-example p:last-child { margin: 0; }
 
 /* The verdict bleeds to the card edges and takes the colour of the result,
    so the answer to "was I right" is the shape of the screen, not text. */
@@ -530,19 +554,13 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .brand span { display: none; }
   .top { gap: 8px; padding: 0 10px; }
   .tab { padding: 6px 9px; font-size: 11px; letter-spacing: 0.01em; }
-  /* Five tabs will not fit a phone, so the strip scrolls sideways and says
-     so with a fade at the edge rather than just cutting a word in half. */
+  /* Five tabs do not fit a phone at any width, so the strip scrolls sideways
+     and says so with a fade at the edge rather than cutting a word in half.
+     Hiding the brand does not change that, so the fox stays. */
   .tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
           mask-image: linear-gradient(90deg, #000 85%, transparent); }
   table.conj { min-width: 380px; font-size: 13px; }
   .example b { min-width: 0; }
-}
-
-/* Below about 380px the three tabs and the brand cannot both fit, and a
-   half-cut "Progress" looks broken. The tabs win; the fox is on the card
-   anyway. */
-@media (max-width: 400px) {
-  .brand { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
