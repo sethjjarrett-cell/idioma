@@ -6,6 +6,20 @@ let pe = 0; p.on('pageerror', e => { pe++; console.log('  !! PAGEERROR:', e.mess
 p.on('console', m => { if (m.type() === 'error') console.log('  !! CONSOLE:', m.text().slice(0,140)); });
 
 // Opened straight from disk, which is how the brief says it should work.
+// A learner who has already met a chunk of the bank. Written in rather than
+// practised in, because what these checks are about is answering cards, and a
+// fresh bank now opens with introductions instead.
+async function seedMetWords(page, howMany = 40, level = 2) {
+  await page.evaluate(({ howMany, level }) => {
+    const st = window.Idioma.state;
+    for (const w of window.Idioma.Store.allWords(st).slice(0, howMany)) {
+      st.progress[w.id] = { ...window.Idioma.Engine.freshProgress(), level, timesSeen: 3,
+        lastSeen: new Date(Date.now() - 864e5).toISOString() };
+    }
+    window.Idioma.Store.saveNow(st);
+  }, { howMany, level });
+}
+
 await p.goto('file:///home/user/idioma/index.html');
 await p.waitForTimeout(400);
 console.log('opens on file:// :', await p.title());
@@ -13,6 +27,7 @@ console.log('tabs:', await p.$$eval('.tab', ns => ns.map(n => n.textContent.trim
 console.log('start blurb:', (await p.textContent('#start-blurb')).trim());
 
 // --- a full round ---
+await seedMetWords(p);
 await p.click('#btn-start');
 await p.waitForTimeout(250);
 let seen = [], bands = new Set();

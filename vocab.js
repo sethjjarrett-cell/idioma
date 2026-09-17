@@ -10,7 +10,7 @@
    blanks it out and the answer is the form as written, inflected, because the
    learner types what the sentence needs rather than the dictionary form.
 
-   252 words, 285 sentences. Generated in batches and
+   261 words, 294 sentences. Generated in batches and
    checked by tests/test-bank.mjs, which fails on a duplicate, a missing
    field, an unknown topic, or a braced form that is not a form of its word.
    Those checks settle structure, not meaning: the Spanish has been written
@@ -88,7 +88,7 @@ const VOCAB = {
     {"id":"mandar","es":"mandar","en":["to send","to order"],"pos":"verb","topic":"verbs","note":"Enviar also means send."},
     {"id":"preguntar","es":"preguntar","en":["to ask"],"pos":"verb","topic":"verbs","note":"Ask a question. pedir is ask for a thing."},
     {"id":"contestar","es":"contestar","en":["to answer","to reply"],"pos":"verb","topic":"verbs","note":"Responder is the same thing."},
-    {"id":"esperar-verbo","es":"aguardar","en":["to wait","to await"],"pos":"verb","topic":"verbs","note":"Formal. Esperar is the everyday word for wait."},
+    {"id":"aguardar","es":"aguardar","en":["to wait","to await"],"pos":"verb","topic":"verbs","note":"Formal. Esperar is the everyday word for wait."},
     {"id":"intentar","es":"intentar","en":["to try"],"pos":"verb","topic":"verbs","note":"Tratar de is the same thing."},
     {"id":"ganar","es":"ganar","en":["to win","to earn"],"pos":"verb","topic":"verbs","note":"Both winning and being paid."},
     {"id":"perder","es":"perder","en":["to lose","to miss"],"pos":"verb","topic":"verbs","note":"e to ie: pierdo. Also missing a bus or a flight."},
@@ -273,7 +273,16 @@ const VOCAB = {
     {"id":"buenos-dias","es":"buenos días","en":["good morning"],"pos":"phrase","topic":"smalltalk","note":"Plural in Spanish. Buenas on its own works any time of day."},
     {"id":"con-permiso","es":"con permiso","en":["excuse me"],"pos":"phrase","topic":"smalltalk","note":"Said when leaving a room or squeezing past. Very Colombian."},
     {"id":"que-tal","es":"¿qué tal?","en":["how are you","how is it going"],"pos":"phrase","topic":"smalltalk","note":"Informal. ¿Qué más? is the Colombian version."},
-    {"id":"vale-la-pena","es":"vale la pena","en":["it is worth it"],"pos":"phrase","topic":"smalltalk"}
+    {"id":"vale-la-pena","es":"vale la pena","en":["it is worth it"],"pos":"phrase","topic":"smalltalk"},
+    {"id":"de","es":"de","en":["of","from"],"pos":"preposition","topic":"glue","note":"The commonest word in Spanish. Also does possession: el carro de Ana, Ana's car. de + el contracts to del."},
+    {"id":"en","es":"en","en":["in","on","at"],"pos":"preposition","topic":"glue","note":"One word for all three. English fusses about the difference; Spanish does not."},
+    {"id":"a","es":"a","en":["to","at"],"pos":"preposition","topic":"glue","note":"a + el contracts to al. Also marks a person as the object: veo a Juan."},
+    {"id":"no","es":"no","en":["no","not"],"pos":"adverb","topic":"glue","note":"Goes straight before the verb. Two negatives are correct: no hay nada."},
+    {"id":"hay","es":"hay","en":["there is","there are"],"pos":"verb","topic":"glue","note":"One form for both singular and plural, and it never changes. Había is the past."},
+    {"id":"lo","es":"lo","en":["it","the"],"pos":"pronoun","topic":"glue","note":"lo + adjective makes an abstract noun: lo bueno, the good thing about it."},
+    {"id":"se","es":"se","en":["himself","herself","oneself"],"pos":"pronoun","topic":"glue","note":"Also makes a verb impersonal: se habla español, Spanish is spoken."},
+    {"id":"este","es":"este","en":["this"],"pos":"determiner","topic":"glue","note":"Before a noun: este carro. esta for feminine, estos and estas for plural."},
+    {"id":"ese","es":"ese","en":["that"],"pos":"determiner","topic":"glue","note":"For something near the listener. aquel is for something far from you both."}
   ],
   sentences: [
     {"id":"g0001","wordId":"hombre","es":"Ese {hombre} trabaja en la tienda.","answer":"hombre","en":"That man works in the shop."},
@@ -342,7 +351,7 @@ const VOCAB = {
     {"id":"g0064","wordId":"mandar","es":"Te {mando} la dirección por mensaje.","answer":"mando","en":"I will send you the address by message."},
     {"id":"g0065","wordId":"preguntar","es":"Voy a {preguntar} en la recepción.","answer":"preguntar","en":"I am going to ask at reception."},
     {"id":"g0066","wordId":"contestar","es":"Nadie {contesta} el teléfono.","answer":"contesta","en":"Nobody is answering the phone."},
-    {"id":"g0067","wordId":"esperar-verbo","es":"Tuvimos que {aguardar} una hora.","answer":"aguardar","en":"We had to wait an hour."},
+    {"id":"g0067","wordId":"aguardar","es":"Tuvimos que {aguardar} una hora.","answer":"aguardar","en":"We had to wait an hour."},
     {"id":"g0068","wordId":"intentar","es":"Voy a {intentar} otra vez.","answer":"intentar","en":"I am going to try again."},
     {"id":"g0069","wordId":"ganar","es":"Nuestro equipo {ganó} el partido.","answer":"ganó","en":"Our team won the match."},
     {"id":"g0070","wordId":"perder","es":"No quiero {perder} el vuelo.","answer":"perder","en":"I do not want to miss the flight."},
@@ -560,7 +569,16 @@ const VOCAB = {
     {"id":"g0282","wordId":"buena-suerte","es":"{Buena suerte} con el examen.","answer":"Buena suerte","en":"Good luck with the exam."},
     {"id":"g0283","wordId":"que-quieres","es":"¿{Qué quieres} tomar?","answer":"Qué quieres","en":"What do you want to drink?"},
     {"id":"g0284","wordId":"llamando","es":"Te estuve {llamando} toda la mañana.","answer":"llamando","en":"I was calling you all morning."},
-    {"id":"g0285","wordId":"siguiente-en-la-fila","es":"Soy el {siguiente en la fila}.","answer":"siguiente en la fila","en":"I am next in the queue."}
+    {"id":"g0285","wordId":"siguiente-en-la-fila","es":"Soy el {siguiente en la fila}.","answer":"siguiente en la fila","en":"I am next in the queue."},
+    {"id":"g0286","wordId":"de","es":"Soy {de} Inglaterra.","answer":"de","en":"I am from England."},
+    {"id":"g0287","wordId":"en","es":"Te espero {en} la estación.","answer":"en","en":"I will wait for you at the station."},
+    {"id":"g0288","wordId":"a","es":"Vamos {a} la playa mañana.","answer":"a","en":"We are going to the beach tomorrow."},
+    {"id":"g0289","wordId":"no","es":"{No} quiero ir hoy.","answer":"No","en":"I do not want to go today."},
+    {"id":"g0290","wordId":"hay","es":"{Hay} dos personas esperando.","answer":"Hay","en":"There are two people waiting."},
+    {"id":"g0291","wordId":"lo","es":"{Lo} mejor es llegar temprano.","answer":"Lo","en":"The best thing is to arrive early."},
+    {"id":"g0292","wordId":"se","es":"{Se} levanta a las seis todos los días.","answer":"Se","en":"He gets up at six every day."},
+    {"id":"g0293","wordId":"este","es":"{Este} restaurante es el mejor de la zona.","answer":"Este","en":"This restaurant is the best in the area."},
+    {"id":"g0294","wordId":"ese","es":"¿Cuánto cuesta {ese} sombrero?","answer":"ese","en":"How much is that hat?"}
   ],
 };
 
