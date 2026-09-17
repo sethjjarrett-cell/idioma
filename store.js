@@ -13,9 +13,9 @@
        stats: { rounds, lastRoundAt }
      }
 
-   Words added or edited in the app are kept separately from the seed
-   rather than copied over it, so a later edit to seed.js still shows
-   through and an Export stays small and readable.
+   Words added or edited in the app are kept separately from the bank
+   rather than copied over it, so a later edit to seed.js or vocab.js still
+   shows through and an Export stays small and readable.
 */
 
 const STORAGE_KEY = "idioma.state.v1";
@@ -93,13 +93,17 @@ function saveNow(state) {
    custom additions appended. */
 function allWords(state) {
   const edits = state.editedWords || {};
-  const seeded = SEED.vocabulary.map((w) => (edits[w.id] ? { ...w, ...edits[w.id] } : w));
-  const custom = (state.customWords || []).map((w) => (edits[w.id] ? { ...w, ...edits[w.id] } : w));
-  return seeded.concat(custom);
+  const apply = (w) => (edits[w.id] ? { ...w, ...edits[w.id] } : w);
+  // Three sources, in the order they were written: the supplied seed, the
+  // generated bank, then anything added here. A hand edit applies to all of
+  // them, which is why it is keyed by id rather than kept per source.
+  return SEED.vocabulary.map(apply)
+    .concat(VOCAB.vocabulary.map(apply))
+    .concat((state.customWords || []).map(apply));
 }
 
 function allSentences(state) {
-  return SEED.sentences.concat(state.customSentences || []);
+  return SEED.sentences.concat(VOCAB.sentences, state.customSentences || []);
 }
 
 /* Read-only: returns defaults for a word that has never been answered,

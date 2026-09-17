@@ -1,0 +1,30 @@
+{"id":"hombre","es":"hombre","en":["man"],"pos":"noun","topic":"people","note":"m.","sent":{"es":"Ese {hombre} trabaja en la tienda.","en":"That man works in the shop."}}
+{"id":"mujer","es":"mujer","en":["woman"],"pos":"noun","topic":"people","note":"f. Plural mujeres.","sent":{"es":"La {mujer} de la esquina vende arepas.","en":"The woman on the corner sells arepas."}}
+{"id":"nino","es":"niño","en":["boy","child"],"pos":"noun","topic":"people","note":"m. niña for a girl.","sent":{"es":"El {niño} está jugando afuera.","en":"The boy is playing outside."}}
+{"id":"nina","es":"niña","en":["girl"],"pos":"noun","topic":"people","note":"f.","sent":{"es":"La {niña} tiene siete años.","en":"The girl is seven years old."}}
+{"id":"gente","es":"gente","en":["people"],"pos":"noun","topic":"people","note":"f. and singular: la gente es, never la gente son.","sent":{"es":"Hay mucha {gente} en el parque hoy.","en":"There are a lot of people in the park today."}}
+{"id":"persona","es":"persona","en":["person"],"pos":"noun","topic":"people","note":"f. even for a man: esa persona.","sent":{"es":"Solo falta una {persona} para empezar.","en":"We are only one person short of starting."}}
+{"id":"amigo","es":"amigo","en":["friend"],"pos":"noun","topic":"people","note":"m. amiga for a woman.","sent":{"es":"Mi {amigo} llega el martes.","en":"My friend arrives on Tuesday."}}
+{"id":"familia","es":"familia","en":["family"],"pos":"noun","topic":"people","note":"f.","sent":{"es":"Toda mi {familia} vive en Bogotá.","en":"My whole family lives in Bogotá."}}
+{"id":"madre","es":"madre","en":["mother"],"pos":"noun","topic":"people","note":"f. Everyday Colombian is mamá.","sent":{"es":"Mi {madre} cocina muy bien.","en":"My mother cooks very well."}}
+{"id":"padre","es":"padre","en":["father"],"pos":"noun","topic":"people","note":"m. Everyday Colombian is papá. Plural padres means parents.","sent":{"es":"Su {padre} es profesor.","en":"His father is a teacher."}}
+{"id":"hijo","es":"hijo","en":["son"],"pos":"noun","topic":"people","note":"m. hija for a daughter; hijos for children generally.","sent":{"es":"Mi {hijo} empieza el colegio mañana.","en":"My son starts school tomorrow."}}
+{"id":"hermano","es":"hermano","en":["brother"],"pos":"noun","topic":"people","note":"m. hermana for a sister.","sent":{"es":"Mi {hermano} vive en Medellín.","en":"My brother lives in Medellín."}}
+{"id":"hermana","es":"hermana","en":["sister"],"pos":"noun","topic":"people","note":"f.","sent":{"es":"Mi {hermana} estudia medicina.","en":"My sister studies medicine."}}
+{"id":"esposo","es":"esposo","en":["husband"],"pos":"noun","topic":"people","note":"m. esposa for a wife. Marido also means husband.","sent":{"es":"Su {esposo} trabaja de noche.","en":"Her husband works nights."}}
+{"id":"novio","es":"novio","en":["boyfriend"],"pos":"noun","topic":"people","note":"m. novia for a girlfriend; also groom and bride.","sent":{"es":"Ella vino con su {novio}.","en":"She came with her boyfriend."}}
+{"id":"abuelo","es":"abuelo","en":["grandfather"],"pos":"noun","topic":"people","note":"m. abuela for a grandmother.","sent":{"es":"Mi {abuelo} tiene noventa años.","en":"My grandfather is ninety."}}
+{"id":"senor","es":"señor","en":["sir","mister","gentleman"],"pos":"noun","topic":"people","note":"m. How you address a man you do not know.","sent":{"es":"Buenos días, {señor}.","en":"Good morning, sir."}}
+{"id":"senora","es":"señora","en":["madam","missus","lady"],"pos":"noun","topic":"people","note":"f. Señorita for a younger woman, though it is going out of use.","sent":{"es":"La {señora} preguntó por usted.","en":"The lady asked for you."}}
+{"id":"vecino","es":"vecino","en":["neighbour"],"pos":"noun","topic":"people","note":"m. vecina for a woman.","sent":{"es":"Mi {vecino} tiene dos perros.","en":"My neighbour has two dogs."}}
+{"id":"yo","es":"yo","en":["i"],"pos":"pronoun","topic":"people","note":"Usually dropped: the verb ending already says who.","sent":{"es":"{Yo} no sabía nada de eso.","en":"I knew nothing about that."}}
+{"id":"el-pron","es":"él","en":["he","him"],"pos":"pronoun","topic":"people","note":"The accent separates it from el, the.","sent":{"es":"{Él} llega tarde siempre.","en":"He is always late."}}
+{"id":"ella","es":"ella","en":["she","her"],"pos":"pronoun","topic":"people","note":"","sent":{"es":"{Ella} me llamó anoche.","en":"She called me last night."}}
+{"id":"ellos","es":"ellos","en":["they"],"pos":"pronoun","topic":"people","note":"ellas if the group is all women.","sent":{"es":"{Ellos} no vinieron a la reunión.","en":"They did not come to the meeting."}}
+{"id":"usted","es":"usted","en":["you"],"pos":"pronoun","topic":"people","note":"The polite you, and the everyday one in much of Colombia. Takes él verb forms.","sent":{"es":"¿{Usted} quiere algo de tomar?","en":"Would you like something to drink?"}}
+{"id":"ustedes","es":"ustedes","en":["you all","you"],"pos":"pronoun","topic":"people","note":"The only you-plural in Latin America, polite or not.","sent":{"es":"¿{Ustedes} ya comieron?","en":"Have you all eaten?"}}
+{"id":"me","es":"me","en":["me","myself"],"pos":"pronoun","topic":"people","note":"Goes before the verb: me llamo, me gusta.","sent":{"es":"{Me} llamo Juan.","en":"My name is Juan."}}
+{"id":"te","es":"te","en":["you"],"pos":"pronoun","topic":"people","note":"The object form of tú.","sent":{"es":"{Te} espero en la entrada.","en":"I will wait for you at the entrance."}}
+{"id":"le","es":"le","en":["to him","to her","to you"],"pos":"pronoun","topic":"people","note":"The indirect object: le dije, I told him.","sent":{"es":"{Le} di las llaves a mi hermana.","en":"I gave the keys to my sister."}}
+{"id":"nos","es":"nos","en":["us"],"pos":"pronoun","topic":"people","note":"","sent":{"es":"{Nos} vemos el viernes.","en":"See you on Friday."}}
+{"id":"su","es":"su","en":["his","her","their","your"],"pos":"determiner","topic":"people","note":"One word for all of them; context decides. sus before a plural noun.","sent":{"es":"Olvidó {su} pasaporte en el hotel.","en":"He left his passport at the hotel."}}

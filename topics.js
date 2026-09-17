@@ -96,6 +96,52 @@ const TOPICS = [
     words: ["nosotros", "esto", "eso", "nuestro", "mi", "tu", "alguna",
             "desde", "para", "por", "asimismo"],
   },
+
+  /* Topics below this line hold no seed words; they exist for the generated
+     bank in vocab.js, where each word carries its own topic. An empty words
+     list is not an oversight. */
+  {
+    id: "people",
+    name: "People and family",
+    blurb: "Who someone is to you, and the words for people in general.",
+    words: [],
+  },
+  {
+    id: "body",
+    name: "Body and health",
+    blurb: "Parts of you, and how to say which one hurts.",
+    words: [],
+  },
+  {
+    id: "numbers",
+    name: "Numbers and amounts",
+    blurb: "Counting, and the vaguer words for how much there is.",
+    words: [],
+  },
+  {
+    id: "travel",
+    name: "Travel and transport",
+    blurb: "Getting between places, and the paperwork that comes with it.",
+    words: [],
+  },
+  {
+    id: "work",
+    name: "Work and study",
+    blurb: "Jobs, offices, classrooms.",
+    words: [],
+  },
+  {
+    id: "nature",
+    name: "Weather and nature",
+    blurb: "What it is doing outside, and what is out there.",
+    words: [],
+  },
+  {
+    id: "feelings",
+    name: "Feelings",
+    blurb: "How someone is, as opposed to what they are like.",
+    words: [],
+  },
 ];
 
 window.TOPICS = TOPICS;

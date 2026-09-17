@@ -175,13 +175,17 @@
 
   /* A word's topic: its own field if it was added here, otherwise whatever
      topics.js files it under. */
-  const topicOf = (wordId) => {
-    const custom = (state.customWords || []).find((w) => w.id === wordId);
-    if (custom && custom.topic) return custom.topic;
-    const t = TOPICS.find((x) => x.words.includes(wordId));
+  const topicOf = (word) => {
+    const w = typeof word === "string" ? words().find((x) => x.id === word) : word;
+    if (!w) return null;
+    // A word carries its own topic if it has one, which everything in
+    // vocab.js and everything added here does. topics.js only has to file
+    // the seed, which predates the field.
+    if (w.topic) return w.topic;
+    const t = TOPICS.find((x) => x.words.includes(w.id));
     return t ? t.id : null;
   };
-  const wordsInTopic = (topicId) => words().filter((w) => topicOf(w.id) === topicId);
+  const wordsInTopic = (topicId) => words().filter((w) => topicOf(w) === topicId);
 
   function updateStartBlurb() {
     const pool = pick && pick.kind === "topic" ? wordsInTopic(pick.id) : words();
@@ -510,7 +514,7 @@
      practises only those words, and the list itself with the sounds on it. */
   function renderTopics() {
     const known = new Set(TOPICS.map((t) => t.id));
-    const extras = new Set(words().map((w) => topicOf(w.id)).filter((t) => t && !known.has(t)));
+    const extras = new Set(words().map((w) => topicOf(w)).filter((t) => t && !known.has(t)));
     const all = TOPICS.concat([...extras].map((id) => ({ id, name: id, blurb: "Added here.", words: [] })));
 
     $("topic-list").innerHTML = all.map((t) => {

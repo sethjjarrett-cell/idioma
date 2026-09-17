@@ -16,7 +16,9 @@ with ordinary script tags, so it works straight off the disk and offline.
 index.html      the five screens
 styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
+vocab.js        the generated bank: 252 more words, 285 more sentences
 topics.js       which context each word belongs to
+tools/bank/     the batches vocab.js is built from, and the builder
 verbs.js        the ending tables, and the one function that reads them
 pronounce.js    Spanish spelling to an English respelling; no data, all rules
 engine.js       levels, bands, card selection, answer checking; no DOM
@@ -72,11 +74,53 @@ one CSS line and no extra markup:
 `app.js` puts a `correct` or `wrong` class on the card and knows nothing else
 about how any of this is drawn.
 
+## The bank
+
+Two sources, loaded together and merged by `store.js`:
+
+| | words | sentences |
+|---|---|---|
+| `seed.js`, as supplied | 130 | 100 |
+| `vocab.js`, generated for this app | 252 | 285 |
+| **total** | **382** | **385** |
+
+`seed.js` is untouched and stays that way. `vocab.js` holds the rest: the
+common words the seed did not reach, each with an example sentence, plus
+sentences for the 30 seeded words that arrived without one. **Every word in
+the bank now has at least one sentence**, so nothing falls back out of cloze
+for want of one, and the "Cloze, no sentence" filter is empty.
+
+Every generated word carries its own `topic`, so `topics.js` only has to file
+the seed. A word added through the Manage screen carries one too.
+
+### What the checks can and cannot tell you
+
+`tools/bank/build.mjs` refuses to write a bank that is structurally wrong: an
+id or a word used twice, a missing field, an unknown topic, a sentence with no
+braced form or no English. One check is worth calling out — a generated word
+is rejected if it *folds* to the same string as a seeded one, because accents
+and punctuation are stripped before an answer is compared, which makes `¿qué?`
+and `que` the same card and only one of them answerable. Three words were
+caught by that and turned into extra sentences on the words that already
+existed, which is where the difference between them actually shows.
+
+None of that can tell you whether a translation is right. The Spanish has been
+written with care, is Colombian-leaning, and has **not** been read by a native
+speaker. Treat a surprising word or a stilted sentence as a bug worth fixing
+rather than as gospel; `vocab.js` is as hand-editable as `seed.js`.
+
+Adding more is a `.jsonl` batch and a rebuild: see `tools/bank/README.md`.
+That build step is for authoring the data, not for running the app, which
+still has none.
+
 ## Topics
 
-Every seed word is filed under a context in `topics.js`: food and drink, out
-and about, where things are, at home, paying and shopping, small talk, asking
-questions, days and time, describing things, everyday verbs, little words.
+Every word is filed under a context: food and drink, out and about, where
+things are, at home, paying and shopping, small talk, asking questions, days
+and time, describing things, everyday verbs, little words, people and family,
+body and health, numbers and amounts, travel and transport, work and study,
+weather and nature, feelings. Eighteen of them, each with between five and
+sixty-odd words.
 The Topics screen shows each one with how far through it you are and a button
 that runs a round drawn from that topic alone. Nothing else changes: same
 levels, same bands, same selection weighting, smaller pool.
@@ -87,9 +131,11 @@ word, so it lives where it can be argued with separately. `tests/test-data.mjs`
 fails if a word is filed twice or not at all, which is what stops a word added
 to the bank from quietly vanishing off this screen.
 
-There is no Sport topic because there is no sport vocabulary in the bank yet.
-Topics are built from what is actually there rather than from a list of
-subjects that ought to exist; add the words and add the topic.
+There is still no Sport topic, and no clothes, animals or technology, because
+the first tranche of generated words went to the commonest vocabulary rather
+than to filling categories. Topics are built from what is in the bank rather
+than from a list of subjects that ought to exist; the next tranche adds the
+words and the topics together.
 
 ## Verb endings
 
@@ -148,8 +194,9 @@ says when you are one away.
 
 A word at cloze level with no sentence falls back to production and says so on
 the card. The Manage screen has a "Cloze, no sentence" filter listing exactly
-those words, and the Add-a-sentence picker puts them at the top. 31 of the 130
-seeded words have no sentence yet.
+those words, and the Add-a-sentence picker puts them at the top. Every word in
+the bank now has a sentence, so that filter comes up empty and the fallback
+should never fire; it stays because a word you add yourself will need one.
 
 ### Selection
 
@@ -273,6 +320,12 @@ and ceiling, the selection weighting, every answer-checking rule, which near
 misses go amber and which stay wrong, the correction diff down to the letter,
 what an amber answer does and does not do to a word, card building in all
 three bands including the no-sentence fallback, and round selection.
+
+`tests/test-bank.mjs` loads both banks the way the app does and checks that
+nothing is duplicated between them, that every generated word is complete and
+has a sentence whose braced form matches, that every word in the bank builds a
+card in all three bands, and that the respeller has something to say about all
+382 of them.
 
 `tests/test-ui.mjs` through `test-ui4.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
