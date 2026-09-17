@@ -16,7 +16,8 @@ with ordinary script tags, so it works straight off the disk and offline.
 index.html      the five screens
 styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
-vocab.js        the generated bank: 252 more words, 285 more sentences
+order.js        the order words are taught in
+vocab.js        the generated bank: 261 more words, 294 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
 verbs.js        the ending tables, and the one function that reads them
@@ -81,8 +82,8 @@ Two sources, loaded together and merged by `store.js`:
 | | words | sentences |
 |---|---|---|
 | `seed.js`, as supplied | 130 | 100 |
-| `vocab.js`, generated for this app | 252 | 285 |
-| **total** | **382** | **385** |
+| `vocab.js`, generated for this app | 261 | 294 |
+| **total** | **391** | **394** |
 
 `seed.js` is untouched and stays that way. `vocab.js` holds the rest: the
 common words the seed did not reach, each with an example sentence, plus
@@ -176,6 +177,59 @@ note, the soft Spanish d between vowels is not marked, and regional habits
 (the coastal aspirated s, the Southern Cone ll) are out of scope. Colombian,
 seseo throughout.
 
+## What you meet, and when
+
+A bank of 391 words is not something to be handed all at once, and it is not
+much use in alphabetical order either. Two rules decide what comes next, and
+between them they are the whole of the progression:
+
+**Commonest first.** `order.js` is a single array listing every word in the
+order it is taught, grouped so it reads as a curriculum rather than a ranking:
+the first words, getting through a conversation, asking, the verbs you will
+reach for hourly, and so on down to the set phrases. New words are taken
+strictly in that order, so the first five you ever meet are *ser, estar,
+tener, hacer, ir* rather than five drawn out of a hat. It is judgement, not a
+corpus count, and re-ordering it is a cut and paste. A test fails if the bank
+holds a word the list does not place.
+
+**Only as many as you can carry.** A word counts as *settling* until it is out
+of the recognition band, which is to say until you can produce it rather than
+merely recognise it. While twenty words are still settling, no new one is
+introduced at all. Below that, a round takes on up to five.
+
+That is enough to give a sensible shape without a schedule or a calendar
+anywhere near it:
+
+| round | cards | new |
+|---|---|---|
+| 1 | 5 | 5 |
+| 2 | 10 | 5 |
+| 3 onwards | 15 | 5, then fewer as the load builds |
+| once twenty are settling | 15 | 0, until some come good |
+
+The first round is five words, not fifteen you have never seen. Nothing tops a
+short round back up out of the unseen pile, which is the point.
+
+It also paces itself to how you are actually doing, because settling is what
+frees a slot. Simulated over sixty rounds:
+
+| getting right | new words met | per round |
+|---|---|---|
+| 90% | 107 | 1.8 |
+| 70% | 68 | 1.1 |
+| 50% | 39 | 0.7 |
+
+Struggling slows the intake without ever stopping it for good; doing well
+speeds it up. Both numbers are checked in `tests/test-order.mjs` rather than
+asserted here and hoped for.
+
+Two constants in `engine.js` tune it: `MAX_NEW_PER_ROUND` (5) and
+`LEARNING_CAP` (20). Raise the cap for a faster, more crowded ride.
+
+The Practice screen says where you are and what is about to happen — how many
+words are met, how many are settling, and how many new ones this round will
+bring, or why it will bring none.
+
 ## Meeting a word before being tested on it
 
 A word you have never seen cannot be tested, only guessed at, so the first
@@ -190,15 +244,9 @@ wrong count, and it stays out of the round's accuracy. A round made entirely
 of introductions reports how many words were met and says plainly that
 nothing was tested.
 
-Rounds are capped at five new words, so a round is five to meet and ten to
-practise rather than fifteen words you have never seen, which is a vocabulary
-list rather than a round. On a fresh bank there is nothing met to fill up
-with, so the cap gives way rather than handing back a short round — the first
-few rounds are all introductions, which is the only honest thing they could
-be.
-
-The toggle in the menu turns it off, and new words go straight to being
-tested.
+How many new words a round may take on is the progression rule above; whether
+they are shown first or tested straight away is this toggle in the menu.
+Turning it off does not change the pacing, only what the card looks like.
 
 ## How the mastery engine works
 
@@ -349,7 +397,7 @@ three bands including the no-sentence fallback, and round selection.
 nothing is duplicated between them, that every generated word is complete and
 has a sentence whose braced form matches, that every word in the bank builds a
 card in all three bands, and that the respeller has something to say about all
-382 of them.
+391 of them.
 
 `tests/test-ui.mjs` through `test-ui5.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.

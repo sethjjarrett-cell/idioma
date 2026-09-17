@@ -35,6 +35,20 @@ const CONFIG = {
   INTRODUCE_UNTIL_SEEN: 1,
   MAX_NEW_PER_ROUND: 5,
 
+  /* How many words may be on the go at once. A word counts as settled once
+     it is out of the recognition band, which is to say you can produce it
+     and not merely recognise it. While more than LEARNING_CAP are short of
+     that, no new word is introduced at all.
+
+     This is the whole of the progression rule: new words arrive at up to
+     five a round until twenty are unsettled, and then they stop until some
+     of those come good. It keeps the first session to five words rather
+     than fifteen, and it keeps a bank of hundreds from ever presenting more
+     than twenty unfamiliar words at once, without putting a schedule or a
+     calendar anywhere near it. */
+  SETTLED_LEVEL: 4,
+  LEARNING_CAP: 20,
+
   /* Selection weight = level part + recency part, floored.
 
      The level part gives a struggling word up to ten times the pull of a
@@ -207,29 +221,46 @@ function drawFrom(pool, count) {
   return picked;
 }
 
-/* A round, with at most `maxNew` words in it that have never been seen.
+/* How many words are part-learned: met, but not yet out of recognition. */
+function stillSettling(words, progressFor) {
+  return words.filter((w) => {
+    const p = progressFor(w.id);
+    return p.enabled !== false && p.timesSeen && p.level < CONFIG.SETTLED_LEVEL;
+  }).length;
+}
 
-   Drawn in three passes: the new words up to the cap, then the words already
-   met, then back to the new ones if there were not enough of the others. The
-   last pass is what keeps a round full-length on a fresh bank, where every
-   word is new and a cap with nothing to fall back on would just make the
-   round short. */
+/* How many new words this round may introduce. Falls to zero while the
+   learner already has a capful on the go, and climbs back as they settle. */
+function newWordAllowance(words, progressFor) {
+  return Math.max(0, Math.min(CONFIG.MAX_NEW_PER_ROUND,
+    CONFIG.LEARNING_CAP - stillSettling(words, progressFor)));
+}
+
+/* A round: the new words the allowance permits, then the ones already met.
+
+   The new words are taken in teaching order rather than by weight, because
+   among words you have never seen there is nothing to weigh; what matters is
+   which is worth knowing first. `options.rankOf` supplies that order, and
+   without it they come in bank order.
+
+   Nothing tops the round back up to full length from the new pile. That is
+   the point: on a fresh bank the first round is five words, not fifteen
+   words nobody has met, and it grows as there is something to grow with. */
 function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE, options = {}) {
-  const maxNew = options.maxNew === undefined ? CONFIG.MAX_NEW_PER_ROUND : options.maxNew;
+  const maxNew = options.maxNew === undefined
+    ? newWordAllowance(words, progressFor)
+    : options.maxNew;
+  const rankOf = options.rankOf || (() => 0);
   const entry = (w) => ({ word: w, weight: selectionWeight(progressFor(w.id), now) });
   const enabled = words.filter((w) => progressFor(w.id).enabled !== false);
   const isNew = (w) => !progressFor(w.id).timesSeen;
 
-  const fresh = enabled.filter(isNew).map(entry);
+  const fresh = enabled.filter(isNew)
+    .sort((a, b) => rankOf(a.id) - rankOf(b.id))
+    .slice(0, Math.max(0, Math.min(maxNew, count)));
   const met = enabled.filter((w) => !isNew(w)).map(entry);
 
-  const picked = drawFrom(fresh, Math.min(maxNew, count));
-  const taken = new Set(picked.map((w) => w.id));
-  picked.push(...drawFrom(met, count - picked.length));
-  if (picked.length < count) {
-    picked.push(...drawFrom(fresh.filter((e) => !taken.has(e.word.id)), count - picked.length));
-  }
-  return picked;
+  return fresh.concat(drawFrom(met, count - fresh.length));
 }
 
 /* ---------------------------------------------------------------
@@ -556,6 +587,6 @@ function checkAnswer(typed, accepted, options = {}) {
    step and no module loader, which is the point. */
 window.Engine = {
   CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult,
-  selectionWeight, pickRound, buildCard, introCard, normalise, fold, checkAnswer,
+  selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
 };

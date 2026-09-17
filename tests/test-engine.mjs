@@ -124,16 +124,18 @@ ok('but the word counts as met, so it is not introduced twice',
 
 console.log('--- round selection ---');
 const progMap = {}; const pf = (id) => (progMap[id] ||= E.freshProgress());
-const round = E.pickRound(SEED.vocabulary, pf, NOW, 15);
+const round = E.pickRound(SEED.vocabulary, pf, NOW, 15, { maxNew: 15 });
 ok('round is the requested size', round.length === 15);
-// With nothing seen there is nothing to fill up with, so the cap gives way
-// rather than handing back a short round.
-ok('a full round even when every word is new and the cap is lower', round.length === 15);
+// Nothing tops a round back up out of the new pile, so on a fresh bank the
+// round is exactly as long as the allowance permits.
+ok('a fresh bank gives a short round rather than a pile of unknown words',
+  E.pickRound(SEED.vocabulary, pf, NOW, 15, { maxNew: 5 }).length === 5);
 ok('no duplicates in a round', new Set(round.map(w => w.id)).size === 15);
 progMap['comer'] = { ...E.freshProgress(), enabled: false };
 const r2 = E.pickRound(SEED.vocabulary, pf, NOW, 130);
 ok('disabled words excluded', !r2.some(w => w.id === 'comer'));
-ok('round cannot exceed the pool', E.pickRound(SEED.vocabulary.slice(0,5), pf, NOW, 15).length === 5);
+ok('round cannot exceed the pool',
+  E.pickRound(SEED.vocabulary.slice(0,5), pf, NOW, 15, { maxNew: 15 }).length === 5);
 
 console.log('--- new words are rationed once there are others to draw on ---');
 const mixed = {};
@@ -150,6 +152,32 @@ for (let i = 0; i < 40; i++) {
 }
 ok('never more new words than the cap allows', worst <= 5, 'worst was ' + worst);
 ok('and the cap can be lifted', E.pickRound(SEED.vocabulary, mf, NOW, 15, { maxNew: 15 }).length === 15);
+
+console.log('--- new words arrive commonest first, and stop when you are full ---');
+const order = ['ser', 'tener', 'hacer', 'comer', 'dormir'];
+const rankOf = (id) => (order.indexOf(id) === -1 ? 999 : order.indexOf(id));
+const blank = {}; const bf = (id) => (blank[id] ||= E.freshProgress());
+const first = E.pickRound(SEED.vocabulary, bf, NOW, 3, { maxNew: 3, rankOf });
+ok('the first words taught are the first words listed',
+  first.map(w => w.id).join() === 'ser,tener,hacer', first.map(w => w.id).join());
+ok('and that order is not luck, it repeats',
+  E.pickRound(SEED.vocabulary, bf, NOW, 3, { maxNew: 3, rankOf }).map(w => w.id).join() === 'ser,tener,hacer');
+
+const load = {};
+const lf = (id) => (load[id] ||= E.freshProgress());
+SEED.vocabulary.forEach((w, i) => { load[w.id] = { ...E.freshProgress(), timesSeen: 2, level: i < 20 ? 1 : 9 }; });
+ok('twenty words short of settled counts as twenty settling',
+  E.stillSettling(SEED.vocabulary, lf) === 20);
+ok('and no new word is allowed through', E.newWordAllowance(SEED.vocabulary, lf) === 0);
+load[SEED.vocabulary[0].id] = { ...E.freshProgress(), timesSeen: 2, level: E.CONFIG.SETTLED_LEVEL };
+ok('one settling makes room for exactly one', E.newWordAllowance(SEED.vocabulary, lf) === 1);
+ok('a word out of recognition counts as settled',
+  E.stillSettling(SEED.vocabulary, lf) === 19);
+const empty = {}; const ef = (id) => (empty[id] ||= E.freshProgress());
+ok('knowing nothing allows a full first helping, not more',
+  E.newWordAllowance(SEED.vocabulary, ef) === E.CONFIG.MAX_NEW_PER_ROUND);
+ok('a disabled word is not counted as settling',
+  E.stillSettling([{ id: 'zzz' }], () => ({ enabled: false, timesSeen: 3, level: 1 })) === 0);
 
 console.log('--- the amber band ---');
 const near = (typed, acc, opt) => E.checkAnswer(typed, acc, opt);

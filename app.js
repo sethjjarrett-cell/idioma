@@ -210,9 +210,17 @@
         + `Drills do not move any word's level; they are practice, not assessment.`;
       return;
     }
-    $("start-blurb").textContent =
-      `${enabled.length} words in play, ${unseen} not yet seen. `
-      + `A round is ${state.settings.roundSize} cards, picked by level and by how long since you last saw them.`;
+    const met = enabled.length - unseen;
+    const settling = Engine.stillSettling(words(), (id) => prog(id));
+    const allowance = Engine.newWordAllowance(words(), (id) => prog(id));
+
+    const where = pick ? `${pick.name}: ${enabled.length} words. ` : `${enabled.length} words. `;
+    $("start-blurb").textContent = where
+      + `${met} met, ${settling} still settling, ${unseen} to come. `
+      + (allowance
+        ? `Up to ${allowance} new ${allowance === 1 ? "word" : "words"} this round, commonest first`
+          + (state.settings.introduceNew === false ? ", tested straight away." : ".")
+        : `No new words until some of those settle; a word settles once you can produce it, not just recognise it.`);
   }
 
   /* Clearing the pick abandons whatever round is running. Nothing is lost by
@@ -242,7 +250,19 @@
       picked = pick.items.slice().sort(() => Math.random() - 0.5);
     } else {
       const pool = pick ? wordsInTopic(pick.id) : words();
-      picked = Engine.pickRound(pool, (id) => prog(id), new Date().toISOString(), state.settings.roundSize);
+      picked = Engine.pickRound(pool, (id) => prog(id), new Date().toISOString(),
+        state.settings.roundSize, {
+          rankOf: TeachingOrder.rankOf,
+          /* Counted across the whole bank, not the pool: how much you have on
+             the go is a fact about you, not about the topic you picked.
+
+             The allowance applies whether or not new words are introduced
+             first. Turning introductions off changes what the card looks
+             like, not how many new words a round may take on; tying it to
+             zero emptied the round completely on a bank where nothing had
+             been met yet. */
+          maxNew: Engine.newWordAllowance(words(), (id) => prog(id)),
+        });
     }
     if (!picked.length) {
       toast(pick ? `Nothing to practise in ${pick.name}.` : "No words are enabled, so there is nothing to practise.", true);

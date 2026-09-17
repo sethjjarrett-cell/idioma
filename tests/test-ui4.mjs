@@ -6,11 +6,26 @@ const p = await (await b.newContext()).newPage();
 let pe = 0; p.on('pageerror', e => { pe++; console.log('  !! PAGEERROR:', e.message); });
 p.on('console', m => { if (m.type() === 'error') console.log('  !! CONSOLE:', m.text().slice(0, 140)); });
 
+/* A learner who has already met the bank. Written in rather than practised
+   in: what these checks are about is answering cards, and a fresh bank now
+   opens with introductions instead of questions. */
+async function seedMetWords(page, level = 2) {
+  await page.evaluate((level) => {
+    const st = window.Idioma.state;
+    for (const w of window.Idioma.Store.allWords(st)) {
+      st.progress[w.id] = { ...window.Idioma.Engine.freshProgress(), level, timesSeen: 3,
+        lastSeen: new Date(Date.now() - 864e5).toISOString() };
+    }
+    window.Idioma.Store.saveNow(st);
+  }, level);
+}
+
 await p.goto('file:///home/user/idioma/index.html');
 await p.waitForTimeout(400);
 console.log('tabs:', (await p.$$eval('.tab', ns => ns.map(n => n.textContent.trim()))).join(', '));
 
 // --- topics ----------------------------------------------------------
+await seedMetWords(p);
 await p.click('.tab[data-screen="topics"]');
 await p.waitForTimeout(300);
 const topics = await p.$$eval('.topic', ns => ns.map(n => ({

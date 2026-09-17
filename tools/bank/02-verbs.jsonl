@@ -34,7 +34,7 @@
 {"id":"mandar","es":"mandar","en":["to send","to order"],"pos":"verb","topic":"verbs","note":"Enviar also means send.","sent":{"es":"Te {mando} la dirección por mensaje.","en":"I will send you the address by message."}}
 {"id":"preguntar","es":"preguntar","en":["to ask"],"pos":"verb","topic":"verbs","note":"Ask a question. pedir is ask for a thing.","sent":{"es":"Voy a {preguntar} en la recepción.","en":"I am going to ask at reception."}}
 {"id":"contestar","es":"contestar","en":["to answer","to reply"],"pos":"verb","topic":"verbs","note":"Responder is the same thing.","sent":{"es":"Nadie {contesta} el teléfono.","en":"Nobody is answering the phone."}}
-{"id":"esperar-verbo","es":"aguardar","en":["to wait","to await"],"pos":"verb","topic":"verbs","note":"Formal. Esperar is the everyday word for wait.","sent":{"es":"Tuvimos que {aguardar} una hora.","en":"We had to wait an hour."}}
+{"id":"aguardar","es":"aguardar","en":["to wait","to await"],"pos":"verb","topic":"verbs","note":"Formal. Esperar is the everyday word for wait.","sent":{"es":"Tuvimos que {aguardar} una hora.","en":"We had to wait an hour."}}
 {"id":"intentar","es":"intentar","en":["to try"],"pos":"verb","topic":"verbs","note":"Tratar de is the same thing.","sent":{"es":"Voy a {intentar} otra vez.","en":"I am going to try again."}}
 {"id":"ganar","es":"ganar","en":["to win","to earn"],"pos":"verb","topic":"verbs","note":"Both winning and being paid.","sent":{"es":"Nuestro equipo {ganó} el partido.","en":"Our team won the match."}}
 {"id":"perder","es":"perder","en":["to lose","to miss"],"pos":"verb","topic":"verbs","note":"e to ie: pierdo. Also missing a bus or a flight.","sent":{"es":"No quiero {perder} el vuelo.","en":"I do not want to miss the flight."}}
