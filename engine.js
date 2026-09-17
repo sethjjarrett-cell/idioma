@@ -49,6 +49,23 @@ const CONFIG = {
   SETTLED_LEVEL: 4,
   LEARNING_CAP: 20,
 
+  /* Sticking points. Some words simply will not go in, and the level on its
+     own does not say which: a word at level 2 because it is new and a word at
+     level 2 because it has been missed four times look identical, and only
+     one of them needs the explanation again.
+
+     So wrong answers are counted. Not for ever: the count is the current run
+     of trouble, and three right answers in a row clears it, because a word
+     you can now do is not a word you keep getting wrong. Past the threshold
+     a word comes up about twice as often and is taught again rather than
+     merely asked, which is the only sensible answer to not knowing it.
+
+     Two numbers per word, one of them usually zero. There is no separate
+     store and nothing to schedule. */
+  STICKY_LAPSES: 3,
+  STICKY_WEIGHT: 2,
+  RELEARN_STREAK: 3,
+
   /* Selection weight = level part + recency part, floored.
 
      The level part gives a struggling word up to ten times the pull of a
@@ -101,6 +118,7 @@ const CONFIG = {
 
 const BANDS = {
   intro: { key: "intro", label: "New word", blurb: "Shown, not asked" },
+  relearn: { key: "relearn", label: "Worth another look", blurb: "Missed too often, so shown again" },
   recognition: { key: "recognition", label: "Recognition", blurb: "Spanish shown, type the English" },
   production: { key: "production", label: "Production", blurb: "English shown, type the Spanish" },
   cloze: { key: "cloze", label: "Cloze", blurb: "Sentence shown, type the missing word" },
@@ -127,8 +145,16 @@ function freshProgress() {
     totalAlmost: 0,
     lastSeen: null,
     timesSeen: 0,
+    lapses: 0,
     enabled: true,
   };
+}
+
+/* A word the learner keeps missing, as against one they simply have not met
+   yet. The count is the current run of trouble, not a lifetime tally, so this
+   goes false again as soon as the word comes good. */
+function isSticking(progress) {
+  return (progress.lapses || 0) >= CONFIG.STICKY_LAPSES;
 }
 
 /* Apply one result and return the updated progress plus what changed, so
@@ -154,9 +180,15 @@ function applyResult(progress, outcome, now) {
     // word stays put and keeps its streak, so the next right answer moves it.
     const heldAtBoundary = isBoundaryLevel(p.level) && p.correctStreak < CONFIG.BOUNDARY_STREAK;
     if (!heldAtBoundary) p.level = Math.min(CONFIG.LEVEL_CEILING, p.level + 1);
+    // Got right enough times running to call the trouble over. The count goes
+    // back to zero rather than down by one: the run has ended, and a word
+    // three-for-three is not still a sticking point.
+    if (p.correctStreak >= CONFIG.RELEARN_STREAK) p.lapses = 0;
   } else if (result === "seen") {
     // An introduction is not an answer. It marks the word met, so it is not
-    // introduced again, and touches nothing else.
+    // introduced again, and clears the standing request to teach it, which
+    // this was the answer to.
+    p.needsTeaching = false;
   } else if (result === "almost") {
     // An answer one slip from the mark should not cost a level, and should
     // not buy one either: the word holds exactly where it was. The streak
@@ -167,10 +199,16 @@ function applyResult(progress, outcome, now) {
     p.correctStreak = 0;
     p.totalWrong += 1;
     p.level = Math.max(CONFIG.LEVEL_MIN, p.level - 1);
+    p.lapses = (p.lapses || 0) + 1;
+    // Past the threshold, asking again is not the answer; the word gets
+    // shown again first. Set on every miss while it is sticking, so a word
+    // that keeps going wrong keeps being explained.
+    if (isSticking(p)) p.needsTeaching = true;
   }
 
   return {
     progress: p,
+    sticking: isSticking(p),
     result,
     held: result === "almost",
     levelBefore: before,
@@ -197,7 +235,10 @@ function selectionWeight(progress, now) {
   const hrs = hoursSince(progress.lastSeen, now);
   const recencyPart = CONFIG.WEIGHT_RECENCY_MAX
     * Math.min(1, hrs / CONFIG.RECENCY_FULL_HOURS);
-  return Math.max(CONFIG.WEIGHT_FLOOR, levelPart + recencyPart);
+  // A word you keep missing is pulled forward on top of whatever its level
+  // says, because the level alone cannot tell "new" from "not going in".
+  const sticky = isSticking(progress) ? CONFIG.STICKY_WEIGHT : 1;
+  return Math.max(CONFIG.WEIGHT_FLOOR, (levelPart + recencyPart) * sticky);
 }
 
 /* Draw `count` distinct words by weight, without replacement so that one
@@ -271,9 +312,12 @@ function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE, options =
    no sentence falls back to production and says so, which is what the
    Manage screen flags. */
 function buildCard(word, progress, sentencesForWord, options = {}) {
-  // A word not yet met is shown rather than asked, whatever level it is at.
-  if (options.introduce !== false && progress.timesSeen < CONFIG.INTRODUCE_UNTIL_SEEN) {
-    return introCard(word, sentencesForWord);
+  // A word not yet met is shown rather than asked, whatever level it is at,
+  // and so is one that has been missed often enough to have earned the
+  // explanation a second time.
+  const unmet = progress.timesSeen < CONFIG.INTRODUCE_UNTIL_SEEN;
+  if (options.introduce !== false && (unmet || progress.needsTeaching)) {
+    return introCard(word, sentencesForWord, { relearn: !unmet });
   }
   const band = bandForLevel(progress.level);
 
@@ -310,11 +354,12 @@ function buildCard(word, progress, sentencesForWord, options = {}) {
 /* The teaching card: everything about the word at once, and nothing to type.
    The sentence keeps the word in place rather than blanking it, because the
    point here is to show the word working, not to test whether it is known. */
-function introCard(word, sentencesForWord) {
+function introCard(word, sentencesForWord, options = {}) {
   const pool = sentencesForWord(word.id);
   const s = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
   return {
-    word, band: BANDS.intro, intro: true, fellBack: false, sentence: s,
+    word, band: options.relearn ? BANDS.relearn : BANDS.intro,
+    intro: true, relearn: !!options.relearn, fellBack: false, sentence: s,
     prompt: word.es,
     promptHint: word.pos,
     accepted: [],                       // there is nothing to answer
@@ -328,7 +373,11 @@ function productionCard(word) {
   return {
     word, band: BANDS.production, fellBack: false, sentence: null,
     prompt: word.en.join(", "),
-    promptHint: word.pos,
+    /* The hint slot earns its keep here. Several Spanish words can answer
+       one English prompt, and "to be" with nothing else said is not a
+       question anyone can answer; the sense tag says which of them is
+       wanted without giving away a letter of it. */
+    promptHint: word.sense ? `${word.pos} · ${word.sense}` : word.pos,
     accepted: [word.es, ...(word.es_alt || [])],
     reveal: word.es,
     revealContext: (word.es_alt || []).length
@@ -536,7 +585,7 @@ function diffAnswer(typed, expected) {
 function checkAnswer(typed, accepted, options = {}) {
   const typoOn = !!options.typoTolerance;
   const given = variants(normalise(typed));
-  const miss = { correct: false, almost: false, matched: null, near: false, reason: null, diff: null };
+  const miss = { correct: false, almost: false, matched: null, near: false, reason: null, diff: null, sibling: null };
   if (!given[0]) return miss;
 
   for (const candidate of accepted) {
@@ -555,6 +604,25 @@ function checkAnswer(typed, accepted, options = {}) {
           if (damerau(g, w) <= CONFIG.TYPO_DISTANCE) {
             return { ...miss, correct: true, matched: candidate, near: true };
           }
+        }
+      }
+    }
+  }
+
+  /* Before spelling: another Spanish word that also means what the prompt
+     said. ser and estar are both "to be", and typing the other one is not a
+     typo and not ignorance of the word; it is the one thing about the pair
+     nobody gets right first time. Amber, and named for what it is, so the
+     card can say which sense this one wanted instead of "a letter out".
+
+     Checked ahead of the spelling rules on purpose: tu and su are one edit
+     apart, and calling that a misspelling is the wrong answer to it. */
+  for (const sib of options.siblings || []) {
+    const want = variants(normalise(sib.es));
+    for (const g of given) {
+      for (const w of want) {
+        if (g === w) {
+          return { ...miss, almost: true, reason: "sense", sibling: sib };
         }
       }
     }
@@ -586,7 +654,7 @@ function checkAnswer(typed, accepted, options = {}) {
 /* Exported for the browser through the global scope; there is no build
    step and no module loader, which is the point. */
 window.Engine = {
-  CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult,
+  CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking,
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
 };

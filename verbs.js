@@ -277,6 +277,10 @@ const VERBS = {
       body: "Vosotros is Spain only. Latin America uses ustedes for every you-plural, polite or not, so these tables leave vosotros out. In Medellín and much of Antioquia you will hear vos instead of tú, with its own present forms (vos tenés, vos podés, vos sos). Understanding it matters more than using it; tú and usted are both understood everywhere.",
     },
     {
+      title: "The accent pairs",
+      body: "A handful of very common words come in pairs that differ by one accent and nothing else, and the accent is the whole meaning. si is if, sí is yes. tu is your, tú is you. el is the, él is he. mi is my, mí is me. se is the reflexive, sé is I know. mas is but in old writing, más is more. The question words take one when they are asking: qué, cuándo, cómo, dónde, cuánto, and por qué as two words against porque, because. This app strips accents before it marks your answer, so you will not be failed for missing one on a phone keyboard, but the pairs are worth knowing on sight because the accent is how you tell which word you are reading.",
+    },
+    {
       title: "Whose: mi, tu, su",
       body: "Possessives agree with the thing owned, not the owner: mi carro, mis carros, tu casa, tus casas. Both tu and su mean your. Tu is the your that goes with tú, su is the your that goes with usted, and su is also his, her and their. Colombia uses usted far more than most of Latin America, so su is the safer default with anyone you have just met. Neither takes an accent: tu is your, tú is you. Su doing four jobs at once means su carro is ambiguous on its own, and when it matters you say el carro de ella instead. Nuestro is the odd one out and agrees in gender as well: nuestro carro, nuestra casa.",
     },

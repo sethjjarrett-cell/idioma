@@ -241,5 +241,53 @@ ok('amber at a boundary does not promote', b.level === 3);
 b = E.applyResult(b, true, NOW).progress;
 ok('and the standing streak still carries it over', b.level === 4);
 
+console.log('--- sticking points ---');
+/* A word met and then missed. The count is of the current run of trouble, so
+   what matters as much as it going up is it going back down again. */
+let k = { ...E.freshProgress(), level: 5, timesSeen: 4 };
+k = E.applyResult(k, 'wrong', NOW).progress;
+ok('a miss is counted', k.lapses === 1);
+ok('one miss is not a sticking point', !E.isSticking(k));
+ok('and does not ask for the word to be taught again', !k.needsTeaching);
+k = E.applyResult(k, 'almost', NOW).progress;
+ok('a near miss does not count against the word', k.lapses === 1);
+k = E.applyResult(k, 'wrong', NOW).progress;
+k = E.applyResult(k, 'wrong', NOW).progress;
+ok('three misses make a sticking point', E.isSticking(k) && k.lapses === 3);
+ok('which asks for the word to be taught again', k.needsTeaching === true);
+ok('and pulls it forward in the draw',
+  E.selectionWeight(k, NOW) > E.selectionWeight({ ...k, lapses: 0 }, NOW));
+ok('the pull is the configured multiple',
+  Math.abs(E.selectionWeight(k, NOW)
+    - E.selectionWeight({ ...k, lapses: 0 }, NOW) * E.CONFIG.STICKY_WEIGHT) < 1e-9);
+
+const taught = E.buildCard(comer, k, sFor);
+ok('a sticking word is shown again rather than asked', taught.intro === true);
+ok('and says it is a second look, not a new word',
+  taught.relearn === true && taught.band.key === 'relearn');
+ok('unless introductions are turned off',
+  E.buildCard(comer, k, sFor, { introduce: false }).intro !== true);
+
+let m = E.applyResult(k, 'seen', NOW).progress;
+ok('being shown it clears the request to teach it', m.needsTeaching === false);
+ok('but not the count: one look is not learning it', m.lapses === 3);
+ok('so it is still a sticking point', E.isSticking(m));
+
+m = E.applyResult(m, true, NOW).progress;
+ok('one right answer does not clear it either', E.isSticking(m));
+m = E.applyResult(m, true, NOW).progress;
+m = E.applyResult(m, true, NOW).progress;
+ok('three in a row does', !E.isSticking(m) && m.lapses === 0);
+ok('and the lifetime tally is untouched by any of it', m.totalWrong === 3);
+
+// A word nobody has met is not a sticking point, whatever else is true of it.
+ok('a fresh word is not sticking', !E.isSticking(E.freshProgress()));
+// The flag has to survive a state written before it existed.
+ok('progress from an older save reads as not sticking',
+  !E.isSticking({ level: 2, correctStreak: 0, totalWrong: 9, timesSeen: 9 }));
+const older = E.applyResult({ level: 2, correctStreak: 0, totalCorrect: 0,
+  totalWrong: 9, timesSeen: 9, lastSeen: NOW }, 'wrong', NOW).progress;
+ok('and starts counting from the next miss', older.lapses === 1);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

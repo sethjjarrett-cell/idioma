@@ -17,6 +17,7 @@ index.html      the five screens
 styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
 order.js        the order words are taught in
+senses.js       one line per word that shares an English meaning with another
 vocab.js        the generated bank: 404 more words, 802 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
@@ -519,14 +520,19 @@ You can also edit `seed.js` directly in any text editor.
 ## Tests
 
 ```bash
-node tests/test-engine.mjs      # 74 assertions, no dependencies
+node tests/test-engine.mjs      # 121 assertions, no dependencies
 ```
 
 Covers the bands, level movement, the two-in-a-row boundary rule, the floor
 and ceiling, the selection weighting, every answer-checking rule, which near
 misses go amber and which stay wrong, the correction diff down to the letter,
 what an amber answer does and does not do to a word, card building in all
-three bands including the no-sentence fallback, and round selection.
+three bands including the no-sentence fallback, and round selection. It also
+covers the lapse counter: that a near miss costs nothing, that three misses
+make a sticking point, that a sticking point is taught again rather than
+asked and comes up twice as often, that being shown it is not the same as
+learning it, that three right answers in a row clear it, and that progress
+saved before any of this existed still loads and starts counting.
 
 `tests/test-bank.mjs` loads both banks the way the app does and checks that
 nothing is duplicated between them, that every generated word is complete and
@@ -534,7 +540,16 @@ has a sentence whose braced form matches, that every word in the bank builds a
 card in all three bands, and that the respeller has something to say about all
 534 of them.
 
-`tests/test-ui.mjs` through `test-ui7.mjs` drive the real page in
+`tests/test-senses.mjs` is about the 52 English prompts in this bank that
+have more than one right Spanish answer. It works the collision groups out
+from the bank itself rather than reading them from `store.js`, so a bug in the
+grouping shows up as a disagreement instead of being agreed with, then holds
+the line: every word in a group carries a tag, no two tags in a group are the
+same, no tag contains its own answer or merely repeats the prompt, and typing
+the sibling word grades amber with the sense named rather than red or "a
+letter out".
+
+`tests/test-ui.mjs` through `test-ui8.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -554,7 +569,11 @@ one and runs two browser contexts against it as a phone and a laptop.
 `test-ui7.mjs` opens the page with the operating system set to dark and checks
 it comes up on paper anyway, that choosing dark sticks across a reload, that
 the attribute is set in the head rather than by `app.js`, and that the choice
-does not reach the synced settings.
+does not reach the synced settings. `test-ui8.mjs` covers the three things
+that only exist with a browser running them: a new word taught and then asked
+as the very next card, a word past the lapse threshold being taught again and
+appearing in the Sticking points table, and an ambiguous English prompt
+carrying its sense tag with the sibling answer graded amber.
 
 ## Not built, by request
 

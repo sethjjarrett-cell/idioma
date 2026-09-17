@@ -231,7 +231,9 @@
 
       <!-- A word you have not met: shown, with nothing to type. -->
       <div class="teach" id="teach" hidden>
+        <p class="teach-why small" id="teach-why" hidden></p>
         <p class="teach-meaning" id="teach-meaning"></p>
+        <p class="teach-sense small muted" id="teach-sense" hidden></p>
         <p class="say" id="teach-say" hidden></p>
         <p class="note" id="teach-note" hidden></p>
         <div class="teach-example" id="teach-example" hidden>
@@ -239,6 +241,7 @@
           <p class="muted small" id="teach-en"></p>
         </div>
         <button class="btn primary big" id="btn-got">Got it</button>
+        <p class="muted small" id="teach-then" hidden>You will be asked this one next.</p>
       </div>
 
       <form id="answer-form" autocomplete="off">
@@ -402,6 +405,18 @@
       <div class="stats" id="progress-stats"></div>
     </div>
     <div class="pane">
+      <h2>Sticking points</h2>
+      <p class="muted small">Words missed three times or more without coming good since. These come up
+        about twice as often as the rest, and are shown again rather than just asked. Three right
+        answers in a row and a word leaves this list.</p>
+      <div class="table-wrap">
+        <table class="bank">
+          <thead><tr><th>Spanish</th><th>English</th><th>Level</th><th>Misses</th><th>Accuracy</th></tr></thead>
+          <tbody id="sticking-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pane">
       <h2>Best streaks</h2>
       <div class="table-wrap">
         <table class="bank">
@@ -418,6 +433,7 @@
 <script src="vocab.js"></script>
 <script src="topics.js"></script>
 <script src="order.js"></script>
+<script src="senses.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>
 <script src="engine.js"></script>

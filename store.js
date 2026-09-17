@@ -94,13 +94,64 @@ function saveNow(state) {
    custom additions appended. */
 function allWords(state) {
   const edits = state.editedWords || {};
-  const apply = (w) => (edits[w.id] ? { ...w, ...edits[w.id] } : w);
+  const senses = window.SENSES || {};
+  /* A hand edit wins over the sense tag, so a tag can be overridden or
+     cleared from the Manage screen like anything else about a word. */
+  const apply = (w) => {
+    const sense = senses[w.id];
+    const base = sense ? { ...w, sense } : w;
+    return edits[w.id] ? { ...base, ...edits[w.id] } : base;
+  };
   // Three sources, in the order they were written: the supplied seed, the
   // generated bank, then anything added here. A hand edit applies to all of
   // them, which is why it is keyed by id rather than kept per source.
   return SEED.vocabulary.map(apply)
     .concat(VOCAB.vocabulary.map(apply))
     .concat((state.customWords || []).map(apply));
+}
+
+/* Which other words could honestly be typed for this one.
+
+   Two words are siblings when they share an English sense: both are a right
+   answer to the prompt the learner was shown, so typing the other is a
+   reasonable answer to an ambiguous question rather than a mistake. The card
+   uses this to say which sense it wanted instead of calling the answer wrong.
+
+   Built once per bank and cached, because it is O(words) and the round asks
+   for it on every card. The cache key is the word count, which is enough:
+   the only thing that changes the bank mid-session is adding or removing a
+   word through the Manage screen. */
+let siblingCache = null;
+
+function senseGroups(words) {
+  if (siblingCache && siblingCache.size === words.length) return siblingCache.map;
+  const byEnglish = new Map();
+  for (const w of words) {
+    for (const en of w.en || []) {
+      const key = Engine.fold(en);
+      if (!key) continue;
+      if (!byEnglish.has(key)) byEnglish.set(key, []);
+      byEnglish.get(key).push(w);
+    }
+  }
+  const map = new Map();
+  for (const group of byEnglish.values()) {
+    if (group.length < 2) continue;
+    for (const w of group) {
+      if (!map.has(w.id)) map.set(w.id, new Map());
+      for (const other of group) {
+        if (other.id === w.id) continue;
+        map.get(w.id).set(other.id, { es: other.es, sense: other.sense || "" });
+      }
+    }
+  }
+  siblingCache = { size: words.length, map };
+  return map;
+}
+
+function siblingsOf(words, wordId) {
+  const found = senseGroups(words).get(wordId);
+  return found ? [...found.values()] : [];
 }
 
 function allSentences(state) {
@@ -169,5 +220,5 @@ function parseImport(text) {
 
 window.Store = {
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow,
-  allWords, allSentences, peekProgress, progressFor, downloadExport, parseImport,
+  allWords, allSentences, siblingsOf, peekProgress, progressFor, downloadExport, parseImport,
 };

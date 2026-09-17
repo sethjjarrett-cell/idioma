@@ -431,7 +431,7 @@
     // A word you have not met is always at L1, so saying so tells nobody
     // anything; the level appears once it starts meaning something.
     $("card-level").textContent = round.drill ? card.levelLabel
-      : card.intro ? ""
+      : (card.intro && !card.relearn) ? ""
       : `L${prog(item.id).level}`;
     $("card-prompt").innerHTML = card.band.key === "cloze"
       ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
@@ -466,7 +466,20 @@
     $("teach").hidden = !c.intro;
     if (!c.intro) return;
 
+    /* A word shown for the second time needs to say why, or it looks like the
+       app has forgotten you have met it. The miss count is the honest reason
+       and is the whole of what the lapse counter is for. */
+    const misses = c.relearn ? prog(c.word.id).lapses || 0 : 0;
+    $("teach-why").textContent = c.relearn
+      ? `Missed ${misses} ${misses === 1 ? "time" : "times"} in a row without coming good, so here it is again.`
+      : "";
+    $("teach-why").hidden = !c.relearn;
+
     $("teach-meaning").textContent = c.reveal;
+
+    // Which sense, where the English alone would fit another word too.
+    $("teach-sense").textContent = c.word.sense ? `The ${c.word.sense} one.` : "";
+    $("teach-sense").hidden = !c.word.sense;
 
     $("teach-say").textContent = Pronounce.isTricky(c.word.es)
       ? `Say it: ${Pronounce.respell(c.word.es)}`
@@ -485,16 +498,28 @@
     } else {
       $("teach-example").hidden = true;
     }
+
+    // Said out loud because it changes how the card is read: this is not a
+    // word to nod at and forget, it is the answer to the next question.
+    $("teach-then").hidden = false;
   }
 
   /* Met, not answered: the word is marked seen so it is not introduced
-     again, and nothing else about it moves. */
+     again, and nothing else about it moves.
+
+     Then the same word goes straight back into the queue, one place along, so
+     it is asked while it is still on the screen behind your eyes. Being shown
+     a word and tested on it twenty cards later is two unrelated events; being
+     shown it and asked immediately is the pair that makes it stick. The word
+     is not removed from anywhere else, so it still comes round again later on
+     its own weight, which is where the actual remembering happens. */
   $("btn-got").addEventListener("click", () => {
     if (!card || !card.intro) return;
     const id = card.word.id;
     state.progress[id] = Engine.applyResult(progWrite(id), "seen", new Date().toISOString()).progress;
     commit();
     round.results[round.index] = { id, outcome: "seen" };
+    round.queue.splice(round.index + 1, 0, card.word);
     round.index += 1;
     nextCard();
   });
@@ -528,6 +553,10 @@
   function grade(typed) {
     applyAndShow(Engine.checkAnswer(typed, card.accepted, {
       typoTolerance: state.settings.typoTolerance,
+      /* The other Spanish words that answer the same English prompt. A drill
+         answer comes off a conjugation table and has no word behind it, so
+         there is nothing to be a sibling of. */
+      siblings: card.drill ? [] : Store.siblingsOf(words(), card.word.id),
     }), typed);
   }
 
@@ -544,6 +573,18 @@
     infinitive: "the infinitive apart",
     spelling: "a letter out",
   };
+
+  /* A sibling answer is not a misspelling and saying "a letter out" would be
+     a lie about it: the word typed is a real answer to the prompt, just not
+     the sense this card wanted. Both tags go in the line, because the pair is
+     the thing worth learning and this is the moment it lands. */
+  function whySense(res) {
+    const mine = card.word.sense;
+    const theirs = res.sibling && res.sibling.sense;
+    if (!res.sibling) return "close";
+    const left = theirs ? `${res.sibling.es} is ${theirs}` : `${res.sibling.es} means that too`;
+    return mine ? `${left} · this one is ${mine}` : left;
+  }
 
   /* The diff comes out of the engine as ops; the markup is this file's
      business. The answer's own words are shown, with what was added struck
@@ -604,7 +645,9 @@
 
     let detail = "";
     if (outcome === "correct" && res.near) detail = "accepted with typo tolerance";
-    else if (outcome === "almost") detail = WHY[res.reason] || "close";
+    else if (outcome === "almost") {
+      detail = res.reason === "sense" ? whySense(res) : (WHY[res.reason] || "close");
+    }
     else if (outcome === "wrong" && typed.trim()) detail = `you typed "${typed.trim()}"`;
     if (applied.movedUp) detail += `${detail ? " · " : ""}L${applied.levelBefore} to L${applied.levelAfter}`;
     if (applied.movedDown) detail += `${detail ? " · " : ""}dropped to L${applied.levelAfter}`;
@@ -1155,6 +1198,27 @@
       stat(state.stats.rounds, "rounds done"),
     ].join("");
 
+    /* The words that are not going in. Sorted by how many misses are standing
+       against them, so the worst of it is at the top, and capped at a dozen
+       because a list of fifty is a reason to give up rather than a thing to
+       work on. */
+    const sticking = all
+      .map((w) => ({ w, p: prog(w.id) }))
+      .filter((x) => Engine.isSticking(x.p))
+      .sort((a, b) => (b.p.lapses || 0) - (a.p.lapses || 0) || a.p.level - b.p.level)
+      .slice(0, 12);
+
+    $("sticking-body").innerHTML = sticking.length
+      ? sticking.map(({ w, p }) => `
+          <tr>
+            <td class="es">${esc(w.es)}</td>
+            <td>${esc(w.en.join(", "))}</td>
+            <td class="lvl">${p.level}</td>
+            <td class="mono">${p.lapses}</td>
+            <td class="mono small">${accuracy(p) === null ? "-" : accuracy(p) + "%"}</td>
+          </tr>`).join("")
+      : '<tr><td colspan="5" class="muted small">Nothing sticking yet. Long may it last.</td></tr>';
+
     const streaks = all
       .map((w) => ({ w, p: prog(w.id) }))
       .filter((x) => x.p.correctStreak > 0)
@@ -1209,5 +1273,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, Engine, Store };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store };
 })();
