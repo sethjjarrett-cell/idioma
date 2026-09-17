@@ -17,9 +17,10 @@ index.html      the five screens
 styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
 order.js        the order words are taught in
-vocab.js        the generated bank: 261 more words, 294 more sentences
+vocab.js        the generated bank: 404 more words, 802 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
+tools/tatoeba/  importers for Tatoeba sentences and Wiktionary glosses
 verbs.js        the ending tables, and the one function that reads them
 pronounce.js    Spanish spelling to an English respelling; no data, all rules
 engine.js       levels, bands, card selection, answer checking; no DOM
@@ -82,8 +83,8 @@ Two sources, loaded together and merged by `store.js`:
 | | words | sentences |
 |---|---|---|
 | `seed.js`, as supplied | 130 | 100 |
-| `vocab.js`, generated for this app | 261 | 294 |
-| **total** | **391** | **394** |
+| `vocab.js`, generated for this app | 404 | 802 |
+| **total** | **534** | **902** |
 
 `seed.js` is untouched and stays that way. `vocab.js` holds the rest: the
 common words the seed did not reach, each with an example sentence, plus
@@ -93,6 +94,29 @@ for want of one, and the "Cloze, no sentence" filter is empty.
 
 Every generated word carries its own `topic`, so `topics.js` only has to file
 the seed. A word added through the Manage screen carries one too.
+
+### Where the later words and sentences came from
+
+The first 261 generated words were written by hand. The rest came through
+`tools/tatoeba/`, which pulls example sentences from
+[Tatoeba](https://tatoeba.org) (CC-BY 2.0 FR) and word meanings and genders
+from [Wiktionary](https://en.wiktionary.org) (CC-BY-SA, via kaikki.org).
+Attribution is in the app under the menu as well as here, because both
+licences ask for it.
+
+The importers propose; a person decides. That is not a formality. Ranking
+Tatoeba tokens by frequency and looking each up in Wiktionary first produced
+`es` glossed "plural of e", `tenia` as "tapeworm" and `la` as a musical note.
+And no filter can settle a noun-verb homograph: *vino* is wine and he came,
+*suelo* is the floor and I usually. Of 143 curated words, 16 came back with an
+example using the wrong sense and were rewritten by hand. Expect about one in
+ten, and read every line.
+
+Tatoeba's Spanish also leans towards Spain — *coche* outnumbers *carro* six to
+one, vosotros forms outnumber *ustedes* two to one — so the importer drops
+vosotros and a list of peninsular words rather than importing them. Its
+English is mildly American; the handful of instances are normalised to British
+spelling on the way in. `tools/tatoeba/README.md` has the counts.
 
 ### What the checks can and cannot tell you
 
@@ -179,7 +203,7 @@ seseo throughout.
 
 ## What you meet, and when
 
-A bank of 391 words is not something to be handed all at once, and it is not
+A bank of 534 words is not something to be handed all at once, and it is not
 much use in alphabetical order either. Two rules decide what comes next, and
 between them they are the whole of the progression:
 
@@ -397,7 +421,7 @@ three bands including the no-sentence fallback, and round selection.
 nothing is duplicated between them, that every generated word is complete and
 has a sentence whose braced form matches, that every word in the bank builds a
 card in all three bands, and that the respeller has something to say about all
-391 of them.
+534 of them.
 
 `tests/test-ui.mjs` through `test-ui5.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.

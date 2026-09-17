@@ -122,6 +122,59 @@ const TEACHING_ORDER = [
 
   /* Set phrases */
   "hay-un", "dime", "buena-suerte", "vale-la-pena", "placer", "punto",
+
+  /* Things you will name every day. The commonest concrete nouns after the first round of them. */
+  "libro", "favor", "verdad", "momento", "parte", "lado", "idea", "plan",
+  "razon", "caso", "numero", "edad",
+
+  /* School, work and paperwork */
+  "profesor", "estudiante", "colegio", "escuela", "examen", "tarea",
+  "respuesta", "opinion", "decision", "consejo", "papel", "lista",
+  "biblioteca", "abogado", "puesto",
+
+  /* Getting about */
+  "tren", "autobus", "estacion", "barco", "bicicleta", "caballo",
+  "pueblo", "edificio", "sitio", "parque", "jardin", "banco",
+  "restaurante", "hospital", "extranjero", "vuelta",
+
+  /* Family and the people in it */
+  "mama", "papa", "esposa", "novia", "hija", "chico", "amiga", "bebe",
+  "doctor",
+
+  /* The body, and being well */
+  "corazon", "cara", "boca", "pelo", "oido", "salud", "sueno",
+
+  /* Feelings, and what goes wrong */
+  "amor", "miedo", "suerte", "culpa", "cuidado", "peligro", "odio",
+  "muerte", "guerra", "error", "falta", "ruido",
+
+  /* Music, film and sport */
+  "musica", "cancion", "pelicula", "television", "foto", "guitarra",
+  "piano", "juego", "futbol", "tenis", "fiesta", "cumpleanos", "regalo",
+  "cine", "equipo",
+
+  /* Words and languages */
+  "idioma", "ingles", "frase", "diccionario", "historia", "secreto",
+
+  /* Phones, clocks and screens */
+  "telefono", "camara", "radio", "reloj",
+
+  /* Clothes and things you carry */
+  "camisa", "vestido", "zapato", "sombrero", "caja",
+
+  /* Weather, food and the outdoors */
+  "cafe", "manzana", "fuego", "aire", "cielo", "nieve", "calor", "verano",
+  "suelo",
+
+  /* Describing more precisely */
+  "interesante", "inteligente", "divertido", "entretenido", "peligroso",
+  "loco", "rico", "libre", "unico", "cierto", "ocupado", "perdido",
+  "equivocado", "duro", "extrano", "suficiente",
+
+  /* The last of the small words */
+  "bastante", "apenas", "jamas", "completamente", "ojala", "anoche",
+  "futuro", "dentro", "alla", "realidad", "situacion", "manera", "forma",
+  "asunto", "atencion", "exito", "recuerdo",
 ];
 
 /* id to position, built once. Anything unlisted sorts last. */
