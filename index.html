@@ -80,6 +80,10 @@
     <input type="checkbox" id="set-typo">
     <span>Typo tolerance <em>lets a single-letter slip through outright; off, it comes back as Almost</em></span>
   </label>
+  <label class="toggle">
+    <input type="checkbox" id="set-introduce">
+    <span>Show new words first <em>the first time a word comes up it is shown, not tested</em></span>
+  </label>
   <label class="field inline">
     <span>Cards per round</span>
     <input type="number" id="set-round" min="1" max="100" step="1">
@@ -119,6 +123,18 @@
       </div>
       <p class="prompt" id="card-prompt"></p>
       <p class="muted small" id="card-hint"></p>
+
+      <!-- A word you have not met: shown, with nothing to type. -->
+      <div class="teach" id="teach" hidden>
+        <p class="teach-meaning" id="teach-meaning"></p>
+        <p class="say" id="teach-say" hidden></p>
+        <p class="note" id="teach-note" hidden></p>
+        <div class="teach-example" id="teach-example" hidden>
+          <p class="teach-es" id="teach-es"></p>
+          <p class="muted small" id="teach-en"></p>
+        </div>
+        <button class="btn primary big" id="btn-got">Got it</button>
+      </div>
 
       <form id="answer-form" autocomplete="off">
         <input type="text" id="answer" placeholder="Type your answer"

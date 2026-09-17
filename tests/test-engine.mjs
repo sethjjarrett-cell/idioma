@@ -83,27 +83,73 @@ console.log('--- card building ---');
 const byId = Object.fromEntries(SEED.vocabulary.map(w => [w.id, w]));
 const sFor = (id) => SEED.sentences.filter(s => s.wordId === id);
 const comer = byId['comer'];
-let c = E.buildCard(comer, { ...E.freshProgress(), level: 2 }, sFor);
+// A word that has been met at least once, which is what the band rules are
+// about; a word that has not is introduced instead, and is tested below.
+const met = (level) => ({ ...E.freshProgress(), level, timesSeen: 1 });
+let c = E.buildCard(comer, met(2), sFor);
 ok('L2 shows Spanish, accepts English', c.band.key === 'recognition' && c.prompt === comer.es && c.accepted.join() === comer.en.join());
-c = E.buildCard(comer, { ...E.freshProgress(), level: 5 }, sFor);
+c = E.buildCard(comer, met(5), sFor);
 ok('L5 shows English, accepts Spanish', c.band.key === 'production' && c.accepted.includes(comer.es));
-c = E.buildCard(comer, { ...E.freshProgress(), level: 9 }, sFor);
+c = E.buildCard(comer, met(9), sFor);
 ok('L9 is cloze with a blank', c.band.key === 'cloze' && c.prompt.includes('_____') && !c.fellBack);
 ok('cloze answer is the surface form', c.accepted.length === 1 && /^[a-záéíóúñ]+$/i.test(c.accepted[0]));
 ok('cloze reveal restores the sentence', !c.revealContext.includes('{'));
-const noSent = SEED.vocabulary.find(w => sFor(w.id).length === 0);
-c = E.buildCard(noSent, { ...E.freshProgress(), level: 9 }, sFor);
+// Built rather than found: every word in the bank has a sentence now, so
+// there is no longer one lying around to stand in for a word that does not.
+const noSent = { id: 'zz_no_sentence', es: 'palabra', en: ['word'], pos: 'noun' };
+c = E.buildCard(noSent, met(9), sFor);
 ok('cloze with no sentence falls back and flags', c.fellBack === true && c.band.key === 'production', noSent.es);
+
+console.log('--- a word you have never met is shown, not asked ---');
+c = E.buildCard(comer, E.freshProgress(), sFor);
+ok('a never-seen word builds an intro card', c.intro === true && c.band.key === 'intro');
+ok('it shows the word and what it means', c.prompt === comer.es && c.reveal === comer.en.join(', '));
+ok('and there is nothing to type', c.accepted.length === 0);
+ok('it carries an example with the word still in it',
+  c.example && !c.example.es.includes('{') && c.example.es.includes(c.example.target), JSON.stringify(c.example));
+ok('a word met once is tested instead', E.buildCard(comer, met(1), sFor).intro !== true);
+ok('introducing can be turned off',
+  E.buildCard(comer, E.freshProgress(), sFor, { introduce: false }).band.key === 'recognition');
+ok('a word with no sentence still introduces, just without the example',
+  E.introCard(noSent, sFor).example === null);
+
+console.log('--- an introduction is not an answer ---');
+let seen = E.applyResult({ ...E.freshProgress(), level: 4, correctStreak: 1 }, 'seen', NOW);
+ok('the level does not move', seen.levelAfter === 4);
+ok('the streak is not broken', seen.progress.correctStreak === 1);
+ok('nothing is counted right or wrong',
+  seen.progress.totalCorrect === 0 && seen.progress.totalWrong === 0 && seen.progress.totalAlmost === 0);
+ok('but the word counts as met, so it is not introduced twice',
+  seen.progress.timesSeen === 1 && seen.progress.lastSeen === NOW);
 
 console.log('--- round selection ---');
 const progMap = {}; const pf = (id) => (progMap[id] ||= E.freshProgress());
 const round = E.pickRound(SEED.vocabulary, pf, NOW, 15);
 ok('round is the requested size', round.length === 15);
+// With nothing seen there is nothing to fill up with, so the cap gives way
+// rather than handing back a short round.
+ok('a full round even when every word is new and the cap is lower', round.length === 15);
 ok('no duplicates in a round', new Set(round.map(w => w.id)).size === 15);
 progMap['comer'] = { ...E.freshProgress(), enabled: false };
 const r2 = E.pickRound(SEED.vocabulary, pf, NOW, 130);
 ok('disabled words excluded', !r2.some(w => w.id === 'comer'));
 ok('round cannot exceed the pool', E.pickRound(SEED.vocabulary.slice(0,5), pf, NOW, 15).length === 5);
+
+console.log('--- new words are rationed once there are others to draw on ---');
+const mixed = {};
+SEED.vocabulary.forEach((w, i) => {
+  // Half the bank met, half never seen.
+  mixed[w.id] = i % 2 ? { ...E.freshProgress(), timesSeen: 3, lastSeen: NOW } : E.freshProgress();
+});
+const mf = (id) => mixed[id];
+let worst = 0;
+for (let i = 0; i < 40; i++) {
+  const r = E.pickRound(SEED.vocabulary, mf, NOW, 15, { maxNew: 5 });
+  worst = Math.max(worst, r.filter(w => !mixed[w.id].timesSeen).length);
+  if (r.length !== 15) { ok('rounds stay full length', false, 'got ' + r.length); break; }
+}
+ok('never more new words than the cap allows', worst <= 5, 'worst was ' + worst);
+ok('and the cap can be lifted', E.pickRound(SEED.vocabulary, mf, NOW, 15, { maxNew: 15 }).length === 15);
 
 console.log('--- the amber band ---');
 const near = (typed, acc, opt) => E.checkAnswer(typed, acc, opt);

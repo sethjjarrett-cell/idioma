@@ -112,6 +112,7 @@
 
   function refreshMenu() {
     $("set-typo").checked = !!state.settings.typoTolerance;
+    $("set-introduce").checked = state.settings.introduceNew !== false;
     $("set-round").value = state.settings.roundSize;
     $("saved-at").textContent = state.savedAt
       ? `Last saved ${new Date(state.savedAt).toLocaleString("en-GB")}`
@@ -124,6 +125,14 @@
     toast(e.target.checked
       ? "Typo tolerance on; a single-letter slip will now pass."
       : "Typo tolerance off.");
+  });
+
+  $("set-introduce").addEventListener("change", (e) => {
+    state.settings.introduceNew = e.target.checked;
+    commit();
+    toast(e.target.checked
+      ? "New words will be shown once before they are tested."
+      : "New words go straight to being tested.");
   });
 
   $("set-round").addEventListener("change", (e) => {
@@ -250,13 +259,21 @@
     if (!round || round.index >= round.queue.length) return endRound();
     const item = round.queue[round.index];
     // A drill item is already a card; a word has to be built into one.
-    card = round.drill ? drillCard(item) : Engine.buildCard(item, prog(item.id), sentencesFor);
+    card = round.drill
+      ? drillCard(item)
+      : Engine.buildCard(item, prog(item.id), sentencesFor, {
+          introduce: state.settings.introduceNew !== false,
+        });
     lastResult = null;
     cardBefore = round.drill ? null : JSON.parse(JSON.stringify(prog(item.id)));
     retypes = 0;
 
     $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
-    $("card-level").textContent = round.drill ? card.levelLabel : `L${prog(item.id).level}`;
+    // A word you have not met is always at L1, so saying so tells nobody
+    // anything; the level appears once it starts meaning something.
+    $("card-level").textContent = round.drill ? card.levelLabel
+      : card.intro ? ""
+      : `L${prog(item.id).level}`;
     $("card-prompt").innerHTML = card.band.key === "cloze"
       ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
       : esc(card.prompt);
@@ -264,6 +281,12 @@
       ? card.promptHint
       : (card.promptHint ? card.promptHint : "");
     $("card-hint").hidden = !$("card-hint").textContent;
+
+    // An introduction has nothing to answer, so the box gives way to the
+    // teaching block and the only thing to press is Got it.
+    drawTeach(card);
+    $("answer-form").hidden = !!card.intro;
+    $("card").classList.toggle("teaching", !!card.intro);
 
     $("answer").value = "";
     $("answer").disabled = false;
@@ -273,9 +296,49 @@
     $("card").hidden = false;
     $("round-count").textContent = `${round.index + 1} / ${round.queue.length}`;
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
-    $("answer").focus();
+    (card.intro ? $("btn-got") : $("answer")).focus();
     window.__card = card;   // handy for debugging and for the UI test
   }
+
+  /* The teaching card. Everything the learner needs in one go: the word, what
+     it means, how to say it, the note, and a sentence with the word still in
+     place rather than blanked out. */
+  function drawTeach(c) {
+    $("teach").hidden = !c.intro;
+    if (!c.intro) return;
+
+    $("teach-meaning").textContent = c.reveal;
+
+    $("teach-say").textContent = Pronounce.isTricky(c.word.es)
+      ? `Say it: ${Pronounce.respell(c.word.es)}`
+      : "";
+    $("teach-say").hidden = !$("teach-say").textContent;
+
+    $("teach-note").textContent = c.word.note || "";
+    $("teach-note").hidden = !c.word.note;
+
+    if (c.example) {
+      // The word is picked out of the sentence so the eye lands on it.
+      $("teach-es").innerHTML = esc(c.example.es)
+        .replace(esc(c.example.target), `<b>${esc(c.example.target)}</b>`);
+      $("teach-en").textContent = c.example.en;
+      $("teach-example").hidden = false;
+    } else {
+      $("teach-example").hidden = true;
+    }
+  }
+
+  /* Met, not answered: the word is marked seen so it is not introduced
+     again, and nothing else about it moves. */
+  $("btn-got").addEventListener("click", () => {
+    if (!card || !card.intro) return;
+    const id = card.word.id;
+    state.progress[id] = Engine.applyResult(progWrite(id), "seen", new Date().toISOString()).progress;
+    commit();
+    round.results[round.index] = { id, outcome: "seen" };
+    round.index += 1;
+    nextCard();
+  });
 
   /* A conjugation dressed as a card, so the practice screen does not need to
      know the difference. The answer comes straight off the table in verbs.js,
@@ -463,8 +526,9 @@
 
     // results is keyed by card position, so a skipped card leaves a hole.
     const answered = round.results.filter(Boolean);
-    const n = answered.length;
     const count = (outcome) => answered.filter((r) => r.outcome === outcome).length;
+    // An introduction was not answered, so it is not in the accuracy.
+    const n = answered.length - count("seen");
     const right = count("correct");
     const pct = n ? Math.round((right / n) * 100) : 0;
 
@@ -474,12 +538,17 @@
       Store.saveNow(state);
     }
 
+    // A round of nothing but introductions has no accuracy to report, and
+    // "0/0 correct" is worse than saying nothing.
     $("end-stats").innerHTML = [
-      stat(pct + "%", "accuracy"),
-      stat(`${right}/${n}`, "correct"),
-      stat(count("almost"), "almost"),
+      ...(count("seen") ? [stat(count("seen"), "new words met")] : []),
+      ...(n ? [
+        stat(pct + "%", "accuracy"),
+        stat(`${right}/${n}`, "correct"),
+        stat(count("almost"), "almost"),
+      ] : []),
       // Levels are a word thing, so a drill does not report them.
-      ...(round.drill ? [] : [
+      ...(round.drill || !n ? [] : [
         stat(round.movers.filter((m) => m.up).length, "levelled up"),
         stat(round.movers.filter((m) => !m.up).length, "dropped"),
       ]),
@@ -487,7 +556,9 @@
 
     $("end-movers").innerHTML = round.drill
       ? '<p class="muted small">A drill is practice, not assessment, so no word has moved.</p>'
-      : round.movers.length
+      : !n
+        ? '<p class="muted small">All new words this round, so nothing was tested. They will come back to be asked.</p>'
+        : round.movers.length
         ? round.movers.map((m) => `
             <div class="mover ${m.up ? "up" : "down"}">
               <span class="arrow">${m.up ? "&#9650;" : "&#9660;"}</span>
@@ -951,7 +1022,10 @@
   // round can be done without touching the mouse.
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
-    if ($("verdict").hidden || $("card").hidden) return;
+    if ($("card").hidden) return;
+    // On an introduction the only action is Got it.
+    if (card && card.intro) { e.preventDefault(); $("btn-got").click(); return; }
+    if ($("verdict").hidden) return;
     e.preventDefault();
     // Enter takes the primary action, which on an amber card is the second
     // go. Only the first one, though: past that, Enter has to mean Next, or

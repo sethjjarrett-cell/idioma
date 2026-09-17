@@ -176,6 +176,30 @@ note, the soft Spanish d between vowels is not marked, and regional habits
 (the coastal aspirated s, the Southern Cone ll) are out of scope. Colombian,
 seseo throughout.
 
+## Meeting a word before being tested on it
+
+A word you have never seen cannot be tested, only guessed at, so the first
+time it comes up it is **shown** rather than asked: the word, what it means,
+how to say it where that is not obvious, its note, and an example sentence
+with the word still in place rather than blanked out. One button, Got it.
+Testing starts the next time it comes round.
+
+An introduction is not an answer. It marks the word met, so it is not
+introduced twice, and touches nothing else: no level, no streak, no right or
+wrong count, and it stays out of the round's accuracy. A round made entirely
+of introductions reports how many words were met and says plainly that
+nothing was tested.
+
+Rounds are capped at five new words, so a round is five to meet and ten to
+practise rather than fifteen words you have never seen, which is a vocabulary
+list rather than a round. On a fresh bank there is nothing met to fill up
+with, so the cap gives way rather than handing back a short round — the first
+few rounds are all introductions, which is the only honest thing they could
+be.
+
+The toggle in the menu turns it off, and new words go straight to being
+tested.
+
 ## How the mastery engine works
 
 Levels run 1 upwards. Correct moves a word up one, wrong moves it down one,
@@ -327,7 +351,7 @@ has a sentence whose braced form matches, that every word in the bank builds a
 card in all three bands, and that the respeller has something to say about all
 382 of them.
 
-`tests/test-ui.mjs` through `test-ui4.mjs` drive the real page in
+`tests/test-ui.mjs` through `test-ui5.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -338,6 +362,10 @@ and the second go that is right earning the level without counting the card
 twice. `test-ui4.mjs` covers the topic screens, checks that a topic round
 really is drawn from that topic alone, opens the lesson tables, runs a
 conjugation drill and confirms it leaves every word's progress untouched.
+`test-ui5.mjs` covers the introduction: that the first card of a fresh bank is
+shown rather than asked, that Got it marks the word met without moving it,
+that the same word is tested the next time, that the five-new cap bites once
+there are met words to draw on, and that the setting turns it off.
 
 ## Not built, by request
 
