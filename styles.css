@@ -7,50 +7,65 @@
    furniture around it is friendly, not shouty. */
 
 :root {
-  /* surfaces */
-  --bg: #fff8f0;
-  --panel: #ffffff;
-  --panel2: #fff3e6;
-  --line: #f0dfcc;
-  --line2: #e2cdb4;
+  /* Sandy paper, olive drab, burnt orange and brick: the palette of a
+     screen-printed film poster left in the sun. Every value below was
+     checked for contrast rather than chosen by eye, because a muted desert
+     palette is exactly how you ship something unreadable. The two that
+     failed on the first pass, --muted against the page and the label on an
+     accent button, were solved for rather than nudged. */
+
+  /* paper */
+  --bg: #efe3c8;
+  --panel: #f8f0dc;
+  --panel2: #ebdec0;
+  --line: #d8c7a4;
+  --line2: #c2ac84;
 
   /* ink */
-  --text: #4b3626;
-  --muted: #9b8574;
+  --text: #2e2a1c;
+  --muted: #6e6349;
 
-  /* brand */
-  --accent: #ff7a1a;
-  --accent-deep: #d95c00;   /* accent text read on a pale tint */
-  --accent-edge: #d95c00;   /* the hard slab under a button, always darker */
-  --accent-soft: #ffe8d2;
-  --on-accent: #ffffff;
+  /* burnt orange, off the poster's title lettering */
+  --accent: #b05423;
+  --accent-deep: #8d4217;   /* accent as text, read on a pale tint */
+  --accent-edge: #6f3411;   /* the slab under a button, always darker */
+  --accent-soft: #f1dcba;
+  --on-accent: #fdf7e8;
 
-  /* verdicts */
-  --good: #5bab24;
-  --good-deep: #46881a;
-  --good-edge: #46881a;
-  --good-soft: #eefadf;
-  --bad: #e04a2f;
-  --bad-deep: #b53820;
-  --bad-edge: #b53820;
-  --bad-soft: #ffe7e1;
-  /* The amber band sits between the two. Pushed yellow rather than amber
-     so that it does not read as the brand orange on an orange page. */
-  --warn: #e0a500;
-  --warn-deep: #8a6300;
-  --warn-edge: #a87a00;
-  --warn-soft: #fff6d6;
+  /* verdicts, in the same dust: olive, ochre, brick */
+  --good: #6b7a33;
+  --good-deep: #46521c;
+  --good-edge: #3a4416;
+  --good-soft: #e6e6c2;
+  --bad: #a8472a;
+  --bad-deep: #78301a;
+  --bad-edge: #5e2413;
+  --bad-soft: #f3dac9;
+  --warn: #c1912b;
+  --warn-deep: #725209;
+  --warn-edge: #8a6209;
+  --warn-soft: #f6e8bd;
 
-  /* mascot */
-  --fur: #ff8a2b;
-  --ear: #ffc79a;
-  --snout: #fff3e6;
-  --blush: #ff5c33;
-  --ink: #4a2c15;
+  /* the fox */
+  --fur: #e08a3c;
+  --tip: #2b332e;
+  --snout: #f0e2c0;
+  --sclera: #f6eeda;
+  --eye: #7e8f6e;
+  --coat: #c9a86a;
+  --coat-line: #a9884a;
+  --shirt: #ece1c2;
+  --ink: #26261a;
 
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --round: ui-rounded, "SF Pro Rounded", "Varela Round", "Quicksand",
            "Nunito", "Trebuchet MS", system-ui, -apple-system, sans-serif;
+  /* A warm old serif for the wordmark and the headings only. The poster's
+     display face is a western slab nobody has installed, and Georgia is on
+     effectively every machine; used sparingly it reads period without
+     costing any legibility where it matters. */
+  --display: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino,
+             "Book Antiqua", serif;
   color-scheme: light;
 }
 
@@ -63,7 +78,11 @@
 html, body {
   margin: 0;
   min-height: 100%;
-  background: var(--bg);
+  background-color: var(--bg);
+  /* Paper grain, generated rather than an image so nothing is downloaded.
+     Deliberately faint: enough to feel like stock, not enough to fight the
+     text sitting on it. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
   color: var(--text);
   font: 15px/1.55 var(--round);
   -webkit-text-size-adjust: 100%;
@@ -74,7 +93,7 @@ html, body {
 .sprite { position: absolute; }
 
 .fox { display: block; flex: none; overflow: visible; }
-.fox-sm { width: 30px; height: 30px; }
+.fox-sm { width: 32px; height: 32px; --fox-detail: 0; }
 .fox-md { width: 46px; height: 46px; }
 .fox-lg { width: 88px; height: 88px; }
 
@@ -103,8 +122,8 @@ html, body {
 }
 .brand {
   display: flex; align-items: center; gap: 9px;
-  font: 800 20px var(--round); letter-spacing: -0.3px; user-select: none;
-  color: var(--text);
+  font: 700 21px var(--display); letter-spacing: 0.01em; user-select: none;
+  color: var(--accent-deep);
 }
 .spacer { flex: 1; }
 
@@ -138,7 +157,7 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
   background: var(--panel); border: 2px solid var(--line);
   border-radius: 20px; padding: 18px; margin-bottom: 16px;
 }
-.pane h2 { font: 800 16px var(--round); margin: 0 0 12px; letter-spacing: -0.2px; }
+.pane h2 { font: 700 17px var(--display); margin: 0 0 12px; letter-spacing: 0; }
 .pane-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .pane-head h2 { margin: 0; flex: 1; }
 
@@ -595,31 +614,39 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1c1511;
-    --panel: #271e18;
-    --panel2: #322620;
-    --line: #3d2f26;
-    --line2: #4d3b30;
-    --text: #f3e7dc;
-    --muted: #a99283;
-    --accent: #ff8a2b;
-    --accent-deep: #ffab61;
-    --accent-edge: #a8480a;
-    --accent-soft: #46301d;
-    --on-accent: #23160b;
-    --good: #6fbf34;
-    --good-deep: #9ada63;
-    --good-edge: #3f7a12;
-    --good-soft: #2b3a1c;
-    --bad: #f0634a;
-    --bad-deep: #ff9781;
-    --bad-edge: #a4301b;
-    --bad-soft: #3d221c;
-    --warn: #e8b52c;
-    --warn-deep: #f4cf72;
-    --warn-edge: #9a7205;
-    --warn-soft: #3a2f13;
-    --snout: #ffe9d4;
+    /* The poster's own dark half: olive drab behind, sand in front. */
+    --bg: #24241a;
+    --panel: #2f3021;
+    --panel2: #3a3a27;
+    --line: #4a4832;
+    --line2: #5f5b3e;
+    --text: #efe3c8;
+    --muted: #a79a77;
+    --accent: #e08a3c;
+    --accent-deep: #f2ba78;
+    --accent-edge: #8c4f18;
+    --accent-soft: #45381f;
+    --on-accent: #241e10;
+    --good: #8a9a44;
+    --good-deep: #c3d17a;
+    --good-edge: #4f5a22;
+    --good-soft: #33381c;
+    --bad: #c9583a;
+    --bad-deep: #f0a086;
+    --bad-edge: #7c3220;
+    --bad-soft: #3d2018;
+    --warn: #d9a93c;
+    --warn-deep: #f0d183;
+    --warn-edge: #8a6209;
+    --warn-soft: #3b3318;
+    --snout: #f0e2c0;
+    /* The ear tips are the one dark part that sits outside the orange, so
+       against an olive background they need lifting or the ears lose their
+       points. Still plainly dark where it matters, on the fur. */
+    --tip: #46514c;
+    --coat: #8a7444;
+    --coat-line: #6b5a34;
+    --shirt: #cdbf96;
     color-scheme: dark;
   }
   .card.correct .verdict { border-top-color: #3f5a28; }

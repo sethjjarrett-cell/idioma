@@ -49,34 +49,64 @@ one copy of the bank.
 
 ## The look
 
-Bright, rounded and chunky, in the manner of the big language apps, but
-orange rather than green. Fat corner radii, all-caps buttons sitting on a
-solid slab of darker colour that the press squashes flat, and a verdict block
-that takes the colour of the answer — green, amber or red — so how the answer
-went is the shape of the screen before it is words.
+A screen-printed film poster left in the sun: sandy paper, olive drab, burnt
+orange and brick. The structure underneath is unchanged from the version
+before it — fat corner radii, all-caps buttons sitting on a slab of darker
+colour that the press squashes flat, a verdict block that bleeds to the card
+edges and takes the colour of the answer. Only the palette and the fox moved.
 
-The wordmark is the word, set plainly. An earlier draft boxed half of it in
-an orange chip, which turned out to be a well-known logo for something that
-is not a Spanish trainer.
+Every colour is a custom property at the top of `styles.css`, and every one of
+them was **checked rather than chosen by eye**, because a muted desert palette
+is exactly how you ship something unreadable. Ten foreground-on-background
+pairs per scheme against WCAG AA; the two that failed on the first pass, the
+muted grey against the page and the label on an accent button, were solved for
+rather than nudged until they looked alright. Both schemes now clear every
+pair, the tightest with 5% to spare.
 
-Every colour is a custom property at the top of `styles.css`, so retuning the
-whole theme is one block. The dark scheme at the bottom of the file is nothing
-but a token swap, in warm browns so the orange still belongs; it follows the
-system setting.
+The dark scheme is the poster's own dark half — olive drab behind, sand in
+front — and is still nothing but a token swap, with one exception worth
+knowing about: the fox's ear tips are the only dark part of him that sits
+outside the orange, so on an olive background they get lifted or the ears lose
+their points.
 
-The mascot is a fox called Zorro, which is what a Spanish speaker would call
-him. He is one inline `<symbol>` near the top of `index.html`, stamped out
-with `<use>`, and he has three faces: idle, right and wrong. The faces are
-`<g>` groups whose opacity reads a custom property, and custom properties
-inherit into the shadow tree a `<use>` builds, so switching his expression is
-one CSS line and no extra markup:
+The wordmark and the section headings are set in Georgia, which is on
+effectively every machine. The poster's display face is a western slab nobody
+has installed, and used sparingly a warm old serif reads period without
+costing legibility where it matters. The paper grain is an inline SVG
+turbulence filter at 5% rather than an image, so nothing is downloaded.
+
+### The fox
+
+Zorro, redrawn after the *Fantastic Mr Fox* poster: a broad flat head, the
+dark angular brows that do as much work as anything else in saying which fox
+this is, dark ear tips, green-grey eyes set wide, a large pale muzzle, and a
+suit.
+
+He is one inline `<symbol>` stamped out with `<use>`, and his three faces are
+groups whose opacity reads a custom property; custom properties inherit into
+the shadow tree a `<use>` builds, so an expression change is one CSS line and
+no extra markup:
 
 ```css
 .card.correct .verdict .fox { --fox-idle: 0; --fox-happy: 1; }
 ```
 
-`app.js` puts a `correct` or `wrong` class on the card and knows nothing else
-about how any of this is drawn.
+Two things about drawing him are worth writing down, because both were got
+wrong first:
+
+**The muzzle line decides the species.** The pale field has to start *below*
+the eyes and rise only a little between them. A first attempt had it rising to
+a point above the eyes, which swallowed the face and turned him into a dog.
+
+**A bust does not fit a square frame by accident.** The head is scaled to 0.88
+and lifted so the chin lands on the collar, done with a transform rather than
+by rewriting every path, so the geometry that was drawn stays the geometry in
+the file. Before that the coat was a tan bar he appeared to be standing
+behind.
+
+The whiskers and the suit are in a group behind `--fox-detail`, which
+`.fox-sm` sets to zero: at 32px in a header a clean head reads better than
+either, and a tan bar is all the suit can ever be at that size.
 
 ## The bank
 
