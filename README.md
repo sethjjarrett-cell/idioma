@@ -63,11 +63,30 @@ muted grey against the page and the label on an accent button, were solved for
 rather than nudged until they looked alright. Both schemes now clear every
 pair, the tightest with 5% to spare.
 
-The dark scheme is the poster's own dark half — olive drab behind, sand in
-front — and is still nothing but a token swap, with one exception worth
-knowing about: the fox's ear tips are the only dark part of him that sits
-outside the orange, so on an olive background they get lifted or the ears lose
-their points.
+### Paper by default, dark by choice
+
+Paper is the default whatever the operating system prefers. Dark is the
+poster's own dark half — olive drab behind, sand in front — and is a choice
+made in the menu, not a setting inherited from elsewhere. There is
+deliberately no `prefers-color-scheme` rule; the tokens hang off a
+`data-theme` attribute instead.
+
+Two details that are the whole reason it feels right:
+
+The attribute is set by a four-line script in the `<head>`, before the
+stylesheet has anything to say. Doing it in `app.js`, which loads at the end
+of the body, would give anyone who picked dark a white flash on every single
+load.
+
+The choice lives in its own `localStorage` key and is **not** part of the
+synced state. Which theme suits a phone at night is not which theme suits a
+laptop at noon, and since the sync merge lets the younger save win the
+settings, putting it there would have two devices overwriting each other's
+answer every time they met.
+
+Dark is still otherwise nothing but a token swap, with one exception: the
+fox's ear tips are the only dark part of him that sits outside the orange, so
+on an olive background they get lifted or the ears lose their points.
 
 The wordmark and the section headings are set in Georgia, which is on
 effectively every machine. The poster's display face is a western slab nobody
@@ -515,7 +534,7 @@ has a sentence whose braced form matches, that every word in the bank builds a
 card in all three bands, and that the respeller has something to say about all
 534 of them.
 
-`tests/test-ui.mjs` through `test-ui6.mjs` drive the real page in
+`tests/test-ui.mjs` through `test-ui7.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -532,6 +551,10 @@ that the same word is tested the next time, that the five-new cap bites once
 there are met words to draw on, and that the setting turns it off.
 `test-ui6.mjs` stands up a server implementing the same two routes as the real
 one and runs two browser contexts against it as a phone and a laptop.
+`test-ui7.mjs` opens the page with the operating system set to dark and checks
+it comes up on paper anyway, that choosing dark sticks across a reload, that
+the attribute is set in the head rather than by `app.js`, and that the choice
+does not reach the synced settings.
 
 ## Not built, by request
 

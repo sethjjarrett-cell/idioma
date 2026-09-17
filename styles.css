@@ -612,8 +612,15 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
 /* Same theme after dark: warm browns rather than blue-greys, so the orange
    still looks like it belongs. Tokens only; no layout changes below. */
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Dark is opted into, never inherited. There is deliberately no
+   prefers-color-scheme rule: paper is the default whatever the operating
+   system prefers, and the attribute below is set by the inline script in the
+   head before the first paint, so choosing dark does not cost a white flash
+   on every load.
+
+   The tokens hang off an attribute rather than a media query, which is the
+   whole of the change; everything under them is the same swap it was. */
+:root[data-theme="dark"] {
     /* The poster's own dark half: olive drab behind, sand in front. */
     --bg: #24241a;
     --panel: #2f3021;
@@ -649,12 +656,13 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
     --shirt: #cdbf96;
     color-scheme: dark;
   }
-  .card.correct .verdict { border-top-color: #3f5a28; }
-  .card.wrong .verdict { border-top-color: #61342a; }
-  .mover.up { border-color: #3f5a28; }
-  .mover.down { border-color: #61342a; }
-  .field input::placeholder, .filter::placeholder, #answer::placeholder { color: #7d6858; }
-  .toast { background: var(--panel2); border: 2px solid var(--line2); color: var(--text); }
-  .toast.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--text); }
-  .btn.primary { color: var(--on-accent); }
-}
+
+:root[data-theme="dark"] .card.correct .verdict { border-top-color: #3f5a28; }
+:root[data-theme="dark"] .card.wrong .verdict { border-top-color: #61342a; }
+:root[data-theme="dark"] .mover.up { border-color: #3f5a28; }
+:root[data-theme="dark"] .mover.down { border-color: #61342a; }
+:root[data-theme="dark"] .field input::placeholder, :root[data-theme="dark"] .filter::placeholder, :root[data-theme="dark"] #answer::placeholder { color: #7d6858; }
+:root[data-theme="dark"] .toast { background: var(--panel2); border: 2px solid var(--line2); color: var(--text); }
+:root[data-theme="dark"] .toast.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--text); }
+:root[data-theme="dark"] .btn.primary { color: var(--on-accent); }
+

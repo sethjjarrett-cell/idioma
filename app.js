@@ -101,6 +101,40 @@
   });
 
   /* ------------------------------------------------------------------
+     Theme
+
+     Paper by default, whatever the operating system prefers; dark is a
+     choice made here. Kept in its own localStorage key rather than in the
+     synced settings, because which theme suits a phone at night is not which
+     theme suits a laptop at noon, and the sync merge would have two devices
+     overwriting each other's answer every time they met.
+
+     The attribute is also set by a four-line script in the head, which is
+     what stops a dark-mode user seeing a white flash on every load; this is
+     only what happens when the toggle moves.
+     ------------------------------------------------------------------ */
+
+  const THEME_KEY = "idioma.theme.v1";
+  const PAPER = "#efe3c8";
+  const OLIVE = "#24241a";
+
+  function loadTheme() {
+    try { return window.localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "paper"; }
+    catch (e) { return "paper"; }
+  }
+
+  function applyTheme(theme) {
+    const dark = theme === "dark";
+    const root = document.documentElement;
+    if (dark) root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    // So the browser chrome on a phone matches the page rather than fighting it.
+    const meta = $("theme-colour");
+    if (meta) meta.setAttribute("content", dark ? OLIVE : PAPER);
+    try { window.localStorage.setItem(THEME_KEY, dark ? "dark" : "paper"); } catch (e) { /* private mode */ }
+  }
+
+  /* ------------------------------------------------------------------
      Menu, settings, backup
      ------------------------------------------------------------------ */
 
@@ -111,6 +145,7 @@
   });
 
   function refreshMenu() {
+    $("set-dark").checked = loadTheme() === "dark";
     $("set-typo").checked = !!state.settings.typoTolerance;
     $("set-introduce").checked = state.settings.introduceNew !== false;
     $("set-round").value = state.settings.roundSize;
@@ -119,6 +154,11 @@
       ? `Last saved ${new Date(state.savedAt).toLocaleString("en-GB")}`
       : "Nothing saved yet.";
   }
+
+  $("set-dark").addEventListener("change", (e) => {
+    applyTheme(e.target.checked ? "dark" : "paper");
+    toast(e.target.checked ? "Dark mode on, on this device." : "Back to paper.");
+  });
 
   $("set-typo").addEventListener("change", (e) => {
     state.settings.typoTolerance = e.target.checked;
@@ -1138,6 +1178,9 @@
      ------------------------------------------------------------------ */
 
   if (loaded.warning) toast(loaded.warning, true);
+  // The head script has already set the attribute; this keeps the meta colour
+  // and the stored value in step with it.
+  applyTheme(loadTheme());
   drawSync();
   // On load, not blocking it: the app is already usable by the time this runs.
   doSync({ quiet: true });
