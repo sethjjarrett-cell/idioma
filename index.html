@@ -14,46 +14,101 @@
      tree, so a face change is one CSS line and no extra markup. -->
 <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
   <symbol id="fox-sym" viewBox="0 0 120 120">
+    <!-- A fox drawn to a strict vertical budget, because everything here has
+         to survive being 32px wide in a header: brows 38-48, eyes on 56,
+         muzzle from 67, nose 74-84, mouth 86-98, chin 106. -->
     <g stroke-linejoin="round" stroke-linecap="round">
-      <!-- ears -->
-      <path d="M30 46 L18 10 L52 26 Z" fill="var(--fur, #ff8a2b)" stroke="var(--fur, #ff8a2b)" stroke-width="7"/>
-      <path d="M90 46 L102 10 L68 26 Z" fill="var(--fur, #ff8a2b)" stroke="var(--fur, #ff8a2b)" stroke-width="7"/>
-      <path d="M32 40 L25 21 L44 29 Z" fill="var(--ear, #ffc79a)" stroke="var(--ear, #ffc79a)" stroke-width="4"/>
-      <path d="M88 40 L95 21 L76 29 Z" fill="var(--ear, #ffc79a)" stroke="var(--ear, #ffc79a)" stroke-width="4"/>
-      <!-- head and muzzle -->
-      <path d="M60 24 C88 24 106 44 106 66 C106 90 86 106 60 106 C34 106 14 90 14 66 C14 44 32 24 60 24 Z"
-            fill="var(--fur, #ff8a2b)"/>
-      <path d="M60 64 C80 64 92 74 92 85 C92 96 78 104 60 104 C42 104 28 96 28 85 C28 74 40 64 60 64 Z"
-            fill="var(--snout, #fff3e6)"/>
-      <!-- cheeks -->
-      <ellipse cx="30" cy="74" rx="7" ry="5" fill="var(--blush, #ff5c33)" opacity="0.35"/>
-      <ellipse cx="90" cy="74" rx="7" ry="5" fill="var(--blush, #ff5c33)" opacity="0.35"/>
-      <!-- nose, shared by every face -->
-      <path d="M60 72 c6 0 9 2 9 5 c0 4 -5 7 -9 7 c-4 0 -9 -3 -9 -7 c0 -3 3 -5 9 -5 z" fill="var(--ink, #4a2c15)"/>
+      <!-- The suit. Shoulders with somewhere to go: the head below is scaled
+           down and lifted so the chin lands on the collar, which is the only
+           way a bust reads in a square frame. In the detail group with the
+           whiskers, because at 32px a tan bar is all it can ever be. -->
+      <g opacity="var(--fox-detail, 1)">
+        <path d="M0 120 L0 103 C12 93 32 87 60 87 C88 87 108 93 120 103
+                 L120 120 Z" fill="var(--coat, #c9a86a)"/>
+        <path d="M47 89 L60 110 L73 89 L66 86 L60 95 L54 86 Z" fill="var(--shirt, #ece1c2)"/>
+        <path d="M47 89 L60 110 L73 89" fill="none" stroke="var(--coat-line, #a9884a)"
+              stroke-width="2" stroke-opacity="0.6"/>
+      </g>
 
-      <!-- idle -->
+      <!-- The head, lifted and scaled so the chin meets the collar. Done
+           with a transform rather than by rewriting every path, so the
+           geometry above stays the geometry that was drawn. -->
+      <g transform="translate(7.2 -5) scale(0.88)">
+      <!-- Ears: tall, set wide, dark over the top third. -->
+      <path d="M26 40 L10 3 L55 23 Z" fill="var(--fur, #e08a3c)"
+            stroke="var(--fur, #e08a3c)" stroke-width="5"/>
+      <path d="M94 40 L110 3 L65 23 Z" fill="var(--fur, #e08a3c)"
+            stroke="var(--fur, #e08a3c)" stroke-width="5"/>
+      <path d="M10 3 L19 26 L33 12 Z" fill="var(--tip, #2b332e)"
+            stroke="var(--tip, #2b332e)" stroke-width="3"/>
+      <path d="M110 3 L101 26 L87 12 Z" fill="var(--tip, #2b332e)"
+            stroke="var(--tip, #2b332e)" stroke-width="3"/>
+
+      <!-- Head: broader than tall, cheeks flared, flat across the top. -->
+      <path d="M60 12 C86 12 104 22 109 40 C113 56 109 76 100 88
+               C90 99 78 106 60 106 C42 106 30 99 20 88
+               C11 76 7 56 11 40 C16 22 34 12 60 12 Z" fill="var(--fur, #e08a3c)"/>
+
+      <!-- Muzzle: the pale field starts below the eyes and rises only a
+           little between them. Higher than this and the face turns into a
+           dog; this is the line that decides it. -->
+      <path d="M60 67 C74 67 84 71 90 76 C96 82 96 93 91 98
+               C85 104 74 106 60 106 C46 106 35 104 29 98
+               C24 93 24 82 30 76 C36 71 46 67 60 67 Z" fill="var(--snout, #f0e2c0)"/>
+
+      <!-- Whiskers. Off at icon size, where they only muddy the shape. -->
+      <g opacity="var(--fox-detail, 1)" fill="none" stroke="var(--ink, #26261a)"
+         stroke-width="1.5" stroke-opacity="0.6">
+        <path d="M28 80 C21 77 13 75 6 73 M27 85 C19 85 11 86 4 87
+                 M29 90 C22 93 15 96 9 100"/>
+        <path d="M92 80 C99 77 107 75 114 73 M93 85 C101 85 109 86 116 87
+                 M91 90 C98 93 105 96 111 100"/>
+      </g>
+
+      <!-- The nose, shared by every face. -->
+      <path d="M60 74 c5.5 0 9.5 2.3 9.5 5.3 c0 3.6 -4.2 6.5 -9.5 6.5
+               c-5.3 0 -9.5 -2.9 -9.5 -6.5 c0 -3 4 -5.3 9.5 -5.3 z"
+            fill="var(--ink, #26261a)"/>
+
+      <!-- idle: heavy level brows, a smirk -->
       <g opacity="var(--fox-idle, 1)">
-        <circle cx="42" cy="58" r="6" fill="var(--ink, #4a2c15)"/>
-        <circle cx="78" cy="58" r="6" fill="var(--ink, #4a2c15)"/>
-        <circle cx="44" cy="56" r="2" fill="#fff"/>
-        <circle cx="80" cy="56" r="2" fill="#fff"/>
-        <path d="M60 85 v4 M60 89 c0 5 -5 8 -10 6 M60 89 c0 5 5 8 10 6"
-              fill="none" stroke="var(--ink, #4a2c15)" stroke-width="3.5"/>
+        <path d="M19 44 C27 35 43 32 54 38 L51 45 C42 40 29 42 23 51 Z" fill="var(--tip, #2b332e)"/>
+        <path d="M101 44 C93 35 77 32 66 38 L69 45 C78 40 91 42 97 51 Z" fill="var(--tip, #2b332e)"/>
+        <ellipse cx="38" cy="56" rx="11.5" ry="9.5" fill="var(--sclera, #f6eeda)"/>
+        <ellipse cx="82" cy="56" rx="11.5" ry="9.5" fill="var(--sclera, #f6eeda)"/>
+        <circle cx="39" cy="56" r="6.6" fill="var(--eye, #7e8f6e)"/>
+        <circle cx="81" cy="56" r="6.6" fill="var(--eye, #7e8f6e)"/>
+        <circle cx="39" cy="56" r="3.2" fill="var(--ink, #26261a)"/>
+        <circle cx="81" cy="56" r="3.2" fill="var(--ink, #26261a)"/>
+        <circle cx="41.8" cy="53.4" r="1.7" fill="#fff"/>
+        <circle cx="83.8" cy="53.4" r="1.7" fill="#fff"/>
+        <path d="M60 86 v4 M41 91 C47 99 56 100 60 94 C64 100 73 99 79 91"
+              fill="none" stroke="var(--ink, #26261a)" stroke-width="3.2"/>
       </g>
 
-      <!-- right answer -->
+      <!-- right answer: brows up, eyes creased shut, a proper grin -->
       <g opacity="var(--fox-happy, 0)">
-        <path d="M35 60 q7 -11 14 0 M71 60 q7 -11 14 0"
-              fill="none" stroke="var(--ink, #4a2c15)" stroke-width="4.5"/>
-        <path d="M47 88 q13 14 26 0 q-13 6 -26 0 z" fill="var(--ink, #4a2c15)"/>
+        <path d="M18 39 C26 29 43 26 55 33 L52 40 C42 35 28 37 22 46 Z" fill="var(--tip, #2b332e)"/>
+        <path d="M102 39 C94 29 77 26 65 33 L68 40 C78 35 92 37 98 46 Z" fill="var(--tip, #2b332e)"/>
+        <path d="M29 58 C34 48 44 48 49 57 M71 58 C76 48 86 48 91 57"
+              fill="none" stroke="var(--ink, #26261a)" stroke-width="5"/>
+        <path d="M40 90 C46 101 56 102 60 95 C64 102 74 101 80 90
+                 C71 99 49 99 40 90 Z" fill="var(--ink, #26261a)"/>
       </g>
 
-      <!-- wrong answer -->
+      <!-- wrong answer: brows pulled up at the inner ends, eyes small -->
       <g opacity="var(--fox-sad, 0)">
-        <circle cx="42" cy="60" r="5.5" fill="var(--ink, #4a2c15)"/>
-        <circle cx="78" cy="60" r="5.5" fill="var(--ink, #4a2c15)"/>
-        <path d="M34 53 L50 47 M86 53 L70 47 M50 98 q10 -9 20 0"
-              fill="none" stroke="var(--ink, #4a2c15)" stroke-width="4"/>
+        <path d="M20 54 C28 42 44 37 55 39 L53 46 C43 45 29 51 25 61 Z" fill="var(--tip, #2b332e)"/>
+        <path d="M100 54 C92 42 76 37 65 39 L67 46 C77 45 91 51 95 61 Z" fill="var(--tip, #2b332e)"/>
+        <ellipse cx="38" cy="59" rx="9" ry="7.5" fill="var(--sclera, #f6eeda)"/>
+        <ellipse cx="82" cy="59" rx="9" ry="7.5" fill="var(--sclera, #f6eeda)"/>
+        <circle cx="38" cy="60" r="5" fill="var(--eye, #7e8f6e)"/>
+        <circle cx="82" cy="60" r="5" fill="var(--eye, #7e8f6e)"/>
+        <circle cx="38" cy="60" r="2.5" fill="var(--ink, #26261a)"/>
+        <circle cx="82" cy="60" r="2.5" fill="var(--ink, #26261a)"/>
+        <path d="M60 86 v4 M47 98 C52 91 68 91 73 98"
+              fill="none" stroke="var(--ink, #26261a)" stroke-width="3.2"/>
+      </g>
       </g>
     </g>
   </symbol>
