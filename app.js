@@ -386,10 +386,36 @@
 
   /* The sentences that can be attempted right now, and where each one sits.
      Worked out from progress, so it answers itself as words are met. */
-  function sentencePool() {
-    const rows = Store.readyPhrases(state, (id) => prog(id));
-    return rows.map((r) => ({ id: r.item.id, item: r.item, needs: r.needs, rank: r.rank }));
+  function readySentences() {
+    return Store.readyPhrases(state, (id) => prog(id));
   }
+
+  function sentencePool() {
+    const theme = subjectName();
+    return readySentences()
+      .filter((r) => theme === "all" || (r.theme || "other") === theme)
+      .map((r) => ({ id: r.item.id, item: r.item, needs: r.needs, rank: r.rank }));
+  }
+
+  /* The words a round may draw on: the topic pick if there is one, then the
+     kind-of-word filter on top of it. They compose, because there is no
+     reason picking Food and picking Nouns should be an either-or. */
+  /* What the learner asked for, in words, for a message about it. */
+  function filterName() {
+    const bits = [pick && pick.kind === "topic" ? pick.name : null,
+                  posName() === "all" ? null : posGroup(posName()).name.toLowerCase()];
+    return bits.filter(Boolean).join(", ") || "the bank";
+  }
+
+  function wordPool() {
+    const base = pick && pick.kind === "topic" ? wordsInTopic(pick.id) : words();
+    return base.filter(posGroup(posName()).has);
+  }
+
+  const subjectLabel = (id) => {
+    const topic = (window.TOPICS || []).find((t) => t.id === id);
+    return topic ? topic.name : "Other";
+  };
 
   function updateStartBlurb() {
     if (mode() === "sentences") {
@@ -397,11 +423,16 @@
       const met = pool.filter((x) => Store.peekPhrase(state, x.id).timesSeen > 0);
       const typing = met.filter((x) => Store.peekPhrase(state, x.id).level > Engine.CONFIG.SENTENCE_TILE_TOP);
       const total = Store.allPhrases(state).length;
+      const all = readySentences().length;
+      const named = subjectName() === "all" ? "" : `${subjectLabel(subjectName())}: `;
       $("start-picked").hidden = true;
       $("start-blurb").textContent = pool.length
-        ? `${pool.length} sentences you have the words for, of ${total} in the bank. `
+        ? `${named}${pool.length} sentences you have the words for`
+          + (subjectName() === "all" ? `, of ${total} in the bank. ` : ` of ${all} in reach. `)
           + `${met.length} started, ${typing.length} at the point of typing them out. `
           + `A sentence unlocks once you have met every word in it.`
+        : all
+        ? `Nothing in ${subjectLabel(subjectName())} yet. Other subjects have ${all} between them.`
         : `No sentences yet: they unlock once you have met every word in one. `
           + `Practise words for a round or two and the first ones will appear.`;
       return;
@@ -420,7 +451,7 @@
         + `Open the Lessons screen to drill a different table.`;
       return;
     }
-    const pool = pick && pick.kind === "topic" ? wordsInTopic(pick.id) : words();
+    const pool = wordPool();
     const enabled = pool.filter((w) => prog(w.id).enabled !== false);
     const unseen = enabled.filter((w) => !prog(w.id).lastSeen).length;
 
@@ -431,7 +462,10 @@
     const settling = Engine.stillSettling(words(), (id) => prog(id));
     const allowance = Engine.newWordAllowance(words(), (id) => prog(id));
 
-    const where = pick ? `${pick.name}: ${enabled.length} words. ` : `${enabled.length} words. `;
+    const named = [pick && pick.kind === "topic" ? pick.name : null,
+                   posName() === "all" ? null : posGroup(posName()).name.toLowerCase()]
+      .filter(Boolean).join(", ");
+    const where = named ? `${named}: ${enabled.length} words. ` : `${enabled.length} words. `;
     $("start-blurb").textContent = where
       + `${met} met, ${settling} still settling, ${unseen} to come. `
       + (allowance
@@ -462,33 +496,121 @@
     document.querySelectorAll("#modes .mode").forEach((b) => {
       b.classList.toggle("on", b.dataset.mode === mode());
     });
-    drawTenses();
+    filtersOpen = false;
+    drawFilters();
   }
 
-  /* Which tense the verb drill asks about. "mixed" is every tense the starter
-     verbs can be vouched for, shuffled together, which is the harder and more
-     realistic thing; a single tense is how you learn one in the first place.
-     Only shown in verb mode, because it means nothing in the other two. */
-  const tenseName = () => (state.settings.tense || "present");
+  /* One row of pills under the modes, meaning something different in each.
 
-  function drawTenses() {
-    const on = mode() === "verbs" && !(pick && pick.kind === "drill");
-    $("tenses").hidden = !on;
-    if (!on) return;
-    const options = [{ id: "mixed", name: "Mixed" }]
-      .concat(Verbs.VERBS.tenses.map((t) => ({ id: t.id, name: t.name })));
-    $("tense-pills").innerHTML = options.map((o) =>
-      `<button class="pill${o.id === tenseName() ? " on" : ""}" data-tense="${esc(o.id)}">${esc(o.name)}</button>`
-    ).join("");
+     Words narrows by what kind of word it is, verbs by tense, sentences by
+     what the sentence is about. Three settings rather than one, because
+     coming back to Words should not have silently rearranged what Sentences
+     was going to ask; each mode remembers its own.
+
+     Each is a plain string that also happens to be a valid setting when it is
+     "all", which is why nothing here needs a null check downstream. */
+  const tenseName = () => state.settings.tense || "present";
+  const posName = () => state.settings.pos || "all";
+  const subjectName = () => state.settings.subject || "all";
+
+  /* Parts of speech, grouped. The bank has twelve of them and twelve pills is
+     not a choice, it is a menu; these are the distinctions a learner would
+     actually make. "days" is its own part of speech in the bank, which is
+     odd but harmless, and it belongs with the numbers. */
+  const POS_GROUPS = [
+    { id: "all", name: "All", has: () => true },
+    { id: "noun", name: "Nouns", has: (w) => w.pos === "noun" },
+    { id: "verb", name: "Verbs", has: (w) => w.pos === "verb" },
+    { id: "describing", name: "Describing", has: (w) => w.pos === "adjective" || w.pos === "adverb" },
+    { id: "phrase", name: "Phrases", has: (w) => w.pos === "phrase" || w.pos === "question" },
+    { id: "glue", name: "Little words", has: (w) => ["pronoun", "preposition", "conjunction", "determiner"].includes(w.pos) },
+    { id: "number", name: "Numbers and days", has: (w) => w.pos === "number" || w.pos === "days" },
+  ];
+  const posGroup = (id) => POS_GROUPS.find((g) => g.id === id) || POS_GROUPS[0];
+
+  /* The themes with sentences in them right now. Which those are changes as
+     words are met, so the row is built from what is actually there rather
+     than from the list of topics: a pill that starts an empty round is worse
+     than no pill. */
+  function sentenceThemes(pool) {
+    const counts = new Map();
+    for (const row of pool) {
+      const key = row.theme || "other";
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([id, n]) => {
+        const topic = (window.TOPICS || []).find((t) => t.id === id);
+        return { id, name: topic ? topic.name : "Other", n };
+      });
   }
 
-  $("tense-pills").addEventListener("click", (e) => {
+  function drawFilters() {
+    const showTense = mode() === "verbs" && !(pick && pick.kind === "drill");
+    const showPos = mode() === "words" && !(pick && pick.kind === "drill");
+    const showTheme = mode() === "sentences";
+    $("filters").hidden = !(showTense || showPos || showTheme);
+    if ($("filters").hidden) return;
+
+    let label, options, current, attr;
+    if (showTense) {
+      label = "Tense";
+      attr = "tense";
+      current = tenseName();
+      options = [{ id: "mixed", name: "Mixed" }]
+        .concat(Verbs.VERBS.tenses.map((t) => ({ id: t.id, name: t.name })));
+    } else if (showPos) {
+      label = "Kind of word";
+      attr = "pos";
+      current = posName();
+      const pool = pick ? wordsInTopic(pick.id) : words();
+      options = POS_GROUPS
+        .map((g) => ({ id: g.id, name: g.name, n: pool.filter(g.has).length }))
+        .filter((o) => o.id === "all" || o.n > 0);
+    } else {
+      label = "About";
+      attr = "subject";
+      current = subjectName();
+      const themes = sentenceThemes(readySentences());
+      options = [{ id: "all", name: "All" }].concat(themes);
+    }
+
+    /* Twelve subjects is six rows of pills on a phone, and a full bank has
+       twenty-one. So the row shows the largest few and hides the rest behind
+       a More, with whatever is currently chosen always among them: a pill
+       that is switched on and not on screen is a thing that looks broken. */
+    const LIMIT = 8;
+    const long = options.length > LIMIT + 1;
+    let shown = options;
+    if (long && !filtersOpen) {
+      shown = options.slice(0, LIMIT);
+      if (!shown.some((o) => o.id === current)) {
+        shown = shown.slice(0, LIMIT - 1).concat(options.find((o) => o.id === current) || []);
+      }
+    }
+
+    $("filter-label").textContent = label;
+    $("filter-pills").innerHTML = shown.map((o) =>
+      `<button class="pill${o.id === current ? " on" : ""}" data-filter="${esc(attr)}" data-value="${esc(o.id)}">`
+      + `${esc(o.name)}${o.n && o.id !== "all" ? `<i>${o.n}</i>` : ""}</button>`
+    ).join("")
+      + (long
+        ? `<button class="pill more" data-more="1">${filtersOpen ? "Fewer" : `More (${options.length - shown.length})`}</button>`
+        : "");
+  }
+
+  let filtersOpen = false;
+
+  $("filter-pills").addEventListener("click", (e) => {
     const pill = e.target.closest(".pill");
     if (!pill) return;
-    state.settings.tense = pill.dataset.tense;
+    if (pill.dataset.more) { filtersOpen = !filtersOpen; drawFilters(); return; }
+    state.settings[pill.dataset.filter] = pill.dataset.value;
     commit();
+    // The round in progress was drawn from the old pool.
     round = null; card = null;
-    drawTenses();
+    drawFilters();
     updateStartBlurb();
     resetPracticeView();
   });
@@ -500,7 +622,7 @@
     pick = null;
     round = null;
     card = null;
-    drawTenses();
+    drawFilters();
     updateStartBlurb();
     resetPracticeView();
   });
@@ -533,8 +655,7 @@
       const shuffled = Engine.shuffle(drill.items);
       picked = drill.starter ? shuffled.slice(0, state.settings.roundSize) : shuffled;
     } else {
-      const pool = pick ? wordsInTopic(pick.id) : words();
-      picked = Engine.pickRound(pool, (id) => prog(id), new Date().toISOString(),
+      picked = Engine.pickRound(wordPool(), (id) => prog(id), new Date().toISOString(),
         state.settings.roundSize, {
           rankOf: TeachingOrder.rankOf,
           /* Counted across the whole bank, not the pool: how much you have on
@@ -549,9 +670,18 @@
         });
     }
     if (!picked.length) {
+      /* An empty round has three quite different causes and they need three
+         different answers. The one that catches people out is the third:
+         asking for a kind of word you have never met while the allowance is
+         spent on words you are already working on. Saying "nothing is
+         enabled" there would be simply untrue. */
+      const pool = drill ? [] : wordPool();
+      const enabled = pool.filter((w) => prog(w.id).enabled !== false);
+      const spent = enabled.length && !Engine.newWordAllowance(words(), (id) => prog(id));
       toast(drill ? `Nothing to drill in ${drill.name}.`
-        : pick ? `Nothing to practise in ${pick.name}.`
-        : "No words are enabled, so there is nothing to practise.", true);
+        : spent ? `Nothing here has been met yet, and no new words until some of the ones you are working on settle.`
+        : enabled.length ? `Nothing to practise in ${filterName()} right now.`
+        : `No words are enabled in ${filterName()}, so there is nothing to practise.`, true);
       return;
     }
     round = { queue: picked, index: 0, results: [], movers: [], drill: !!drill };
@@ -568,7 +698,9 @@
   function startSentenceRound() {
     const pool = sentencePool();
     if (!pool.length) {
-      toast("No sentences are within reach yet. Practise some words first.", true);
+      toast(readySentences().length
+        ? `No sentences about ${subjectLabel(subjectName()).toLowerCase()} are in reach yet.`
+        : "No sentences are within reach yet. Practise some words first.", true);
       return;
     }
     const rankById = new Map(pool.map((x) => [x.id, x.rank]));

@@ -50,7 +50,13 @@ for (let i = 0; i < 15; i++) {
     console.log('\nfirst card band:', band);
     console.log('verdict:', (await p.textContent('#verdict-chip')).trim(),
                 '| answer shown:', (await p.textContent('#verdict-answer')).trim());
-    console.log('note shown:', !(await p.locator('#verdict-note').isHidden()));
+    /* Shown when the word has one, hidden when it does not. Asserting it is
+       always shown depends on which word the draw happened to produce, and
+       about one word in ten carries no note. */
+    const hasNote = await p.evaluate(() => !!(window.__card.word && window.__card.word.note));
+    console.log('note shown exactly when the word has one:',
+      hasNote === !(await p.locator('#verdict-note').isHidden()),
+      hasNote ? '(this one has a note)' : '(this one has none)');
   }
   await p.click('#btn-next');
   await p.waitForTimeout(60);
