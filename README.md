@@ -608,7 +608,7 @@ hundreds of lines later and takes everything between with it, and anything
 skipped that way is skipped silently. Scanning everything is stricter instead
 of looser, which is the right direction for a check like this.
 
-`tests/test-ui.mjs` through `test-ui9.mjs` drive the real page in
+`tests/test-ui.mjs` through `test-ui10.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -667,6 +667,33 @@ a third-person s and a two-verb table for be and have. The preterite would
 need English past tenses, which are irregular in their own right, and the
 subjunctive has no clean English at all, so both fall back to naming the
 person instead.
+
+### One screen on a phone
+
+The pickers cost about three hundred pixels: three mode buttons at 191, a row
+of pills at 99 to 213, and the round bar. On a 390 by 660 phone, which is an
+iPhone with the browser's own chrome on screen, that put the card at 336px and
+in sentence mode the Check button at 690px, off the bottom. Every card needed
+a scroll before it could be answered.
+
+So once a round is running the pickers fold into one line saying what you
+picked, and tapping **change** brings them back without ending the round.
+Hiding them outright would be simpler and wrong: not being able to switch mode
+without finishing the round is what made them a fixture of the screen in the
+first place.
+
+The other hundred pixels came from the answer box. Once an answer is graded
+the box and its Check button are disabled controls sitting between the
+question and the Next button, so they now get out of the way like the tile
+tray already did; what you typed is in the verdict line anyway, and Type it
+again puts the box back.
+
+Together that takes the page from 956, 729 and 961 pixels in the three modes
+down to exactly 660: no scrolling at all, in any of them, before or after
+answering. `tests/test-ui10.mjs` holds it there, and measures the page height
+rather than the card's rectangle, because a rectangle is measured after the
+browser has already scrolled to bring it into view and so reads as fitting on
+a page that had to be scrolled first.
 
 ### The filter row
 
