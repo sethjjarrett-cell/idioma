@@ -162,6 +162,15 @@
     <input type="checkbox" id="set-introduce">
     <span>Show new words first <em>the first time a word comes up it is shown, not tested</em></span>
   </label>
+  <div class="field inline">
+    <span>Pace</span>
+    <div class="pills" id="set-pace">
+      <button class="pill" data-pace="gentle">Gentle</button>
+      <button class="pill on" data-pace="steady">Steady</button>
+      <button class="pill" data-pace="brisk">Brisk</button>
+    </div>
+  </div>
+  <p class="muted small" id="pace-blurb"></p>
   <label class="field inline">
     <span>Cards per round</span>
     <input type="number" id="set-round" min="1" max="100" step="1">
@@ -180,12 +189,14 @@
     <div class="menu-row">
       <button class="btn" id="btn-sync-now">Sync now</button>
       <button class="btn" id="btn-sync-new">New code</button>
-      <button class="btn" id="btn-sync-copy">Copy code</button>
+      <button class="btn" id="btn-sync-link">Copy pairing link</button>
       <button class="btn danger" id="btn-sync-off">Stop syncing</button>
     </div>
-    <p class="muted small">Anyone with the code has your progress, so treat it
-      like a password. Set-up takes one command; see
-      <span class="mono">tools/sync/README.md</span>.</p>
+    <p class="muted small">Set this up on one device, then send yourself the
+      pairing link and open it on the other; it fills both boxes in and syncs.
+      Anyone with that link has your progress, so treat it like a password and
+      do not post it anywhere public. Putting the server up is four commands,
+      once: see <span class="mono">tools/sync/README.md</span>.</p>
   </div>
 
   <div class="menu-row">
@@ -221,6 +232,11 @@
       <button class="mode" data-mode="sentences">
         <b>Sentences</b><span>Tap the words into order, then type them</span>
       </button>
+    </div>
+
+    <div class="tenses" id="tenses" hidden>
+      <span class="muted small">Tense</span>
+      <div class="pills" id="tense-pills"></div>
     </div>
 
     <div class="picked" id="start-picked" hidden>

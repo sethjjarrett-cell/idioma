@@ -50,6 +50,55 @@ function newCode() {
 }
 
 /* ---------------------------------------------------------------
+   Pairing a second device
+   --------------------------------------------------------------- */
+
+/* The endpoint and the code, packed into a link.
+
+   Typing a twenty-two character code on a phone is the step where setting
+   this up stops being worth it, so the configured device makes a link and the
+   other device opens it. The payload rides in the fragment, after the #,
+   which browsers never send to the server: the code is the only secret here
+   and putting it in the path or the query would hand it to the host's logs.
+
+   base64url, because a fragment must survive being pasted into a message and
+   back out again without anything helpfully escaping it. */
+function pairingLink(cfg, base) {
+  if (!configured(cfg)) return "";
+  const payload = JSON.stringify({ v: 1, url: cfg.url, code: cfg.code });
+  const b64 = btoa(encodeURIComponent(payload))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const here = String(base || "").split("#")[0];
+  return `${here}#sync=${b64}`;
+}
+
+/* The other end. Returns the config to save, or null for anything that is not
+   a pairing link, including one mangled in transit; a half-read link must
+   leave the device unconfigured rather than pointed somewhere wrong. */
+function readPairingLink(hash) {
+  const m = String(hash || "").match(/[#&]sync=([A-Za-z0-9\-_]+)/);
+  if (!m) return null;
+  try {
+    const b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(atob(b64));
+    const got = JSON.parse(json);
+    if (!got || !got.url || !got.code) return null;
+    /* https, or a loopback address. Progress is not sent in the clear over
+       somebody else's network, and a link that arrived by message is exactly
+       the case where you cannot see which network that is. Localhost is the
+       standard exception: nothing leaves the machine. */
+    if (!/^https:\/\//i.test(got.url)
+        && !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(got.url)) {
+      return null;
+    }
+    return { url: String(got.url), code: String(got.code),
+             rev: 0, lastSyncedAt: null, lastError: null };
+  } catch (e) {
+    return null;
+  }
+}
+
+/* ---------------------------------------------------------------
    The merge
    --------------------------------------------------------------- */
 
@@ -207,8 +256,12 @@ async function run(cfg, localState, { save }) {
   return merged;
 }
 
+function configured(cfg) {
+  return !!(cfg && cfg.url && cfg.code);
+}
+
 window.Sync = {
-  SYNC_KEY, loadConfig, saveConfig, newCode,
+  SYNC_KEY, loadConfig, saveConfig, newCode, configured,
+  pairingLink, readPairingLink,
   merge, pickRow, touchedAt, endpoint, pull, push, run,
-  configured: (cfg) => !!(cfg && cfg.url && cfg.code),
 };

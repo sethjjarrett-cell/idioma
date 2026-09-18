@@ -31,6 +31,9 @@ function defaultState() {
       typoTolerance: false,          // off by default, as the brief asks
       introduceNew: true,            // a word you have not met is shown first
       roundSize: Engine.CONFIG.ROUND_SIZE,
+      pace: "steady",                // gentle, steady or brisk; see PACES
+      mode: "words",                 // words, verbs or sentences
+      tense: "present",              // which tense the verb drill asks about
     },
     progress: {},
     /* Sentences keep their own book. Same shape, same level machinery, but a

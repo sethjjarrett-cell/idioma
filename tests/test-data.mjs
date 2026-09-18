@@ -112,5 +112,59 @@ ok('and none comes out with a capital inside a syllable',
   !SEED.vocabulary.some(w => /[a-z][A-Z]/.test(P.respell(w.es))),
   SEED.vocabulary.filter(w => /[a-z][A-Z]/.test(P.respell(w.es))).map(w => w.es).join(', '));
 
+console.log('--- the future and conditional stems ---');
+/* Twelve verbs build the future on a shortened stem. Without the table,
+   conjugate produced teneré from the regular rule and handed back a word that
+   does not exist. */
+const stems = [
+  ['tener', 'future', 'yo', 'tendré'], ['tener', 'conditional', 'el', 'tendría'],
+  ['hacer', 'future', 'yo', 'haré'], ['decir', 'future', 'yo', 'diré'],
+  ['poder', 'future', 'tu', 'podrás'], ['poner', 'future', 'yo', 'pondré'],
+  ['salir', 'conditional', 'yo', 'saldría'], ['venir', 'future', 'ellos', 'vendrán'],
+  ['querer', 'future', 'yo', 'querré'], ['saber', 'future', 'yo', 'sabré'],
+  // and a regular verb keeps the whole infinitive
+  ['comer', 'future', 'yo', 'comeré'], ['hablar', 'conditional', 'nosotros', 'hablaríamos'],
+];
+for (const [v, t, p2, want] of stems) {
+  ok(`${v} ${t} ${p2} is ${want}`, conjugate(v, t, p2) === want, conjugate(v, t, p2));
+}
+ok('a tense an irregular verb does not list is not vouched for',
+  ctx.window.Verbs.isVouchedFor('tener', 'imperfect') === false,
+  'the regular rule happens to be right there, but the table cannot say so');
+ok('one it does list is', ctx.window.Verbs.isVouchedFor('hacer', 'preterite') === true);
+ok('a regular verb is vouched for everywhere',
+  VERBS.tenses.every((t) => ctx.window.Verbs.isVouchedFor('hablar', t.id)));
+ok('and so is the future of anything, because the stems cover it',
+  ctx.window.Verbs.isVouchedFor('tener', 'future') === true);
+
+console.log('--- the English a drill card asks for ---');
+const eng = ctx.window.Verbs.englishPhrase;
+const phrases = [
+  ['to talk', 'yo', 'present', 'I talk'],
+  ['to talk', 'el', 'present', 'he talks'],
+  ['to be', 'yo', 'present', 'I am'],
+  ['to be', 'el', 'present', 'he is'],
+  ['to be', 'tu', 'present', 'you are'],
+  ['to have', 'el', 'present', 'he has'],
+  ['to do, to make', 'el', 'present', 'he does'],
+  ['to go', 'el', 'present', 'he goes'],
+  ['to be able to', 'yo', 'present', 'I am able to'],
+  ['to ask for', 'el', 'present', 'he asks for'],
+  ['to talk', 'yo', 'future', 'I will talk'],
+  ['to talk', 'el', 'conditional', 'he would talk'],
+  ['to talk', 'nosotros', 'imperfect', 'we used to talk'],
+];
+for (const [g, person, t, want] of phrases) {
+  ok(`${g} / ${person} / ${t} is "${want}"`, eng(g, person, t) === want, eng(g, person, t));
+}
+ok('the preterite is left alone: English past tenses are their own irregulars',
+  eng('to talk', 'yo', 'preterite') === null);
+ok('and so is the subjunctive, which has no clean English',
+  eng('to talk', 'yo', 'subjunctive') === null);
+ok('a missing gloss is no phrase rather than a broken one',
+  eng('', 'yo', 'present') === null && eng('to talk', 'nobody', 'present') === null);
+ok('every person has a subject pronoun and a short label',
+  VERBS.persons.every((p2) => p2.subject && p2.short));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

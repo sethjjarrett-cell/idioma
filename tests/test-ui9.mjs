@@ -146,7 +146,8 @@ console.log('\n--- verb endings ---');
 await p.click('[data-mode="verbs"]');
 await p.waitForTimeout(150);
 const blurb = await p.textContent('#start-blurb');
-console.log('it starts with the present tense only:', /Present tense/.test(blurb));
+console.log('it starts on the present tense, not every tense at once:',
+  /^Present, the verbs you need first/.test(blurb.trim()));
 console.log('blurb:', blurb.trim());
 await p.click('#btn-start');
 await p.waitForTimeout(300);
@@ -154,11 +155,62 @@ const vc = await p.evaluate(() => ({ band: window.__card.band.key,
   label: window.__card.band.label, drill: !!window.__card.drill,
   queue: window.Idioma.round.queue.length }));
 console.log('a drill card comes up:', vc.drill === true, `(${vc.label})`);
-console.log('and the round is a sensible size:', vc.queue > 10 && vc.queue < 60, `(${vc.queue} forms)`);
+console.log('and the round is the length you asked for, not the whole table:',
+  vc.queue === 15, `(${vc.queue} cards)`);
 
-console.log('\n--- and the word mode still works ---');
+console.log('\n--- picking a tense ---');
+console.log('the picker is only in verb mode:', await p.isVisible('#tenses'));
+const tenseNames = await p.$$eval('#tense-pills .pill', ps => ps.map(x => x.textContent));
+console.log('mixed plus every tense:', tenseNames.join(', '));
+const runTense = async (tense, cards) => {
+  await p.click(`#tense-pills .pill[data-tense="${tense}"]`);
+  await p.waitForTimeout(150);
+  await p.click('#btn-start');
+  await p.waitForTimeout(250);
+  const seen = new Set();
+  for (let i = 0; i < cards; i++) {
+    const c = await p.evaluate(() => ({ t: window.__card.band.label, a: window.__card.accepted[0] }));
+    seen.add(c.t);
+    await p.fill('#answer', c.a); await p.click('#btn-submit'); await p.waitForTimeout(45);
+    await p.click('#btn-next'); await p.waitForTimeout(45);
+  }
+  return [...seen];
+};
+console.log('one tense asks only that tense:',
+  JSON.stringify(await runTense('future', 10)));
+const mixed = await runTense('mixed', 14);
+console.log('mixed really mixes:', mixed.length > 1, `(${mixed.length} tenses)`);
+console.log('and a mixed round is still a round, not two hundred cards:',
+  await p.evaluate(() => window.Idioma.round ? window.Idioma.round.queue.length : 0) <= 15);
+console.log('and changing it takes effect on the next round, not never:',
+  JSON.stringify(await runTense('present', 8)));
+console.log('the picker survives a round:', await p.isVisible('#tenses'));
+
+console.log('\n--- pace ---');
+await p.click('#btn-menu'); await p.waitForTimeout(250);
+console.log('steady by default:', await p.$eval('#set-pace .pill.on', e => e.textContent));
+await p.click('#set-pace .pill[data-pace="brisk"]'); await p.waitForTimeout(200);
+console.log('the engine takes it:',
+  await p.evaluate(() => window.Idioma.Engine.CONFIG.MAX_NEW_PER_ROUND) === 10);
+console.log('the teaching checkbox stops lying about itself:',
+  await p.isDisabled('#set-introduce'));
+await p.reload(); await p.waitForTimeout(400);
+console.log('it survives a reload:',
+  await p.evaluate(() => window.Idioma.Engine.CONFIG.MAX_NEW_PER_ROUND) === 10);
 await p.evaluate(() => { window.Idioma.state.settings.mode = 'words';
   window.Idioma.Store.saveNow(window.Idioma.state); });
+await p.reload(); await p.waitForTimeout(400);
+await p.click('#btn-start'); await p.waitForTimeout(300);
+console.log('brisk asks a word it never showed you:',
+  await p.evaluate(() => window.__card.intro) !== true);
+await p.click('#btn-menu'); await p.waitForTimeout(200);
+await p.click('#set-pace .pill[data-pace="gentle"]'); await p.waitForTimeout(200);
+console.log('gentle puts it back:',
+  await p.evaluate(() => window.Idioma.Engine.CONFIG.MAX_NEW_PER_ROUND) === 3);
+await p.click('#set-pace .pill[data-pace="steady"]'); await p.waitForTimeout(200);
+await p.click('#btn-menu'); await p.waitForTimeout(200);
+
+console.log('\n--- and the word mode still works ---');
 await p.reload();
 await p.waitForTimeout(400);
 await p.click('#btn-start');

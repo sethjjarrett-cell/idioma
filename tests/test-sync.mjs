@@ -6,7 +6,8 @@ import vm from 'vm';
 const ctx = {
   window: { localStorage: { getItem: () => null, setItem: () => {} },
             crypto: { getRandomValues: (a) => { for (let i = 0; i < a.length; i++) a[i] = (i * 37) % 256; } } },
-  console, Math, Date, JSON, fetch: () => { throw new Error('no network in this test'); },
+  console, Math, Date, JSON, btoa, atob,
+  fetch: () => { throw new Error('no network in this test'); },
 };
 vm.createContext(ctx);
 vm.runInContext(readFileSync(new URL('../sync.js', import.meta.url), 'utf8'), ctx);
@@ -101,6 +102,43 @@ ok('a state saved before sentences existed still merges',
   'and comes back with the book it did not have');
 ok('the word book is untouched by any of it',
   Object.keys(S.merge(sPhone, sLaptop).progress).length === 0);
+
+console.log('--- pairing a second device ---');
+const cfg = { url: 'https://idioma-sync.example.workers.dev', code: 'bcdfghjkmnpqrstvwxyz00',
+  rev: 4, lastSyncedAt: T1, lastError: null };
+const link = S.pairingLink(cfg, 'https://example.github.io/idioma/');
+ok('the link is made from the page it is copied on',
+  link.startsWith('https://example.github.io/idioma/#sync='), link);
+ok('the secret rides in the fragment, which never reaches a server',
+  link.indexOf('#') < link.indexOf('bcdfgh') || !link.includes('bcdfgh'),
+  'a code in the path or the query would land in the host log');
+ok('the code is not sitting in the link in the clear',
+  !link.includes(cfg.code), link);
+const back = S.readPairingLink(new URL(link).hash);
+ok('the other device gets the endpoint back', back.url === cfg.url);
+ok('and the code', back.code === cfg.code);
+ok('but not the revision, which belongs to the device that synced',
+  back.rev === 0 && back.lastSyncedAt === null);
+ok('a link made before anything was set up is no link',
+  S.pairingLink({ url: '', code: '' }, 'https://example.com/') === '');
+ok('an ordinary page load is not a pairing link',
+  S.readPairingLink('') === null && S.readPairingLink('#practice') === null);
+const packed = (o) => Buffer.from(encodeURIComponent(JSON.stringify(o))).toString('base64url');
+ok('a link mangled in transit is refused rather than half read',
+  S.readPairingLink('#sync=bm90YmFzZTY0!!!') === null);
+ok('and so is one that decodes to nothing useful',
+  S.readPairingLink('#sync=' + packed({ v: 1 })) === null);
+ok('a plain http endpoint is refused: progress is not sent in the clear',
+  S.readPairingLink('#sync=' + packed(
+    { v: 1, url: 'http://example.com', code: 'abc' })) === null);
+ok('but a loopback one is fine, since nothing leaves the machine',
+  (S.readPairingLink('#sync=' + packed(
+    { v: 1, url: 'http://127.0.0.1:8787', code: 'abc' })) || {}).code === 'abc');
+ok('and a host merely pretending to be local is not',
+  S.readPairingLink('#sync=' + packed(
+    { v: 1, url: 'http://localhost.evil.com', code: 'abc' })) === null);
+ok('it survives being pasted into a message and back out',
+  S.readPairingLink(new URL(encodeURI(decodeURI(link))).hash).code === cfg.code);
 
 console.log('--- merging is safe to repeat ---');
 const once = S.merge(phone, laptop);
