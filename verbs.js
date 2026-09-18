@@ -21,11 +21,11 @@ const VERBS = {
   /* Five persons, not six. The él column doubles as usted, which is the
      one Colombians use most with strangers. */
   persons: [
-    { id: "yo",       label: "yo",                gloss: "I" },
-    { id: "tu",       label: "tú",                gloss: "you" },
-    { id: "el",       label: "él / ella / usted", gloss: "he, she, you (polite)" },
-    { id: "nosotros", label: "nosotros",          gloss: "we" },
-    { id: "ellos",    label: "ellos / ustedes",   gloss: "they, you (plural)" },
+    { id: "yo",       label: "yo",                gloss: "I",                       short: "I",    subject: "I" },
+    { id: "tu",       label: "tú",                gloss: "you",                     short: "you",  subject: "you" },
+    { id: "el",       label: "él / ella / usted", gloss: "he, she, you (polite)",   short: "he, she", subject: "he" },
+    { id: "nosotros", label: "nosotros",          gloss: "we",                      short: "we",   subject: "we" },
+    { id: "ellos",    label: "ellos / ustedes",   gloss: "they, you (plural)",      short: "they", subject: "they" },
   ],
 
   /* base: "stem" drops the last two letters of the infinitive, "infinitive"
@@ -331,6 +331,51 @@ function conjugate(infinitive, tenseId, personId) {
   return base + endings[personId];
 }
 
+/* The English the form actually means, for the drill card.
+
+   "hablar, yo, present" is only a question if you already know what yo does to
+   a verb, which is the thing being learned. "I talk" is the question everybody
+   can read, and it is the point of the ending.
+
+   Built rather than stored, because it is mechanical in four of the six
+   tenses: will and would and used to just sit in front of the plain form, and
+   the present needs nothing but a third-person s. The preterite would need
+   English past tenses, which are irregular in their own right and not worth a
+   second table, and the subjunctive has no clean English at all, so both
+   return null and the card falls back to naming the person. */
+const ENGLISH_IRREGULAR = {
+  be: { I: "am", you: "are", he: "is", we: "are", they: "are" },
+  have: { he: "has" },
+};
+
+function thirdPerson(verb) {
+  if (/(s|sh|ch|x|z|o)$/.test(verb)) return verb + "es";
+  if (/[^aeiou]y$/.test(verb)) return verb.slice(0, -1) + "ies";
+  return verb + "s";
+}
+
+function englishPhrase(gloss, personId, tenseId) {
+  const person = VERBS.persons.find((p) => p.id === personId);
+  if (!person || !gloss) return null;
+
+  // One gloss, not three: "to do, to make" asks for one English sentence.
+  const first = String(gloss).split(",")[0].trim().replace(/^to\s+/, "");
+  if (!first) return null;
+  const [head, ...rest] = first.split(/\s+/);
+  const tail = rest.length ? " " + rest.join(" ") : "";
+  const subject = person.subject;
+
+  if (tenseId === "future") return `${subject} will ${first}`;
+  if (tenseId === "conditional") return `${subject} would ${first}`;
+  if (tenseId === "imperfect") return `${subject} used to ${first}`;
+  if (tenseId !== "present") return null;
+
+  const irregular = ENGLISH_IRREGULAR[head];
+  if (irregular && irregular[subject]) return `${subject} ${irregular[subject]}${tail}`;
+  if (subject === "he") return `he ${thirdPerson(head)}${tail}`;
+  return `${subject} ${first}`;
+}
+
 /* Whether the tables can vouch for a form, as against merely produce one.
 
    A verb with an irregular entry is irregular somewhere, and the entry only
@@ -348,4 +393,4 @@ function isVouchedFor(infinitive, tenseId) {
   return !!(tense && tense.base === "infinitive");
 }
 
-window.Verbs = { VERBS, conjugate, isVouchedFor };
+window.Verbs = { VERBS, conjugate, isVouchedFor, englishPhrase };

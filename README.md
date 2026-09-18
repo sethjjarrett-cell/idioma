@@ -485,10 +485,34 @@ another device returns the newer version so the client can merge it and retry,
 once.
 
 The code is 110 bits from `crypto.getRandomValues` and it *is* the
-authorisation — it names an unguessable box rather than unlocking a named
+authorisation: it names an unguessable box rather than unlocking a named
 account. So **anyone you give the code to has your progress**, and the app
 says so where you set it up. Nothing personal is in the blob: no name, no
 email, just which Spanish words you know.
+
+### Getting it onto the second device
+
+Typing twenty-two characters of base32 into a phone keyboard is the step where
+setting this up stops being worth the trouble, so the configured device makes
+a link instead. **Copy pairing link** puts the endpoint and the code in the
+fragment of a URL, after the `#`; you send it to yourself and open it on the
+other device, which fills both boxes in, clears the fragment out of the
+address bar and history, and syncs.
+
+The fragment is the right place for it. Browsers never send what follows a `#`
+to the server, so the code stays out of the host's logs in a way it would not
+if it rode in the path or the query. The link is refused unless the endpoint
+is `https`, or a loopback address where nothing leaves the machine. A link
+mangled in transit is refused outright rather than half read, because a device
+pointed at half an endpoint is worse than one pointed at none.
+
+The link is the code, so it is a password: send it to yourself, not to a group
+chat, and do not put it anywhere public.
+
+Google sign-in would not make this simpler. It needs everything here plus a
+Google Cloud project, a consent screen, a client ID and an authorised origin,
+and the server still has to exist; what it buys is not having to move a link
+once per device.
 
 ## Progress and backups
 
@@ -599,14 +623,44 @@ remembered between sessions.
 **Words** is the original: one word at a time, shown before it is tested,
 levels and bands as below.
 
-**Verb endings** runs the conjugation drill. With no table picked it is the
-present tense of the three regular families and the five verbs you cannot get
-through a sentence without, which is forty cards. Deliberately small: every
-tense of every irregular is sixty-odd cards and a reason to stop, and the
-Lessons screen is still there for anyone who wants a particular table. Drills
-never move a word's level, because a word's level means how well that word is
-known and diluting it with endings drilled off a table would make it mean
-nothing.
+**Verb endings** runs the conjugation drill over the three regular families
+and the five verbs you cannot get through a sentence without. A row of pills
+picks the tense, or Mixed for all of them at once; it starts on the present,
+because every tense at once is two hundred forms and not where anybody begins.
+A round obeys the Cards per round setting rather than running the whole set,
+so Mixed is a sample rather than a marathon. A table picked from the Lessons
+screen still runs end to end, because running that table is what was asked
+for. Drills never move a word's level, because a word's level means how well
+that word is known and diluting it with endings drilled off a table would make
+it mean nothing.
+
+The card says what the ending is for in English: `hablar`, and under it
+*say "I talk"*. "hablar, yo, present" is only a question if you already know
+what `yo` does to a verb, which is the thing being drilled. The English is
+built rather than stored, which works for four tenses of six: will, would and
+used to just sit in front of the plain form, and the present needs nothing but
+a third-person s and a two-verb table for be and have. The preterite would
+need English past tenses, which are irregular in their own right, and the
+subjunctive has no clean English at all, so both fall back to naming the
+person instead.
+
+### Pace
+
+One setting, three positions, six numbers moving together: how many new words
+a round may take on, how many may be unsettled at once, whether a new word is
+shown before it is asked, how long a sentence stays on tiles, how many new
+sentences a round, and how many misses make a sticking point.
+
+Gentle is three new words and twelve on the go. Steady is five and twenty, and
+is exactly the numbers that were hard-coded before the setting existed, so the
+default changes nothing. Brisk is ten and forty, shows nothing before asking
+it, and sends a sentence to typing after one correct answer.
+
+Three positions rather than six sliders, because six sliders is a way of
+asking the learner to do the tuning. It is applied by writing into `CONFIG`
+rather than threading an options object through every call: `CONFIG` is
+already the one place those numbers live, and a copy passed around would be a
+second place for them to disagree.
 
 **Sentences** shows the English and asks for the Spanish. Below level 3 the
 words are given as tiles and the job is the order; above it the whole thing is

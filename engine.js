@@ -134,6 +134,63 @@ const CONFIG = {
   FLAGGED_PREFIXES: ["to"],
 };
 
+/* How fast to go.
+
+   Every number here already existed; what is new is that they move together
+   and have a name. A learner who has done this before is held up by five new
+   words a round and a teaching card in front of every one of them, and a
+   learner who has not is buried by twenty.
+
+   "steady" is exactly the numbers above, so the default changes nothing. The
+   other two are a single decision each way rather than six sliders, because
+   six sliders is a way of asking the learner to do the tuning.
+
+   Applied by writing into CONFIG rather than threading an options object
+   through every call. CONFIG is already the one place these live, the app is
+   one page with one engine, and a copy passed around would be a second place
+   for them to disagree. */
+const PACES = {
+  gentle: {
+    label: "Gentle",
+    blurb: "Three new words a round, twelve on the go at once, every new word shown before it is asked, and sentences stay on tiles longer.",
+    MAX_NEW_PER_ROUND: 3,
+    LEARNING_CAP: 12,
+    INTRODUCE_UNTIL_SEEN: 1,
+    SENTENCE_TILE_TOP: 3,
+    SENTENCE_MAX_NEW: 2,
+    STICKY_LAPSES: 2,
+  },
+  steady: {
+    label: "Steady",
+    blurb: "Five new words a round, twenty on the go, a new word shown once before it is asked. The default.",
+    MAX_NEW_PER_ROUND: 5,
+    LEARNING_CAP: 20,
+    INTRODUCE_UNTIL_SEEN: 1,
+    SENTENCE_TILE_TOP: 2,
+    SENTENCE_MAX_NEW: 3,
+    STICKY_LAPSES: 3,
+  },
+  brisk: {
+    label: "Brisk",
+    blurb: "Ten new words a round, forty on the go, nothing shown before it is asked, and sentences go to typing after one correct answer. For people who have done this before.",
+    MAX_NEW_PER_ROUND: 10,
+    LEARNING_CAP: 40,
+    INTRODUCE_UNTIL_SEEN: 0,
+    SENTENCE_TILE_TOP: 1,
+    SENTENCE_MAX_NEW: 5,
+    STICKY_LAPSES: 4,
+  },
+};
+
+const PACE_KEYS = ["MAX_NEW_PER_ROUND", "LEARNING_CAP", "INTRODUCE_UNTIL_SEEN",
+                   "SENTENCE_TILE_TOP", "SENTENCE_MAX_NEW", "STICKY_LAPSES"];
+
+function applyPace(name) {
+  const pace = PACES[name] || PACES.steady;
+  for (const key of PACE_KEYS) CONFIG[key] = pace[key];
+  return pace;
+}
+
 const BANDS = {
   intro: { key: "intro", label: "New word", blurb: "Shown, not asked" },
   relearn: { key: "relearn", label: "Worth another look", blurb: "Missed too often, so shown again" },
@@ -866,7 +923,7 @@ function checkSequence(picked, want) {
 /* Exported for the browser through the global scope; there is no build
    step and no module loader, which is the point. */
 window.Engine = {
-  CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking,
+  CONFIG, BANDS, PACES, applyPace, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking,
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,

@@ -595,6 +595,13 @@ table.conj td b { color: var(--accent-deep); }
   content: "Every word is placed."; color: var(--muted); font-size: 12px;
 }
 
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.tenses {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+#pace-blurb { margin: -4px 0 12px; }
+
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table.bank { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
 table.bank th {

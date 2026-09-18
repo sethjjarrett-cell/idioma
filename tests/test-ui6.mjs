@@ -177,6 +177,41 @@ await phone.click('#btn-sync-off'); await phone.waitForTimeout(300);
 console.log('state says         :', (await phone.textContent('#sync-state')).trim());
 console.log('progress kept      :', await levelOf(phone, 'mesa'), '(not null)');
 
+console.log('\n--- pairing the second device with a link ---');
+/* The step that decides whether anyone actually sets this up: getting the
+   endpoint and the code onto the phone without typing twenty-two characters
+   of base32 into a phone keyboard. */
+const desk = await device('desk');
+await setUp(desk, 'bcdfghjkmnpqrstvwxyz11');
+await desk.evaluate(() => {
+  const st = window.Idioma.state;
+  st.progress['mesa'] = { ...window.Idioma.Engine.freshProgress(), level: 7,
+    timesSeen: 9, totalCorrect: 9, lastSeen: new Date().toISOString() };
+  window.Idioma.Store.saveNow(st);
+});
+console.log('desk synced      :', await syncNow(desk));
+const link = await desk.evaluate(() =>
+  window.Sync.pairingLink(window.Sync.loadConfig(), location.href));
+console.log('link made        :', /#sync=/.test(link));
+console.log('code not in the clear:', !link.includes('bcdfghjkmnpqrstvwxyz11'));
+
+const fresh = await b.newContext();
+const phone2 = await fresh.newPage();
+phone2.on('pageerror', (e) => { pe++; console.log('  !! PAGEERROR (phone2):', e.message); });
+await phone2.goto(link);
+await phone2.waitForTimeout(900);
+console.log('it says it paired :', (await phone2.textContent('#toast')).includes('Paired'));
+console.log('the code is out of the address bar:', !phone2.url().includes('#sync='));
+const got = await phone2.evaluate(() => window.Sync.loadConfig());
+console.log('endpoint carried  :', got.url === URL_BASE);
+console.log('code carried      :', got.code === 'bcdfghjkmnpqrstvwxyz11');
+console.log('and the progress came with it:',
+  await phone2.evaluate(() => window.Idioma.state.progress.mesa?.level) === 7);
+await phone2.reload();
+await phone2.waitForTimeout(600);
+console.log('pairing sticks across a reload:',
+  (await phone2.evaluate(() => window.Sync.loadConfig())).code === 'bcdfghjkmnpqrstvwxyz11');
+
 console.log('\npageerror =', pe);
 await b.close();
 server.close();

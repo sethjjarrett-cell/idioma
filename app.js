@@ -157,11 +157,41 @@
     if (!m.hidden) refreshMenu();
   });
 
+  /* The pace is a setting, so it lives in the synced state, and it is applied
+     to the engine on load and whenever it changes. One decision, six numbers:
+     see PACES in engine.js for what each one moves. */
+  const paceName = () => (Engine.PACES[state.settings.pace] ? state.settings.pace : "steady");
+
+  function applyPace() {
+    const pace = Engine.applyPace(paceName());
+    document.querySelectorAll("#set-pace .pill").forEach((b) => {
+      b.classList.toggle("on", b.dataset.pace === paceName());
+    });
+    $("pace-blurb").textContent = pace.blurb;
+    /* Brisk turns the teaching card off, and the checkbox that also turns it
+       off would otherwise sit there ticked and lying. */
+    $("set-introduce").disabled = Engine.CONFIG.INTRODUCE_UNTIL_SEEN === 0;
+  }
+
+  $("set-pace").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    state.settings.pace = pill.dataset.pace;
+    commit();
+    applyPace();
+    // The round in progress was built under the old numbers.
+    round = null; card = null;
+    resetPracticeView();
+    updateStartBlurb();
+    toast(`Pace: ${Engine.PACES[paceName()].label}.`);
+  });
+
   function refreshMenu() {
     $("set-dark").checked = loadTheme() === "dark";
     $("set-typo").checked = !!state.settings.typoTolerance;
     $("set-introduce").checked = state.settings.introduceNew !== false;
     $("set-round").value = state.settings.roundSize;
+    applyPace();
     drawSync();
     $("saved-at").textContent = state.savedAt
       ? `Last saved ${new Date(state.savedAt).toLocaleString("en-GB")}`
@@ -263,8 +293,10 @@
   /* `quiet` is for the automatic syncs, on load and after a round: they say
      nothing when they fail, because a toast about the network in the middle
      of practising is no help to anybody. The button is not quiet. */
+  /* Returns whether it worked, which the pairing path needs: "paired" and
+     "paired and your progress is here" are different things to be told. */
   async function doSync({ quiet = false } = {}) {
-    if (!Sync.configured(syncCfg) || syncing) return;
+    if (!Sync.configured(syncCfg) || syncing) return false;
     syncing = true;
     drawSync();
     try {
@@ -282,9 +314,11 @@
         toast("Synced.");
       }
       rememberSync({ ...syncCfg, lastError: null });
+      return true;
     } catch (e) {
       rememberSync({ ...syncCfg, lastError: e.message || "sync failed" });
       if (!quiet) toast(`Could not sync: ${e.message}`, true);
+      return false;
     } finally {
       syncing = false;
       drawSync();
@@ -313,11 +347,12 @@
     toast("New code made. Put it on your other device.");
   });
 
-  $("btn-sync-copy").addEventListener("click", async () => {
-    if (!syncCfg.code) { toast("No code to copy yet.", true); return; }
+  $("btn-sync-link").addEventListener("click", async () => {
+    if (!Sync.configured(syncCfg)) { toast("Set the URL and a code first.", true); return; }
+    const link = Sync.pairingLink(syncCfg, location.href);
     try {
-      await navigator.clipboard.writeText(syncCfg.code);
-      toast("Code copied.");
+      await navigator.clipboard.writeText(link);
+      toast("Pairing link copied. Open it on the other device.");
     } catch (e) {
       // Clipboard access is refused often enough that it needs a fallback.
       $("sync-code").select();
@@ -372,11 +407,15 @@
       return;
     }
     if (mode() === "verbs") {
-      const built = pick && pick.kind === "drill" ? pick : starterDrill();
+      const built = pick && pick.kind === "drill" ? pick : starterDrill(tenseName());
       $("start-picked").hidden = !(pick && pick.kind === "drill");
       if (pick && pick.kind === "drill") $("start-picked-name").textContent = pick.name;
+      const size = built.starter
+        ? Math.min(state.settings.roundSize, built.items.length)
+        : built.items.length;
+      const of = size < built.items.length ? ` of ${built.items.length}` : "";
       $("start-blurb").textContent =
-        `${built.name}. ${built.items.length} forms, asked in a random order. `
+        `${built.name}. ${size}${of} forms, asked in a random order. `
         + `Drills do not move any word's level; they are practice, not assessment. `
         + `Open the Lessons screen to drill a different table.`;
       return;
@@ -423,7 +462,36 @@
     document.querySelectorAll("#modes .mode").forEach((b) => {
       b.classList.toggle("on", b.dataset.mode === mode());
     });
+    drawTenses();
   }
+
+  /* Which tense the verb drill asks about. "mixed" is every tense the starter
+     verbs can be vouched for, shuffled together, which is the harder and more
+     realistic thing; a single tense is how you learn one in the first place.
+     Only shown in verb mode, because it means nothing in the other two. */
+  const tenseName = () => (state.settings.tense || "present");
+
+  function drawTenses() {
+    const on = mode() === "verbs" && !(pick && pick.kind === "drill");
+    $("tenses").hidden = !on;
+    if (!on) return;
+    const options = [{ id: "mixed", name: "Mixed" }]
+      .concat(Verbs.VERBS.tenses.map((t) => ({ id: t.id, name: t.name })));
+    $("tense-pills").innerHTML = options.map((o) =>
+      `<button class="pill${o.id === tenseName() ? " on" : ""}" data-tense="${esc(o.id)}">${esc(o.name)}</button>`
+    ).join("");
+  }
+
+  $("tense-pills").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    state.settings.tense = pill.dataset.tense;
+    commit();
+    round = null; card = null;
+    drawTenses();
+    updateStartBlurb();
+    resetPracticeView();
+  });
 
   /* Clearing the pick abandons whatever round is running. Nothing is lost by
      that: every card commits as it is answered, so the round is only ever a
@@ -432,6 +500,7 @@
     pick = null;
     round = null;
     card = null;
+    drawTenses();
     updateStartBlurb();
     resetPracticeView();
   });
@@ -446,15 +515,23 @@
   function startRound() {
     let picked;
     if (mode() === "sentences") return startSentenceRound();
-    if (mode() === "verbs" && !(pick && pick.kind === "drill")) {
-      const built = starterDrill();
-      pick = { kind: "drill", id: "starter", name: built.name, items: built.items };
-    }
-    if (pick && pick.kind === "drill") {
-      // A drill asks every form in the table, shuffled, however many that is;
-      // the round size is about how many words to revisit, which is a
-      // different question.
-      picked = pick.items.slice().sort(() => Math.random() - 0.5);
+
+    /* A table picked from the Lessons screen is a standing choice and lives in
+       `pick`. The starter drill is not: it is rebuilt from the tense pills on
+       every round, because stashing it would mean changing the tense had no
+       effect until something cleared the stash. */
+    const drill = (pick && pick.kind === "drill") ? pick
+      : mode() === "verbs" ? starterDrill(tenseName())
+      : null;
+
+    if (drill) {
+      /* A table picked from Lessons runs end to end, because running the
+         table is what was asked for. The starter set is a different thing: on
+         Mixed it is two hundred forms, which is not a round by anybody's
+         reckoning, so it is shuffled and cut to the length already set under
+         Cards per round. */
+      const shuffled = Engine.shuffle(drill.items);
+      picked = drill.starter ? shuffled.slice(0, state.settings.roundSize) : shuffled;
     } else {
       const pool = pick ? wordsInTopic(pick.id) : words();
       picked = Engine.pickRound(pool, (id) => prog(id), new Date().toISOString(),
@@ -472,10 +549,12 @@
         });
     }
     if (!picked.length) {
-      toast(pick ? `Nothing to practise in ${pick.name}.` : "No words are enabled, so there is nothing to practise.", true);
+      toast(drill ? `Nothing to drill in ${drill.name}.`
+        : pick ? `Nothing to practise in ${pick.name}.`
+        : "No words are enabled, so there is nothing to practise.", true);
       return;
     }
-    round = { queue: picked, index: 0, results: [], movers: [], drill: !!(pick && pick.kind === "drill") };
+    round = { queue: picked, index: 0, results: [], movers: [], drill: !!drill };
     $("round-start").hidden = true;
     $("round-end").hidden = true;
     $("round-bar").hidden = false;
@@ -674,17 +753,25 @@
      know the difference. The answer comes straight off the table in verbs.js,
      so the drill can only ever ask what the lesson already teaches. */
   function drillCard(item) {
+    /* "hablar, yo, present" is only a question if you already know what yo
+       does to a verb, which is the thing being drilled. So the card asks in
+       English where it can: hablar, and under it "I talk". Where it cannot,
+       for the preterite and the subjunctive, it at least spells out who yo
+       is rather than leaving the pronoun to speak for itself. */
+    const english = item.english;
     return {
       drill: true,
       word: { id: null, es: item.answer, note: item.note || "" },
       band: { key: "drill", label: item.tenseName },
-      levelLabel: item.personLabel,
+      levelLabel: `${item.personLabel} (${item.personShort})`,
       fellBack: false,
       prompt: item.infinitive,
-      promptHint: `${item.gloss} \u2014 ${item.personLabel}, ${item.tenseName.toLowerCase()}`,
+      promptHint: english
+        ? `${item.gloss} \u2014 say "${english}"`
+        : `${item.gloss} \u2014 the ${item.personLabel} form (${item.personShort}), ${item.tenseName.toLowerCase()}`,
       accepted: [item.answer],
       reveal: item.answer,
-      revealContext: "",
+      revealContext: english ? `${item.personLabel}: ${english}` : "",
     };
   }
 
@@ -1106,26 +1193,33 @@
      there for anyone who wants a particular table. */
   const STARTER_VERBS = ["ser", "estar", "tener", "ir", "hacer"];
 
-  function starterDrill() {
-    const tense = Verbs.VERBS.tenses.find((t) => t.id === "present");
+  function starterDrill(tenseId) {
+    const wanted = tenseId && tenseId !== "mixed"
+      ? Verbs.VERBS.tenses.filter((t) => t.id === tenseId)
+      : Verbs.VERBS.tenses;
     const items = [];
-    for (const f of FAMILIES) {
+    const add = (infinitive, gloss, note, tense) => {
+      // Only forms the tables can vouch for; the rest would be invented.
+      if (!Verbs.isVouchedFor(infinitive, tense.id)) return;
       for (const p of PERSONS) {
-        const answer = Verbs.conjugate(f.example, tense.id, p.id);
-        if (answer) items.push({ infinitive: f.example, gloss: f.gloss, answer,
-          note: tense.note, tenseName: tense.name, personLabel: p.label });
+        const answer = Verbs.conjugate(infinitive, tense.id, p.id);
+        if (!answer) continue;
+        items.push({ infinitive, gloss, answer, note,
+          tenseName: tense.name, personLabel: p.label, personShort: p.short,
+          english: Verbs.englishPhrase(gloss, p.id, tense.id) });
+      }
+    };
+    for (const tense of wanted) {
+      for (const f of FAMILIES) add(f.example, f.gloss, tense.note, tense);
+      for (const id of STARTER_VERBS) {
+        const verb = Verbs.VERBS.irregulars.find((v) => v.infinitive === id);
+        if (verb) add(verb.infinitive, verb.gloss, verb.note, tense);
       }
     }
-    for (const id of STARTER_VERBS) {
-      const verb = Verbs.VERBS.irregulars.find((v) => v.infinitive === id);
-      if (!verb) continue;
-      for (const p of PERSONS) {
-        const answer = Verbs.conjugate(verb.infinitive, tense.id, p.id);
-        if (answer) items.push({ infinitive: verb.infinitive, gloss: verb.gloss,
-          answer, note: verb.note, tenseName: tense.name, personLabel: p.label });
-      }
-    }
-    return { name: "Present tense, the verbs you need first", items };
+    const name = wanted.length === 1
+      ? `${wanted[0].name}, the verbs you need first`
+      : "Every tense mixed together, the verbs you need first";
+    return { name, items, starter: true };
   }
 
   function drillItems(spec) {
@@ -1135,7 +1229,9 @@
       const answer = Verbs.conjugate(infinitive, tense.id, person.id);
       if (answer) {
         items.push({ infinitive, gloss, answer, note,
-          tenseName: tense.name, personLabel: person.label });
+          tenseName: tense.name, personLabel: person.label,
+          personShort: person.short,
+          english: Verbs.englishPhrase(gloss, person.id, tense.id) });
       }
     };
 
@@ -1441,9 +1537,29 @@
   // and the stored value in step with it.
   applyTheme(loadTheme());
   drawSync();
-  // On load, not blocking it: the app is already usable by the time this runs.
-  doSync({ quiet: true });
+  /* A pairing link opened on the second device. Taken before the first sync,
+     so the very next thing that happens is a pull from the box the link
+     names, and the hash is cleared straight afterwards: leaving the code in
+     the address bar puts it in the history and in anything that reads a
+     shared screen. Not quiet, because the whole point is to know it worked. */
+  if (Sync.readPairingLink(location.hash)) {
+    const paired = Sync.readPairingLink(location.hash);
+    rememberSync(paired);
+    history.replaceState(null, "", location.pathname + location.search);
+    /* One message, after the first sync rather than before it: "paired" and
+       "paired and your progress is actually here" are different things to be
+       told, and only the second is the one worth celebrating. */
+    doSync({ quiet: true }).then((worked) => {
+      toast(worked
+        ? "Paired with your other device, and your progress is here."
+        : "Paired, but the first sync failed. Try Sync now from the menu.", !worked);
+    });
+  } else {
+    // On load, not blocking it: the app is already usable by the time this runs.
+    doSync({ quiet: true });
+  }
   refreshMenu();
+  applyPace();
   drawModes();
   refreshTopicSelect();
   refreshWordSelect();

@@ -289,5 +289,42 @@ const older = E.applyResult({ level: 2, correctStreak: 0, totalCorrect: 0,
   totalWrong: 9, timesSeen: 9, lastSeen: NOW }, 'wrong', NOW).progress;
 ok('and starts counting from the next miss', older.lapses === 1);
 
+console.log('--- pace ---');
+/* The default has to be exactly what the numbers were before there was a
+   setting, or every other assertion in this file is testing a moving target. */
+const steady = E.applyPace('steady');
+ok('steady is the default', E.applyPace('nonsense such as this').label === steady.label);
+ok('and it is five new words, twenty on the go',
+  E.CONFIG.MAX_NEW_PER_ROUND === 5 && E.CONFIG.LEARNING_CAP === 20);
+ok('every pace has a label and a blurb saying what it does',
+  Object.values(E.PACES).every((x) => x.label && x.blurb));
+
+E.applyPace('gentle');
+ok('gentle takes on fewer at once',
+  E.CONFIG.MAX_NEW_PER_ROUND === 3 && E.CONFIG.LEARNING_CAP === 12);
+ok('and keeps a sentence on tiles longer', E.CONFIG.SENTENCE_TILE_TOP === 3);
+ok('and calls a word a sticking point sooner', E.CONFIG.STICKY_LAPSES === 2);
+ok('a fresh word is still shown before it is asked',
+  E.buildCard(comer, E.freshProgress(), sFor).intro === true);
+
+E.applyPace('brisk');
+ok('brisk takes on more', E.CONFIG.MAX_NEW_PER_ROUND === 10 && E.CONFIG.LEARNING_CAP === 40);
+ok('and asks a word it has never shown you',
+  E.buildCard(comer, E.freshProgress(), sFor).intro !== true);
+ok('and sends a sentence to typing after one right answer',
+  E.sentenceCard({ id: 'x', es: 'No sé.', en: 'I do not know.' }, { level: 2 }).band.key === 'translate');
+ok('the allowance follows the pace',
+  E.newWordAllowance(SEED.vocabulary, () => E.freshProgress()) === 10);
+
+E.applyPace('gentle');
+ok('and back down again',
+  E.newWordAllowance(SEED.vocabulary, () => E.freshProgress()) === 3);
+E.applyPace('steady');
+ok('switching back restores every number',
+  E.CONFIG.MAX_NEW_PER_ROUND === 5 && E.CONFIG.LEARNING_CAP === 20
+  && E.CONFIG.INTRODUCE_UNTIL_SEEN === 1 && E.CONFIG.SENTENCE_TILE_TOP === 2
+  && E.CONFIG.SENTENCE_MAX_NEW === 3 && E.CONFIG.STICKY_LAPSES === 3,
+  'a pace that only sets some of them would leave the others stuck');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
