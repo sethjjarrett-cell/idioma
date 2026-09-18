@@ -222,6 +222,14 @@
   <!-- ============================ PRACTICE ============================ -->
   <section class="screen on" id="screen-practice">
 
+    <!-- What the pickers collapse to once a round is running. Three mode
+         buttons and a row of pills come to about three hundred pixels, which
+         on a phone is the difference between the card being on screen and
+         having to scroll to every question. -->
+    <button class="picker-summary" id="picker-summary" hidden>
+      <span id="picker-summary-text"></span><i>change</i>
+    </button>
+
     <div class="modes" id="modes" role="group" aria-label="What to practise">
       <button class="mode on" data-mode="words">
         <b>Words</b><span>One word at a time, shown then asked</span>

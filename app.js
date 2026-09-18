@@ -492,13 +492,62 @@
     resetPracticeView();
   });
 
+  /* The pickers take about three hundred pixels, which is fine on the screen
+     you choose from and ruinous on the one you answer questions on: on a
+     phone it puts the card, and in sentence mode the Check button, below the
+     fold, so every new card needs a scroll.
+
+     So once a round is running they fold into one line saying what you picked.
+     Hiding them outright would be simpler and wrong: being unable to change
+     mode without finishing the round is the thing that made them a screen
+     fixture in the first place. */
+  let pickersOpen = false;
+  const inRound = () => !!round && !$("card").hidden;
+
   function drawModes() {
     document.querySelectorAll("#modes .mode").forEach((b) => {
       b.classList.toggle("on", b.dataset.mode === mode());
     });
+    // A long filter row expanded in one mode should not stay expanded in the
+    // next; the row is about the mode you are in.
     filtersOpen = false;
     drawFilters();
+    drawPickerSummary();
   }
+
+  /* What the one line says: the mode, and the filter if it is narrowing
+     anything. "Words" on its own is the whole truth when nothing is filtered,
+     and "Words · all" would be noise. */
+  function pickerSummaryText() {
+    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences" }[mode()];
+    let narrowed = null;
+    if (mode() === "verbs") {
+      narrowed = pick && pick.kind === "drill" ? pick.name
+        : tenseName() === "mixed" ? "mixed tenses"
+        : (Verbs.VERBS.tenses.find((t) => t.id === tenseName()) || {}).name;
+    } else if (mode() === "words") {
+      narrowed = [pick && pick.kind === "topic" ? pick.name : null,
+                  posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
+    } else {
+      narrowed = subjectName() === "all" ? null : subjectLabel(subjectName());
+    }
+    return narrowed ? `${label} · ${narrowed}` : label;
+  }
+
+  function drawPickerSummary() {
+    const folded = inRound() && !pickersOpen;
+    $("picker-summary").hidden = !folded;
+    $("modes").hidden = folded;
+    if (folded) {
+      $("filters").hidden = true;
+      $("picker-summary-text").textContent = pickerSummaryText();
+    }
+  }
+
+  $("picker-summary").addEventListener("click", () => {
+    pickersOpen = true;
+    drawModes();
+  });
 
   /* One row of pills under the modes, meaning something different in each.
 
@@ -547,6 +596,7 @@
   }
 
   function drawFilters() {
+    if (inRound() && !pickersOpen) { $("filters").hidden = true; return; }
     const showTense = mode() === "verbs" && !(pick && pick.kind === "drill");
     const showPos = mode() === "words" && !(pick && pick.kind === "drill");
     const showTheme = mode() === "sentences";
@@ -628,10 +678,12 @@
   });
 
   function resetPracticeView() {
+    pickersOpen = false;
     $("card").hidden = true;
     $("round-bar").hidden = true;
     $("round-end").hidden = true;
     $("round-start").hidden = false;
+    drawPickerSummary();
   }
 
   function startRound() {
@@ -685,6 +737,7 @@
       return;
     }
     round = { queue: picked, index: 0, results: [], movers: [], drill: !!drill };
+    pickersOpen = false;
     $("round-start").hidden = true;
     $("round-end").hidden = true;
     $("round-bar").hidden = false;
@@ -710,6 +763,7 @@
         rankOf: (id) => (rankById.has(id) ? rankById.get(id) : Number.MAX_SAFE_INTEGER),
       });
     round = { queue: picked, index: 0, results: [], movers: [], drill: false, sentences: true };
+    pickersOpen = false;
     $("round-start").hidden = true;
     $("round-end").hidden = true;
     $("round-bar").hidden = false;
@@ -762,6 +816,7 @@
     $("verdict").hidden = true;
     $("card").classList.remove("correct", "almost", "wrong");
     $("card").hidden = false;
+    drawPickerSummary();
     $("round-count").textContent = `${round.index + 1} / ${round.queue.length}`;
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
     (card.intro ? $("btn-got")
@@ -1057,8 +1112,14 @@
     $("btn-retry").hidden = outcome !== "almost";
     $("btn-next").classList.toggle("primary", outcome !== "almost");
 
+    /* The box and the Check button have done their job and are now a hundred
+       pixels of disabled controls between the question and the Next button.
+       On a phone that is the difference between reading the verdict and
+       scrolling to it. The tile tray already went this way; what you typed is
+       in the verdict line anyway. Type it again puts the box back. */
     $("answer").disabled = true;
     $("btn-submit").disabled = true;
+    $("answer-form").hidden = true;
     $("build").hidden = true;
     $("verdict").hidden = false;
     (outcome === "almost" ? $("btn-retry") : $("btn-next")).focus();
@@ -1077,6 +1138,7 @@
       $("btn-build-check").focus();
       return;
     }
+    $("answer-form").hidden = false;
     $("answer").value = "";
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
@@ -1103,6 +1165,9 @@
     $("card").hidden = true;
     $("round-bar").hidden = true;
     $("round-fill").style.width = "100%";
+    // The round is over, so the pickers are the point of the screen again.
+    pickersOpen = false;
+    drawPickerSummary();
 
     // results is keyed by card position, so a skipped card leaves a hole.
     const answered = round.results.filter(Boolean);
