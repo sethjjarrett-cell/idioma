@@ -3,7 +3,7 @@
 {"id":"ventana","es":"ventana","en":["window"],"pos":"noun","topic":"home","note":"f.","sent":{"es":"Abre la {ventana}, hace calor.","en":"Open the window, it is hot."}}
 {"id":"llave","es":"llave","en":["key"],"pos":"noun","topic":"home","note":"f. Also a tap in some countries.","sent":{"es":"Perdí la {llave} del apartamento.","en":"I lost the key to the flat."}}
 {"id":"silla","es":"silla","en":["chair"],"pos":"noun","topic":"home","note":"f.","sent":{"es":"Esa {silla} está rota.","en":"That chair is broken."}}
-{"id":"cocina","es":"cocina","en":["kitchen","cooker"],"pos":"noun","topic":"home","note":"f. Both the room and the stove.","sent":{"es":"La {cocina} es la parte más grande de la casa.","en":"The kitchen is the biggest part of the house."}}
+{"id":"cocina","es":"cocina","en":["kitchen","cooker"],"pos":"noun","topic":"home","note":"f. Both the room and the cooker.","sent":{"es":"La {cocina} es la parte más grande de la casa.","en":"The kitchen is the biggest part of the house."}}
 {"id":"ropa","es":"ropa","en":["clothes"],"pos":"noun","topic":"home","note":"f. and singular: la ropa está sucia.","sent":{"es":"Tengo que lavar la {ropa}.","en":"I have to wash the clothes."}}
 {"id":"luz","es":"luz","en":["light","electricity"],"pos":"noun","topic":"home","note":"f. Plural luces. Also the electricity bill.","sent":{"es":"Apaga la {luz} cuando salgas.","en":"Turn off the light when you leave."}}
 {"id":"pan","es":"pan","en":["bread"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Compré {pan} fresco esta mañana.","en":"I bought fresh bread this morning."}}

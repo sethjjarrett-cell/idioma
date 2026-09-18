@@ -1,6 +1,6 @@
 {"sentenceOnly": true, "wordId": "habitacion", "sent": {"es": "¡Sal de mi {habitación}!", "en": "Get out of my room!"}}
 {"sentenceOnly": true, "wordId": "dormitorio", "sent": {"es": "Limpió su {dormitorio}.", "en": "He cleaned his room."}}
-{"sentenceOnly": true, "wordId": "bano", "sent": {"es": "Hay {baño} aquí.", "en": "There is a bathroom here."}}
+{"sentenceOnly": true, "wordId": "bano", "sent": {"es": "Hay {baño} aquí.", "en": "There is a toilet here."}}
 {"sentenceOnly": true, "wordId": "cama", "sent": {"es": "Sal de mi {cama}.", "en": "Get out of my bed."}}
 {"sentenceOnly": true, "wordId": "comida", "sent": {"es": "No hay {comida}.", "en": "There's no food."}}
 {"sentenceOnly": true, "wordId": "agua", "sent": {"es": "No hay {agua}.", "en": "There is no water."}}
@@ -89,7 +89,7 @@
 {"sentenceOnly": true, "wordId": "tener", "sent": {"es": "¿Hay manera de ganar dinero sin {tener} que trabajar?", "en": "Is there a way to make money without having to work?"}}
 {"sentenceOnly": true, "wordId": "ir", "sent": {"es": "No sé si {ir} a casa.", "en": "I do not know whether to go home."}}
 {"sentenceOnly": true, "wordId": "hablar", "sent": {"es": "Mejor no {hablar}.", "en": "You'd better not speak."}}
-{"sentenceOnly": true, "wordId": "coger", "sent": {"es": "¿Dónde puedo {coger} mi pasaje de avión?", "en": "Where can I pick up my airplane ticket?"}}
+{"sentenceOnly": true, "wordId": "coger", "sent": {"es": "¿Dónde puedo {coger} mi pasaje de avión?", "en": "Where can I pick up my plane ticket?"}}
 {"sentenceOnly": true, "wordId": "vivir", "sent": {"es": "Como para {vivir}.", "en": "I eat to live."}}
 {"sentenceOnly": true, "wordId": "traer", "sent": {"es": "Me olvidé de {traer} algo con que escribir.", "en": "I forgot to bring something to write with."}}
 {"sentenceOnly": true, "wordId": "beber", "sent": {"es": "¿Qué hay para {beber}?", "en": "What's there to drink?"}}
@@ -146,7 +146,7 @@
 {"sentenceOnly": true, "wordId": "terminar", "sent": {"es": "Yo quiero {terminar} el trabajo por mi cuenta.", "en": "I want to finish the work on my own."}}
 {"sentenceOnly": true, "wordId": "seguir", "sent": {"es": "No sé qué camino {seguir} para conseguirlo.", "en": "I don't know how to go about getting it."}}
 {"sentenceOnly": true, "wordId": "volver", "sent": {"es": "¿Hay que {volver}?", "en": "Do we have to go back?"}}
-{"sentenceOnly": true, "wordId": "llevar", "sent": {"es": "¿Para {llevar} o para comer aquí?", "en": "For here or to go?"}}
+{"sentenceOnly": true, "wordId": "llevar", "sent": {"es": "¿Para {llevar} o para comer aquí?", "en": "Eat in or takeaway?"}}
 {"sentenceOnly": true, "wordId": "dejar", "sent": {"es": "No puedo {dejar} de pensar en lo de ayer.", "en": "I can't stop thinking about yesterday."}}
 {"sentenceOnly": true, "wordId": "pasar", "sent": {"es": "No sé lo que te va a {pasar}.", "en": "I don't know what's going to happen to you."}}
 {"sentenceOnly": true, "wordId": "quedar", "sent": {"es": "Me voy a {quedar} en casa de mi amigo.", "en": "I'm staying over at my friend's place."}}
@@ -244,7 +244,7 @@
 {"sentenceOnly": true, "wordId": "dinero", "sent": {"es": "Hay mucho {dinero}.", "en": "There is a lot of money."}}
 {"sentenceOnly": true, "wordId": "plata", "sent": {"es": "Él siempre está corto de {plata}.", "en": "He's always short of money."}}
 {"sentenceOnly": true, "wordId": "precio", "sent": {"es": "Dime tu {precio}.", "en": "Just name your price."}}
-{"sentenceOnly": true, "wordId": "tienda", "sent": {"es": "No hay {tiendas} cerca de mi casa.", "en": "There is not a store near my house."}}
+{"sentenceOnly": true, "wordId": "tienda", "sent": {"es": "No hay {tiendas} cerca de mi casa.", "en": "There is no shop near my house."}}
 {"sentenceOnly": true, "wordId": "mercado", "sent": {"es": "En este {mercado} hay fruta y hay carne.", "en": "There's fruit and meat in this market."}}
 {"sentenceOnly": true, "wordId": "ciudad", "sent": {"es": "¡Qué {ciudad} más grande!", "en": "What a large town!"}}
 {"sentenceOnly": true, "wordId": "pais", "sent": {"es": "¿Cuántos {países} hay en el mundo?", "en": "How many countries are there in the world?"}}
@@ -311,7 +311,7 @@
 {"sentenceOnly": true, "wordId": "cabeza", "sent": {"es": "Como pollo sin {cabeza}.", "en": "Like a chicken with its head cut off."}}
 {"sentenceOnly": true, "wordId": "mano", "sent": {"es": "Esa casa ya cambió de {mano} el año pasado.", "en": "This house already changed hands last year."}}
 {"sentenceOnly": true, "wordId": "ojo", "sent": {"es": "{Ojo} con ella.", "en": "Keep an eye on her."}}
-{"sentenceOnly": true, "wordId": "pie", "sent": {"es": "Viajé a {pie}.", "en": "I traveled on foot."}}
+{"sentenceOnly": true, "wordId": "pie", "sent": {"es": "Viajé a {pie}.", "en": "I travelled on foot."}}
 {"sentenceOnly": true, "wordId": "doler", "sent": {"es": "Te prometo que no te va a {doler}.", "en": "It won't hurt, I promise."}}
 {"sentenceOnly": true, "wordId": "medico", "sent": {"es": "¿Te dio el {médico} algo para el dolor?", "en": "Did the doctor give you anything for the pain?"}}
 {"sentenceOnly": true, "wordId": "uno", "sent": {"es": "No, solo {uno}.", "en": "No, just one."}}

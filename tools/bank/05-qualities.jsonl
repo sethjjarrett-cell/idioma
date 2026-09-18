@@ -76,7 +76,7 @@
 {"id": "rio", "es": "río", "en": ["river"], "pos": "noun", "topic": "nature", "note": "m.", "sent": {"es": "Nadamos en el {río} el domingo.", "en": "We swam in the river on Sunday."}}
 {"id": "montana", "es": "montaña", "en": ["mountain"], "pos": "noun", "topic": "nature", "note": "f.", "sent": {"es": "La {montaña} se ve desde la ventana.", "en": "The mountain is visible from the window."}}
 {"id": "playa", "es": "playa", "en": ["beach"], "pos": "noun", "topic": "nature", "note": "f.", "sent": {"es": "Pasamos el día en la {playa}.", "en": "We spent the day at the beach."}}
-{"id": "arbol", "es": "árbol", "en": ["tree"], "pos": "noun", "topic": "nature", "note": "m. Plural árboles.", "sent": {"es": "Hay un {árbol} enorme en el patio.", "en": "There is an enormous tree in the yard."}}
+{"id": "arbol", "es": "árbol", "en": ["tree"], "pos": "noun", "topic": "nature", "note": "m. Plural árboles.", "sent": {"es": "Hay un {árbol} enorme en el patio.", "en": "There is an enormous tree in the garden."}}
 {"id": "perro", "es": "perro", "en": ["dog"], "pos": "noun", "topic": "nature", "note": "m. perra for a female, though it is also an insult.", "sent": {"es": "El {perro} del vecino ladra toda la noche.", "en": "The neighbour's dog barks all night."}}
 {"id": "gato", "es": "gato", "en": ["cat"], "pos": "noun", "topic": "nature", "note": "m. Also a car jack.", "sent": {"es": "Mi {gato} duerme todo el día.", "en": "My cat sleeps all day."}}
 {"id": "por-favor", "es": "por favor", "en": ["please"], "pos": "phrase", "topic": "smalltalk", "note": "", "sent": {"es": "Un tinto, {por favor}.", "en": "A black coffee, please."}}
