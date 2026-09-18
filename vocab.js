@@ -10,7 +10,7 @@
    blanks it out and the answer is the form as written, inflected, because the
    learner types what the sentence needs rather than the dictionary form.
 
-   404 words, 802 sentences. Generated in batches and
+   414 words, 812 sentences. Generated in batches and
    checked by tests/test-bank.mjs, which fails on a duplicate, a missing
    field, an unknown topic, or a braced form that is not a form of its word.
    Those checks settle structure, not meaning: the Spanish has been written
@@ -425,7 +425,17 @@ const VOCAB = {
     {"id":"apenas","es":"apenas","en":["barely","just"],"pos":"adverb","topic":"glue"},
     {"id":"jamas","es":"jamás","en":["never"],"pos":"adverb","topic":"glue","note":"Stronger than nunca."},
     {"id":"completamente","es":"completamente","en":["completely"],"pos":"adverb","topic":"glue"},
-    {"id":"ojala","es":"ojalá","en":["hopefully","I hope"],"pos":"adverb","topic":"glue","note":"From Arabic, if God wills. Takes the subjunctive: ojalá venga."}
+    {"id":"ojala","es":"ojalá","en":["hopefully","I hope"],"pos":"adverb","topic":"glue","note":"From Arabic, if God wills. Takes the subjunctive: ojalá venga."},
+    {"id":"adonde","es":"¿adónde?","en":["where to"],"pos":"question","topic":"where","note":"For going somewhere. ¿dónde? is for being somewhere."},
+    {"id":"despacio","es":"despacio","en":["slowly"],"pos":"adverb","topic":"smalltalk","note":"Más despacio, por favor is the most useful sentence you will learn."},
+    {"id":"centro","es":"centro","en":["centre","downtown"],"pos":"noun","topic":"travel","note":"m. El centro is the middle of town."},
+    {"id":"taxi","es":"taxi","en":["taxi"],"pos":"noun","topic":"travel","note":"m. Plural taxis."},
+    {"id":"tiempo","es":"tiempo","en":["time"],"pos":"noun","topic":"time","note":"m. Time as a quantity, not an occasion. Also the weather: ¿qué tiempo hace? is what is it like out."},
+    {"id":"espanol","es":"español","en":["spanish"],"pos":"noun","topic":"smalltalk","note":"m. Lower case for the language; española for a woman from Spain."},
+    {"id":"seis","es":"seis","en":["six"],"pos":"number","topic":"numbers"},
+    {"id":"siete","es":"siete","en":["seven"],"pos":"number","topic":"numbers"},
+    {"id":"ocho","es":"ocho","en":["eight"],"pos":"number","topic":"numbers"},
+    {"id":"nueve","es":"nueve","en":["nine"],"pos":"number","topic":"numbers"}
   ],
   sentences: [
     {"id":"g0001","wordId":"hombre","es":"Ese {hombre} trabaja en la tienda.","answer":"hombre","en":"That man works in the shop."},
@@ -1229,7 +1239,17 @@ const VOCAB = {
     {"id":"g0799","wordId":"lo","es":"{Lo} sé todo.","answer":"Lo","en":"I know everything."},
     {"id":"g0800","wordId":"se","es":"Él {se} rio.","answer":"se","en":"He laughed."},
     {"id":"g0801","wordId":"este","es":"Sal de {este} lugar.","answer":"este","en":"Leave this place."},
-    {"id":"g0802","wordId":"ese","es":"A {ese} precio no se puede comprar el pollo.","answer":"ese","en":"You can't buy chicken at that price."}
+    {"id":"g0802","wordId":"ese","es":"A {ese} precio no se puede comprar el pollo.","answer":"ese","en":"You can't buy chicken at that price."},
+    {"id":"g0803","wordId":"adonde","es":"¿{Adónde} vas tan temprano?","answer":"Adónde","en":"Where are you going so early?"},
+    {"id":"g0804","wordId":"despacio","es":"¿Puede hablar más {despacio}?","answer":"despacio","en":"Could you speak more slowly?"},
+    {"id":"g0805","wordId":"centro","es":"Vivo cerca del {centro}.","answer":"centro","en":"I live near the centre."},
+    {"id":"g0806","wordId":"taxi","es":"Necesito un {taxi} al aeropuerto.","answer":"taxi","en":"I need a taxi to the airport."},
+    {"id":"g0807","wordId":"tiempo","es":"No tengo {tiempo} hoy.","answer":"tiempo","en":"I do not have time today."},
+    {"id":"g0808","wordId":"espanol","es":"Estoy aprendiendo {español}.","answer":"español","en":"I am learning Spanish."},
+    {"id":"g0809","wordId":"seis","es":"Son las {seis} de la tarde.","answer":"seis","en":"It is six in the afternoon."},
+    {"id":"g0810","wordId":"siete","es":"Trabajo {siete} días a la semana.","answer":"siete","en":"I work seven days a week."},
+    {"id":"g0811","wordId":"ocho","es":"La película empieza a las {ocho}.","answer":"ocho","en":"The film starts at eight."},
+    {"id":"g0812","wordId":"nueve","es":"Mi abuelo tiene noventa y {nueve} años.","answer":"nueve","en":"My grandfather is ninety nine."}
   ],
 };
 

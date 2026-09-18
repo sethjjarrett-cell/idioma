@@ -6,7 +6,9 @@
        version, savedAt,
        settings: { typoTolerance, introduceNew, roundSize },
        progress: { [wordId]: { level, correctStreak, totalCorrect,
-                               totalWrong, lastSeen, timesSeen, enabled } },
+                               totalWrong, lastSeen, timesSeen, lapses,
+                               enabled } },
+       phrases:  { [sentenceId]: ...the same shape },
        customWords: [ ...same shape as a seed word ],
        customSentences: [ ...same shape as a seed sentence ],
        editedWords: { [wordId]: { ...fields overridden by hand } },
@@ -31,6 +33,12 @@ function defaultState() {
       roundSize: Engine.CONFIG.ROUND_SIZE,
     },
     progress: {},
+    /* Sentences keep their own book. Same shape, same level machinery, but a
+       separate map: a sentence's level says how well you can say that
+       sentence, and mixing it in with the words would make both mean less.
+       Ids cannot collide either way, which is a happy accident rather than
+       something to rely on. */
+    phrases: {},
     customWords: [],
     customSentences: [],
     editedWords: {},
@@ -158,6 +166,116 @@ function allSentences(state) {
   return SEED.sentences.concat(VOCAB.sentences, state.customSentences || []);
 }
 
+/* ---------------------------------------------------------------
+   Sentences
+   --------------------------------------------------------------- */
+
+/* Everything that can be practised as a whole sentence, from two sources.
+
+   `phrases.js` is the ladder: short things to say, written outwards from the
+   earliest words so that there is something to do in the first session. The
+   bank's own sentences are the long tail, and they come in with their braces
+   taken out, because a sentence being translated is not a sentence with a
+   hole in it.
+
+   A bank sentence and a ladder item can say the same thing. That is not worth
+   de-duplicating: they are drawn by weight, and a repeat costs one card. */
+function allPhrases(state) {
+  const ladder = ((window.PHRASES && window.PHRASES.items) || [])
+    .map((it) => ({ ...it, source: "ladder" }));
+  const fromBank = allSentences(state).map((s) => ({
+    id: "s:" + s.id,
+    es: String(s.es).replace(/[{}]/g, ""),
+    en: s.en,
+    source: "bank",
+    wordId: s.wordId,
+  }));
+  return ladder.concat(fromBank);
+}
+
+/* Every conjugated form of one verb the tables can build. Handed to the
+   engine so that "tengo" in a sentence counts as knowing tener, without the
+   engine having to know what a verb is. */
+function verbForms(infinitive, tenses) {
+  const out = [];
+  if (!window.Verbs) return out;
+  for (const t of window.Verbs.VERBS.tenses) {
+    if (tenses && !tenses.includes(t.id)) continue;
+    /* Only the forms the tables can vouch for. Asking for every tense of
+       every verb is how you end up claiming "tenería" is Spanish. */
+    if (!window.Verbs.isVouchedFor(infinitive, t.id)) continue;
+    for (const person of ["yo", "tu", "el", "nosotros", "ellos"]) {
+      const f = window.Verbs.conjugate(infinitive, t.id, person);
+      if (f) out.push(f);
+    }
+  }
+  return out;
+}
+
+/* The form index and the per-sentence word lists, worked out once. Both are
+   pure functions of the bank, so the only thing that invalidates them is a
+   word or a sentence being added, which the count catches. */
+let sentenceCache = null;
+
+function sentenceIndex(state) {
+  const words = allWords(state);
+  const items = allPhrases(state);
+  const key = words.length + ":" + items.length;
+  if (sentenceCache && sentenceCache.key === key) return sentenceCache;
+
+  const sentences = allSentences(state);
+  const forWord = new Map();
+  for (const s of sentences) {
+    if (!forWord.has(s.wordId)) forWord.set(s.wordId, []);
+    forWord.get(s.wordId).push(s);
+  }
+  const rankOf = window.TeachingOrder ? window.TeachingOrder.rankOf : () => 0;
+  const forms = Engine.buildFormIndex(words, (id) => forWord.get(id) || [],
+    { conjugate: verbForms, rankOf });
+
+  const rows = items.map((item) => {
+    const { needs, loose } = Engine.sentenceNeeds(item.es, forms);
+    return { item, needs, loose, rank: Engine.sentenceRank(needs, rankOf) };
+  });
+  sentenceCache = { key, forms, rows };
+  return sentenceCache;
+}
+
+/* The sentences the learner could attempt right now: every word in them met,
+   and no token the bank cannot account for. */
+function readyPhrases(state, progressFor) {
+  return sentenceIndex(state).rows
+    .filter((r) => !r.loose.length && Engine.sentenceReady(r.needs, progressFor));
+}
+
+/* Plausible wrong tiles. Words the learner has met, so they are recognisable
+   rather than noise, and never a word already in the sentence.
+
+   A near-miss form of a verb already in the sentence is the useful decoy, so
+   those go first: offering tengo, tienes and tiene is a question about the
+   ending, which is the thing being learned. */
+function tileDistractors(state, item, needs, progressFor, count) {
+  const inSentence = new Set(Engine.tokenise(item.es));
+  const out = [];
+  const push = (form) => {
+    const t = Engine.wordToken(form);
+    if (!t || inSentence.has(t) || out.some((o) => Engine.wordToken(o) === t)) return;
+    out.push(form);
+  };
+  const byId = new Map(allWords(state).map((w) => [w.id, w]));
+  for (const id of needs) {
+    const w = byId.get(id);
+    if (w && w.pos === "verb") for (const f of verbForms(w.es, ["present"])) push(f);
+  }
+  const met = allWords(state)
+    .filter((w) => progressFor(w.id).timesSeen > 0 && !String(w.es).includes(" "));
+  for (const w of Engine.shuffle(met)) {
+    if (out.length >= count * 3) break;
+    push(w.es);
+  }
+  return Engine.shuffle(out).slice(0, count);
+}
+
 /* Read-only: returns defaults for a word that has never been answered,
    without writing anything. Rendering the bank asks about every word, and
    creating a row for each would fill the backup file with 130 identical
@@ -170,6 +288,19 @@ function peekProgress(state, wordId) {
 function progressFor(state, wordId) {
   if (!state.progress[wordId]) state.progress[wordId] = Engine.freshProgress();
   return state.progress[wordId];
+}
+
+/* The same pair again for the sentence book. Kept as separate functions
+   rather than a parameter, so that a call site cannot quietly write a
+   sentence's level into a word's row. */
+function peekPhrase(state, id) {
+  return (state.phrases || {})[id] || Engine.freshProgress();
+}
+
+function phraseProgressFor(state, id) {
+  if (!state.phrases) state.phrases = {};
+  if (!state.phrases[id]) state.phrases[id] = Engine.freshProgress();
+  return state.phrases[id];
 }
 
 /* ---------------------------------------------------------------
@@ -215,10 +346,16 @@ function parseImport(text) {
   for (const [id, p] of Object.entries(merged.progress)) {
     merged.progress[id] = { ...Engine.freshProgress(), ...p };
   }
+  merged.phrases = merged.phrases && typeof merged.phrases === "object" ? merged.phrases : {};
+  for (const [id, p] of Object.entries(merged.phrases)) {
+    merged.phrases[id] = { ...Engine.freshProgress(), ...p };
+  }
   return merged;
 }
 
 window.Store = {
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow,
-  allWords, allSentences, siblingsOf, peekProgress, progressFor, downloadExport, parseImport,
+  allWords, allSentences, siblingsOf, peekProgress, progressFor,
+  allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms,
+  peekPhrase, phraseProgressFor, downloadExport, parseImport,
 };

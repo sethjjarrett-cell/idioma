@@ -45,6 +45,11 @@ for (let i = 0; i < 12 && /^(a|an|the)\s/i.test(c.answer); i++) {
   c = await card();
 }
 const levelBefore = await levelOf(c.id);
+/* Seen before this card, not zero: a word met for the first time is shown and
+   then asked straight away, so a card reached part way through a round has
+   already been counted once or twice. What is under test is that three
+   attempts at one card count as one, whatever the running total was. */
+const seenBefore = (await progOf(c.id) || { timesSeen: 0 }).timesSeen;
 console.log('card:', c.id, '| answer:', JSON.stringify(c.answer), '| level', levelBefore);
 
 // --- the near miss --------------------------------------------------
@@ -83,7 +88,8 @@ const afterFix = await progOf(c.id);
 console.log('\n--- fixed ---');
 console.log('verdict     :', (await p.textContent('#verdict-chip')).trim());
 console.log('levelled up :', afterFix.level === levelBefore + 1, `(L${afterFix.level})`);
-console.log('counted once, not three times:', afterFix.timesSeen === 1, `(seen ${afterFix.timesSeen})`);
+console.log('counted once, not three times:',
+  afterFix.timesSeen === seenBefore + 1, `(seen ${seenBefore} then ${afterFix.timesSeen})`);
 console.log('near miss no longer on the card:', afterFix.totalAlmost === 0);
 console.log('one correct answer recorded  :', afterFix.totalCorrect === 1);
 

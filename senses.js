@@ -111,6 +111,7 @@ window.SENSES = {
   forma: "a shape, or a means",
   vez: "an occasion",
   hora: "the clock time",
+  tiempo: "duration, how much of it",
   nino: "a child",
   chico: "a lad",
   amigo: "a man",

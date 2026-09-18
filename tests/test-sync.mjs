@@ -23,7 +23,7 @@ const T2 = '2026-09-17T11:00:00.000Z';
 const row = (o = {}) => ({ level: 1, correctStreak: 0, totalCorrect: 0, totalWrong: 0,
   totalAlmost: 0, lastSeen: null, timesSeen: 0, enabled: true, ...o });
 const state = (o = {}) => ({ version: 1, savedAt: T1, settings: { roundSize: 15, typoTolerance: false },
-  progress: {}, customWords: [], customSentences: [], editedWords: {},
+  progress: {}, phrases: {}, customWords: [], customSentences: [], editedWords: {},
   stats: { rounds: 0, lastRoundAt: null }, ...o });
 
 console.log('--- a word answered on two devices ---');
@@ -79,6 +79,28 @@ ok('hand edits from both sides are kept',
 ok('the round count is the higher, not the sum',
   S.merge(state({ stats: { rounds: 10 } }), state({ stats: { rounds: 7 } })).stats.rounds === 10,
   'summing would inflate it every time the same pair merged again');
+
+console.log('--- the sentence book merges by the same rule ---');
+/* Sentences have their own book with the same row shape, so the same
+   last-touched rule has to settle them, including the drops. */
+const sPhone = state({ savedAt: T2, phrases: { p001: row({ level: 4, timesSeen: 6, lastSeen: T2 }) } });
+const sLaptop = state({ savedAt: T1, phrases: { p001: row({ level: 2, timesSeen: 3, lastSeen: T1 }) } });
+ok('the device that touched a sentence last wins',
+  S.merge(sLaptop, sPhone).phrases.p001.level === 4);
+ok('and in either direction', S.merge(sPhone, sLaptop).phrases.p001.level === 4);
+const sDrop = state({ savedAt: T2, phrases: { p001: row({ level: 1, timesSeen: 9, lastSeen: T2 }) } });
+ok('a sentence that went back to tiles stays there',
+  S.merge(sPhone, sDrop).phrases.p001.level === 1,
+  'taking the higher level would undo the drop that sent it back to tiles');
+ok('sentences only one device has are kept',
+  Object.keys(S.merge(state({ phrases: { p001: row() } }),
+    state({ phrases: { p002: row() } })).phrases).length === 2);
+ok('a state saved before sentences existed still merges',
+  Object.keys(S.merge({ version: 1, savedAt: T1, settings: {}, progress: {} },
+    sPhone).phrases).length === 1,
+  'and comes back with the book it did not have');
+ok('the word book is untouched by any of it',
+  Object.keys(S.merge(sPhone, sLaptop).progress).length === 0);
 
 console.log('--- merging is safe to repeat ---');
 const once = S.merge(phone, laptop);

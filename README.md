@@ -18,7 +18,8 @@ styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
 order.js        the order words are taught in
 senses.js       one line per word that shares an English meaning with another
-vocab.js        the generated bank: 404 more words, 802 more sentences
+phrases.js      the sentence ladder: short things to say, earliest words first
+vocab.js        the generated bank: 414 more words, 812 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
 tools/tatoeba/  importers for Tatoeba sentences and Wiktionary glosses
@@ -549,7 +550,17 @@ same, no tag contains its own answer or merely repeats the prompt, and typing
 the sibling word grades amber with the sense named rather than red or "a
 letter out".
 
-`tests/test-ui.mjs` through `test-ui8.mjs` drive the real page in
+`tests/test-sentences.mjs` covers the part of the sentence work that decides
+whether a sentence is ever offered: the tokeniser, the surface-form index
+over the bank, and readiness. A bug there either hides sentences for ever or
+asks for words nobody has been shown, and neither failure announces itself,
+so the index is rebuilt inside the test rather than read from `store.js`.
+It also holds the ladder to being reachable early, which is the only reason
+the ladder exists: at least three sentences after ten words, eight after
+twenty, twenty-five after fifty. If that fails, sentence practice has quietly
+become unreachable again.
+
+`tests/test-ui.mjs` through `test-ui9.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
 reload, adding a word, the Manage filters, a real cloze card, the override, an
@@ -573,7 +584,102 @@ does not reach the synced settings. `test-ui8.mjs` covers the three things
 that only exist with a browser running them: a new word taught and then asked
 as the very next card, a word past the lapse threshold being taught again and
 appearing in the Sticking points table, and an ambiguous English prompt
-carrying its sense tag with the sibling answer graded amber.
+carrying its sense tag with the sibling answer graded amber. `test-ui9.mjs`
+covers the three modes: picking one and having it survive a reload, the tile
+builder end to end including taking a tile back, two words swapped grading
+amber and handing the tiles back, a sentence graduating to typing and being
+sent back to tiles by enough wrong answers, and the verb mode starting with
+the present tense rather than every table at once.
+
+## Three modes
+
+A round is one of three things, picked at the top of the Practice screen and
+remembered between sessions.
+
+**Words** is the original: one word at a time, shown before it is tested,
+levels and bands as below.
+
+**Verb endings** runs the conjugation drill. With no table picked it is the
+present tense of the three regular families and the five verbs you cannot get
+through a sentence without, which is forty cards. Deliberately small: every
+tense of every irregular is sixty-odd cards and a reason to stop, and the
+Lessons screen is still there for anyone who wants a particular table. Drills
+never move a word's level, because a word's level means how well that word is
+known and diluting it with endings drilled off a table would make it mean
+nothing.
+
+**Sentences** shows the English and asks for the Spanish. Below level 3 the
+words are given as tiles and the job is the order; above it the whole thing is
+typed. Getting a typed one wrong drops its level, which hands the tiles back
+rather than leaving you at a wall. Sentences keep their own progress book:
+a sentence's level says how well you can say that sentence, and mixing it in
+with the words would make both mean less.
+
+### When a sentence is offered
+
+A sentence is offered once every bank word in it has been met at least once.
+Met, not mastered: the sentence is the exercise that turns half-known words
+into something you can say, so waiting for mastery would put it permanently
+out of reach.
+
+Which words a sentence needs is worked out from the Spanish itself rather than
+declared alongside it. Every word in the bank contributes its surface forms to
+an index: the headword, each word of a multi-word entry on its own, every
+inflected form the bank's own sentences use, and every conjugation the tables
+in `verbs.js` can vouch for. A token is then looked up in that index, with
+plurals and the other gender tried before giving up. The articles and the
+`que` that joins two clauses are free, because you cannot write Spanish
+without them and nobody needs them tested as vocabulary.
+
+Two things follow from doing it this way rather than by hand. A typo in a
+ladder item shows up as a test failure rather than as a sentence that silently
+never appears. And a sentence using a word the bank does not have is never
+offered at all, because there is no honest moment at which it becomes fair;
+191 of the bank's 912 sentences are in that position and stay cloze-only.
+
+That number is a little higher than it needs to be, on purpose. The tables in
+`verbs.js` cannot tell a tense left out because the verb is regular there from
+one left out because nobody filled it in, so the index only takes the forms
+they can vouch for: what a hand-written irregular entry lists, the future and
+conditional stems, and everything for a verb with no irregular entry at all.
+That loses `tenía`, which is correct, rather than gaining `tenería`, which is
+not a word. Seven sentences fall out of reach for it and no wrong Spanish gets
+in, which is the right way round.
+
+### Why the ladder exists
+
+The bank's 912 sentences were each written to show off one word, so they use
+whatever other vocabulary was to hand. Measured against the teaching order,
+ten of them are within reach after fifty words and twenty-eight after a
+hundred. Sentence practice that starts there is sentence practice you cannot
+start.
+
+`phrases.js` is written the other way round: from the earliest words outwards,
+short first, each one a pattern rather than a curiosity. Ninety-eight items,
+every one of them made only of words the bank has. Together they give four
+sentences after ten words, eleven after twenty and forty-three after fifty,
+and the bank's own sentences take over from there.
+
+The notes on a ladder item are about the pattern, not the words: `tener que`
+and then the infinitive, `ir a` for the everyday future, `hay` that never
+changes, `me gusta` being backwards. Those are the things a word-by-word
+trainer cannot teach and the reason for having sentences at all.
+
+### Tiles
+
+The tiles are the sentence's own words plus three decoys. They are all lower
+case: Spanish capitalises almost nothing, so one capital in the tray is the
+first word of the answer and a free guess.
+
+The decoys are chosen rather than random. A near-miss form of a verb already
+in the sentence goes first, because offering `tengo`, `tienes` and `tiene` is a
+question about the ending, which is the thing being learned. The rest are
+words you have already met, so they are recognisable wrong answers rather than
+noise. Nothing you have not met is ever offered.
+
+Two words swapped is amber, for the same reason one letter out is: it is a slip
+in something otherwise right. Wrong words, or the wrong number of them, is not
+a slip.
 
 ## Not built, by request
 

@@ -1,0 +1,10 @@
+{"id":"adonde","es":"¿adónde?","en":["where to"],"pos":"question","topic":"where","note":"For going somewhere. ¿dónde? is for being somewhere.","sent":{"es":"¿{Adónde} vas tan temprano?","en":"Where are you going so early?"}}
+{"id":"despacio","es":"despacio","en":["slowly"],"pos":"adverb","topic":"smalltalk","note":"Más despacio, por favor is the most useful sentence you will learn.","sent":{"es":"¿Puede hablar más {despacio}?","en":"Could you speak more slowly?"}}
+{"id":"centro","es":"centro","en":["centre","downtown"],"pos":"noun","topic":"travel","note":"m. El centro is the middle of town.","sent":{"es":"Vivo cerca del {centro}.","en":"I live near the centre."}}
+{"id":"taxi","es":"taxi","en":["taxi"],"pos":"noun","topic":"travel","note":"m. Plural taxis.","sent":{"es":"Necesito un {taxi} al aeropuerto.","en":"I need a taxi to the airport."}}
+{"id":"tiempo","es":"tiempo","en":["time"],"pos":"noun","topic":"time","note":"m. Time as a quantity, not an occasion. Also the weather: ¿qué tiempo hace? is what is it like out.","sent":{"es":"No tengo {tiempo} hoy.","en":"I do not have time today."}}
+{"id":"espanol","es":"español","en":["spanish"],"pos":"noun","topic":"smalltalk","note":"m. Lower case for the language; española for a woman from Spain.","sent":{"es":"Estoy aprendiendo {español}.","en":"I am learning Spanish."}}
+{"id":"seis","es":"seis","en":["six"],"pos":"number","topic":"numbers","sent":{"es":"Son las {seis} de la tarde.","en":"It is six in the afternoon."}}
+{"id":"siete","es":"siete","en":["seven"],"pos":"number","topic":"numbers","sent":{"es":"Trabajo {siete} días a la semana.","en":"I work seven days a week."}}
+{"id":"ocho","es":"ocho","en":["eight"],"pos":"number","topic":"numbers","sent":{"es":"La película empieza a las {ocho}.","en":"The film starts at eight."}}
+{"id":"nueve","es":"nueve","en":["nine"],"pos":"number","topic":"numbers","sent":{"es":"Mi abuelo tiene noventa y {nueve} años.","en":"My grandfather is ninety nine."}}

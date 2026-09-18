@@ -102,10 +102,19 @@ function merge(local, remote) {
   const fresher = localNewer ? local : remote;
   const staler = localNewer ? remote : local;
 
-  const progress = {};
-  for (const id of new Set([...Object.keys(local.progress || {}), ...Object.keys(remote.progress || {})])) {
-    progress[id] = pickRow((local.progress || {})[id], (remote.progress || {})[id]);
-  }
+  /* Both books merge the same way, row by row, last touched wins. Sentences
+     are not a special case: a sentence's row has the same shape and the same
+     timestamps, so the same rule settles it. */
+  const mergeBook = (key) => {
+    const out = {};
+    const a = local[key] || {}, b = remote[key] || {};
+    for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      out[id] = pickRow(a[id], b[id]);
+    }
+    return out;
+  };
+  const progress = mergeBook("progress");
+  const phrases = mergeBook("phrases");
 
   // Additions from either device survive; on the same id the younger save
   // wins, which is the best guess available without per-word edit times.
@@ -117,6 +126,7 @@ function merge(local, remote) {
     savedAt: later(local.savedAt, remote.savedAt),
     settings: { ...staler.settings, ...fresher.settings },
     progress,
+    phrases,
     customWords: [...words.values()],
     customSentences: [...sentences.values()],
     editedWords: { ...staler.editedWords, ...fresher.editedWords },

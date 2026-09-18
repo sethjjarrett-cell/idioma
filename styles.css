@@ -544,6 +544,57 @@ table.conj td b { color: var(--accent-deep); }
   color: var(--accent-deep); box-shadow: 0 2px 0 var(--accent);
 }
 
+/* The three things a round can be. Wide targets with the explanation on the
+   button, because the difference between them is not obvious from a word. */
+.modes {
+  display: grid; gap: 8px; margin: 0 0 14px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 620px) { .modes { grid-template-columns: repeat(3, 1fr); } }
+.mode {
+  display: flex; flex-direction: column; gap: 2px; text-align: left;
+  background: var(--panel); border: 2px solid var(--line); color: var(--muted);
+  border-radius: 14px; padding: 10px 14px; cursor: pointer;
+  box-shadow: 0 3px 0 var(--line); transition: transform .06s, box-shadow .06s;
+}
+.mode b { font: 800 14px var(--round); color: var(--text); }
+.mode span { font-size: 12px; line-height: 1.35; }
+.mode:active { transform: translateY(3px); box-shadow: none; }
+.mode.on {
+  background: var(--accent-soft); border-color: var(--accent);
+  box-shadow: 0 3px 0 var(--accent);
+}
+.mode.on b, .mode.on span { color: var(--accent-deep); }
+
+/* Tapping words into order. The line is the answer being built and the tray
+   is what is left; a tile moves between the two and nothing else happens. */
+.build { margin-top: 14px; }
+.build-line {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  min-height: 52px; padding: 10px;
+  background: var(--panel2); border: 2px dashed var(--line); border-radius: 14px;
+}
+#build-hint { margin: 8px 0 10px; }
+.build-tray { display: flex; flex-wrap: wrap; gap: 8px; }
+.build-acts { display: flex; gap: 8px; margin-top: 14px; }
+.build-acts .btn { flex: 1; }
+.tile {
+  background: var(--panel); border: 2px solid var(--line); color: var(--text);
+  border-radius: 12px; font: 700 16px/1 var(--round); padding: 10px 13px;
+  cursor: pointer; box-shadow: 0 3px 0 var(--line);
+  transition: transform .06s, box-shadow .06s;
+}
+.tile:active { transform: translateY(3px); box-shadow: none; }
+.tile.placed {
+  background: var(--accent-soft); border-color: var(--accent);
+  color: var(--accent-deep); box-shadow: 0 3px 0 var(--accent);
+}
+/* An empty tray with tiles still to place would otherwise collapse to nothing
+   and look broken. */
+.build-tray:empty::after {
+  content: "Every word is placed."; color: var(--muted); font-size: 12px;
+}
+
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table.bank { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
 table.bank th {
