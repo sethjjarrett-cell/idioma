@@ -43,7 +43,7 @@
 {"id": "alla", "es": "allá", "en": ["over there"], "pos": "adverb", "topic": "where", "note": "Vaguer and further than allí.", "sent": {"es": "Hay alguien {allá}.", "en": "There's someone there."}}
 {"id": "musica", "es": "música", "en": ["music"], "pos": "noun", "topic": "leisure", "note": "f.", "sent": {"es": "No sé nada de {música}.", "en": "I know nothing about music."}}
 {"id": "cancion", "es": "canción", "en": ["song"], "pos": "noun", "topic": "leisure", "note": "f. Plural canciones.", "sent": {"es": "Por eso mi {canción} suena triste.", "en": "That is why my song sounds sad."}}
-{"id": "pelicula", "es": "película", "en": ["film", "movie"], "pos": "noun", "topic": "leisure", "note": "f.", "sent": {"es": "¿Qué {película} vas a ir a ver?", "en": "What film are you going to see?"}}
+{"id":"pelicula","es":"película","en":["film","movie"],"pos":"noun","topic":"leisure","note":"f.","sent":{"es":"¿Qué {película} vas a ir a ver?","en":"What film are you going to see?"}}
 {"id": "television", "es": "televisión", "en": ["television"], "pos": "noun", "topic": "leisure", "note": "f.", "sent": {"es": "No hay {televisión} en mi habitación.", "en": "There is no TV in my room."}}
 {"id": "foto", "es": "foto", "en": ["photo"], "pos": "noun", "topic": "leisure", "note": "f. despite the o: la foto, short for la fotografía.", "sent": {"es": "Aquí hay una {foto} de mi familia.", "en": "Here is a photograph of my family."}}
 {"id": "guitarra", "es": "guitarra", "en": ["guitar"], "pos": "noun", "topic": "leisure", "note": "f. You play one with tocar, not jugar.", "sent": {"es": "A mi padre le encanta tocar {guitarra}.", "en": "My father loves to play the guitar."}}
@@ -84,7 +84,7 @@
 {"id": "salud", "es": "salud", "en": ["health"], "pos": "noun", "topic": "body", "note": "f. Also what you say when someone sneezes, and a toast.", "sent": {"es": "¡A tu {salud}!", "en": "To your health!"}}
 {"id": "sueno", "es": "sueño", "en": ["sleep", "dream"], "pos": "noun", "topic": "body", "note": "m. Tengo sueño, I am sleepy.", "sent": {"es": "No tengo {sueño} todavía.", "en": "I am not sleepy yet."}}
 {"id": "bebe", "es": "bebé", "en": ["baby"], "pos": "noun", "topic": "people", "note": "m. and f.", "sent": {"es": "¿Y tu {bebé}?", "en": "Where's your baby?"}}
-{"id": "mama", "es": "mamá", "en": ["mum"], "pos": "noun", "topic": "people", "note": "f. The accent matters: mama without it is something else.", "sent": {"es": "Y tu {mamá} también.", "en": "And your mom also."}}
+{"id": "mama", "es": "mamá", "en": ["mum"], "pos": "noun", "topic": "people", "note": "f. The accent matters: mama without it is something else.", "sent": {"es": "Y tu {mamá} también.", "en": "And your mum as well."}}
 {"id": "papa", "es": "papá", "en": ["dad"], "pos": "noun", "topic": "people", "note": "m. papa without the accent is a potato.", "sent": {"es": "Mi {papá} trabaja en el banco.", "en": "My dad works at the bank."}}
 {"id": "esposa", "es": "esposa", "en": ["wife"], "pos": "noun", "topic": "people", "note": "f.", "sent": {"es": "Mi {esposa} cocina bien.", "en": "My wife cooks well."}}
 {"id": "novia", "es": "novia", "en": ["girlfriend", "bride"], "pos": "noun", "topic": "people", "note": "f.", "sent": {"es": "Gracias por ser mi {novia}.", "en": "Thanks for being my girlfriend."}}

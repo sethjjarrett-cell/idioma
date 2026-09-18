@@ -584,6 +584,30 @@ the ladder exists: at least three sentences after ten words, eight after
 twenty, twenty-five after fifty. If that fails, sentence practice has quietly
 become unreachable again.
 
+`tests/test-british.mjs` checks that the app speaks British English: the page,
+every message `app.js` builds, the lesson notes, the sense tags, the ladder
+and the generated bank. Spelling matters least of it. An English gloss is not
+decoration, it is the answer the learner has to type, so a word offered only
+as "movie" marks "film" wrong; the rule is that a word may offer the American
+term as well but never instead.
+
+`seed.js` is exempt, because it is the bank as supplied and stays that way. It
+is still checked, on the one thing that would matter: that nothing in it
+offers an American term without the British one beside it. Nothing does.
+
+The awkward case is practice. British English spells the noun practice and the
+verb practise, so neither spelling can be banned outright; the test checks the
+forms that can only be one thing ("practicing", "to practice", "the practise")
+and that both spellings appear at all, so that it is testing the distinction
+rather than the absence of the word.
+
+It scans the raw files rather than picking the strings out of them. Pulling
+string literals with a regex is the obvious approach and it does not work:
+an apostrophe in a comment opens a string that runs to the next apostrophe
+hundreds of lines later and takes everything between with it, and anything
+skipped that way is skipped silently. Scanning everything is stricter instead
+of looser, which is the right direction for a check like this.
+
 `tests/test-ui.mjs` through `test-ui9.mjs` drive the real page in
 a browser and need Playwright installed, which the app itself does not.
 Between them they cover a full round from `file://`, persistence across a
