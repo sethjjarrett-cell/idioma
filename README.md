@@ -644,6 +644,38 @@ need English past tenses, which are irregular in their own right, and the
 subjunctive has no clean English at all, so both fall back to naming the
 person instead.
 
+### The filter row
+
+One row of pills sits under the modes and means something different in each:
+what kind of word for Words, which tense for Verb endings, what the sentence
+is about for Sentences. Three separate settings rather than one, because
+coming back to Words should not have silently rearranged what Sentences was
+going to ask.
+
+The word groups are the distinctions a learner would actually make: nouns,
+verbs, describing (adjectives and adverbs together), phrases, little words,
+numbers and days. The bank has twelve parts of speech and twelve pills is not
+a choice, it is a menu. A topic picked on the Topics screen and a kind of word
+compose, because there is no reason Food and Nouns should be either-or.
+
+A sentence's subject is the topic of the least common word in it. "Quiero ir a
+la playa" needs querer, ir and playa; what it is about is the beach, not the
+wanting, and the rarest word is reliably the one carrying the subject.
+Counting topics and taking the winner sounds more careful and is worse: every
+sentence has two or three glue words in it, so glue would win nearly all of
+them.
+
+Only subjects that have sentences in them are offered, and each pill carries
+its count, because a pill that starts an empty round is worse than no pill.
+Past eight the row hides the rest behind a **More**, with whatever is
+currently chosen always among those shown: a pill that is switched on and not
+on screen looks broken.
+
+An empty round has three quite different causes and gets three different
+messages. The one that catches people out is asking for a kind of word you
+have never met while the new-word allowance is spent on words you are already
+working on; saying "nothing is enabled" there would be simply untrue.
+
 ### Pace
 
 One setting, three positions, six numbers moving together: how many new words

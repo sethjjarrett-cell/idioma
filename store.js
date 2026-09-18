@@ -34,6 +34,8 @@ function defaultState() {
       pace: "steady",                // gentle, steady or brisk; see PACES
       mode: "words",                 // words, verbs or sentences
       tense: "present",              // which tense the verb drill asks about
+      pos: "all",                    // which kind of word a words round draws
+      subject: "all",                // what a sentences round is about
     },
     progress: {},
     /* Sentences keep their own book. Same shape, same level machinery, but a
@@ -196,6 +198,25 @@ function allPhrases(state) {
   return ladder.concat(fromBank);
 }
 
+/* Which topic a word belongs to, from whichever of the two places says so.
+
+   A generated word carries its own topic. A seed word does not, because
+   seed.js is the bank as it was supplied and topics.js was written alongside
+   it to file exactly those words. Neither source is wrong; a caller just has
+   to ask both, so it asks this instead. */
+let topicCache = null;
+
+function topicOf(state, word) {
+  if (word.topic) return word.topic;
+  if (!topicCache) {
+    topicCache = new Map();
+    for (const t of (window.TOPICS || [])) {
+      for (const id of t.words) topicCache.set(id, t.id);
+    }
+  }
+  return topicCache.get(word.id) || null;
+}
+
 /* Every conjugated form of one verb the tables can build. Handed to the
    engine so that "tengo" in a sentence counts as knowing tener, without the
    engine having to know what a verb is. */
@@ -236,9 +257,24 @@ function sentenceIndex(state) {
   const forms = Engine.buildFormIndex(words, (id) => forWord.get(id) || [],
     { conjugate: verbForms, rankOf });
 
+  /* A sentence's theme is the topic of the least common word in it.
+
+     "Quiero ir a la playa" needs querer, ir and playa; what it is about is
+     the beach, not the wanting, and the rarest word is reliably the one
+     carrying the subject. Counting topics and taking the winner sounds more
+     careful and is worse: every sentence has two or three glue words in it,
+     so glue would win nearly all of them. */
+  const byId = new Map(words.map((w) => [w.id, w]));
   const rows = items.map((item) => {
     const { needs, loose } = Engine.sentenceNeeds(item.es, forms);
-    return { item, needs, loose, rank: Engine.sentenceRank(needs, rankOf) };
+    let theme = null, worst = -1;
+    for (const id of needs) {
+      const r = rankOf(id);
+      const w = byId.get(id);
+      if (w && r >= worst) { worst = r; theme = topicOf(state, w) || theme; }
+    }
+    return { item, needs, loose, theme,
+             rank: Engine.sentenceRank(needs, rankOf) };
   });
   sentenceCache = { key, forms, rows };
   return sentenceCache;
@@ -359,6 +395,6 @@ function parseImport(text) {
 window.Store = {
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow,
   allWords, allSentences, siblingsOf, peekProgress, progressFor,
-  allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms,
+  allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,
   peekPhrase, phraseProgressFor, downloadExport, parseImport,
 };
