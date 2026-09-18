@@ -43,7 +43,16 @@ console.log('word list has pronunciation column:', await p.locator('.topic .say-
 // practise one topic and check the pool really is limited to it
 const first = p.locator('.topic').first();
 const topicId = await first.getAttribute('data-topic');
-const expected = await p.evaluate(id => window.TOPICS.find(t => t.id === id).words, topicId);
+/* The real pool, not topics.js's list. topics.js only files the seed; a
+   generated word carries its own topic, so a food word from vocab.js is
+   legitimately in a food round and is not in that array. */
+const expected = await p.evaluate((id) => {
+  const st = window.Idioma.state;
+  const filed = window.TOPICS.find(t => t.id === id);
+  const ids = new Set(filed ? filed.words : []);
+  for (const w of window.Idioma.Store.allWords(st)) if (w.topic === id) ids.add(w.id);
+  return [...ids];
+}, topicId);
 await first.locator('[data-act="practise-topic"]').click();
 await p.waitForTimeout(350);
 console.log('\n--- practising one topic ---');
@@ -51,9 +60,16 @@ console.log('switched to practice:', await p.isVisible('#card'));
 console.log('chip says:', (await p.textContent('#start-picked-name')).trim());
 const drawn = [];
 for (let i = 0; i < 6; i++) {
-  drawn.push(await p.evaluate(() => window.__card.word.id));
-  await p.fill('#answer', 'x'); await p.click('#btn-submit'); await p.waitForTimeout(70);
-  await p.click('#btn-next'); await p.waitForTimeout(70);
+  const c = await p.evaluate(() => ({ id: window.__card.word.id, intro: !!window.__card.intro }));
+  drawn.push(c.id);
+  // A word met for the first time is shown rather than asked, and the only
+  // thing to press is Got it.
+  if (c.intro) { await p.click('#btn-got'); }
+  else {
+    await p.fill('#answer', 'x'); await p.click('#btn-submit'); await p.waitForTimeout(70);
+    await p.click('#btn-next');
+  }
+  await p.waitForTimeout(80);
   if (!(await p.isVisible('#card'))) break;
 }
 console.log('cards drawn:', drawn.length, '| all from that topic:', drawn.every(id => expected.includes(id)));

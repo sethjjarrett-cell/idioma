@@ -24,17 +24,17 @@ const TEACHING_ORDER = [
   "ser", "estar", "tener", "hacer", "ir", "poder", "querer", "de", "en",
   "a", "no", "y", "que", "si-cond", "o", "pero", "porque", "hay", "muy",
   "mas", "mucho", "yo", "tu", "el-pron", "ella", "nosotros", "ustedes",
-  "usted",
+  "usted", "con",
 
   /* Getting through a conversation. Enough to greet someone, ask for something and get out again. */
   "hola", "gracias", "por-favor", "perdon", "adios", "buenos-dias",
   "que-tal", "como", "por-supuesto", "de-nada", "hasta-luego",
-  "con-permiso", "bien", "mal",
+  "con-permiso", "bien", "mal", "despacio",
 
   /* Asking. The question words open more doors than any amount of vocabulary. */
   "donde", "cuando", "quien", "por-que", "cuanto", "cuantos",
   "a-que-hora", "cuanto-tiempo", "cada-cuanto", "por-cuanto-tiempo",
-  "cuanto-cuesta", "algo-mas", "que-quieres",
+  "cuanto-cuesta", "algo-mas", "que-quieres", "adonde",
 
   /* The verbs you will reach for hourly */
   "decir", "ver", "dar", "saber", "venir", "salir", "llegar", "hablar",
@@ -48,13 +48,14 @@ const TEACHING_ORDER = [
 
   /* Time */
   "hoy", "manana", "ayer", "ahora", "dia", "noche", "semana", "mes",
-  "ano", "hora", "minuto", "vez", "tarde", "temprano", "siempre", "nunca",
+  "ano", "hora", "minuto", "tiempo", "vez", "tarde", "temprano",
+  "siempre", "nunca",
   "ya", "todavia", "antes", "despues", "proximo", "pasado", "lunes",
   "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
 
   /* Numbers */
-  "uno", "dos", "tres", "cuatro", "cinco", "diez", "veinte", "cien",
-  "mil", "primero", "ultimo", "medio",
+  "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho",
+  "nueve", "diez", "veinte", "cien", "mil", "primero", "ultimo", "medio",
 
   /* People */
   "hombre", "mujer", "gente", "persona", "amigo", "familia", "nino",
@@ -73,9 +74,10 @@ const TEACHING_ORDER = [
   "en-efectivo", "siguiente-en-la-fila", "pinta",
 
   /* Out in the world */
-  "casa", "calle", "ciudad", "pais", "mundo", "lugar", "camino", "salida",
-  "carro", "bus", "avion", "viaje", "hotel", "aeropuerto", "maleta",
-  "boleto", "caminar", "viajar", "playa", "montana", "rio",
+  "casa", "calle", "ciudad", "centro", "pais", "mundo", "lugar",
+  "camino", "salida", "carro", "bus", "taxi", "avion", "viaje", "hotel",
+  "aeropuerto", "maleta", "boleto", "caminar", "viajar", "playa",
+  "montana", "rio",
 
   /* At home */
   "puerta", "ventana", "llave", "cama", "silla", "cocina", "habitacion",
@@ -116,7 +118,7 @@ const TEACHING_ORDER = [
 
   /* The smaller joins */
   "tambien", "tampoco", "poco", "menos", "tanto", "solo", "asi", "claro",
-  "entonces", "asimismo", "aunque", "mientras", "sin", "con", "sobre",
+  "entonces", "asimismo", "aunque", "mientras", "sin", "sobre",
   "entre", "hasta", "durante", "desde", "para", "por", "otro", "cada",
   "alguna", "alguien", "nada", "nadie", "todo", "tal-vez", "algo", "casi",
 
@@ -125,6 +127,7 @@ const TEACHING_ORDER = [
 
   /* Things you will name every day. The commonest concrete nouns after the first round of them. */
   "libro", "favor", "verdad", "momento", "parte", "lado", "idea", "plan",
+  "espanol",
   "razon", "caso", "numero", "edad",
 
   /* School, work and paperwork */

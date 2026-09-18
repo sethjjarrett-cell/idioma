@@ -108,6 +108,24 @@ const CONFIG = {
      being tested. */
   OPTIONAL_ARTICLES: ["el", "la", "los", "las", "un", "una", "unos", "unas"],
 
+  /* Sentence work. A sentence is offered once every bank word in it has been
+     met at least once, which is a lower bar than knowing them: the point of
+     the sentence is to put words you half-know into an order, and waiting for
+     mastery would mean never getting there. TILE_TOP is where tapping words
+     into place gives way to typing the thing out. */
+  SENTENCE_TILE_TOP: 2,
+  SENTENCE_ROUND_SIZE: 10,
+  SENTENCE_MAX_NEW: 3,
+  TILE_DISTRACTORS: 3,
+
+  /* Grammar no sentence can do without, and that nobody needs tested as
+     vocabulary: the articles, the two contractions, and the que that joins
+     two clauses. The bank has ¿qué? the question word, which is a different
+     word that happens to share its letters. Tokens in this list never make a
+     sentence unready. */
+  FREE_TOKENS: ["el", "la", "los", "las", "un", "una", "unos", "unas",
+                "del", "al", "lo", "que"],
+
   /* Articles on the English side are a different matter: "a glass of
      water" and "glass of water" are not the same Spanish, so they are
      flagged amber rather than waved through. Same for the infinitive
@@ -122,6 +140,8 @@ const BANDS = {
   recognition: { key: "recognition", label: "Recognition", blurb: "Spanish shown, type the English" },
   production: { key: "production", label: "Production", blurb: "English shown, type the Spanish" },
   cloze: { key: "cloze", label: "Cloze", blurb: "Sentence shown, type the missing word" },
+  build: { key: "build", label: "Build it", blurb: "English shown, tap the words into order" },
+  translate: { key: "translate", label: "Translate", blurb: "English shown, type the Spanish" },
 };
 
 function bandForLevel(level) {
@@ -651,10 +671,204 @@ function checkAnswer(typed, accepted, options = {}) {
   };
 }
 
+/* ---------------------------------------------------------------
+   Sentences: what a sentence needs, and what to do with it
+   --------------------------------------------------------------- */
+
+/* Marks a token as grammar rather than vocabulary. Not a word id, and cannot
+   collide with one, because no bank id has a space in it. */
+const FREE_TOKEN = "free token";
+
+/* One Spanish word, folded down to something comparable. Punctuation goes,
+   which matters more than it sounds: without it "cuesta?" and "cuesta" are
+   different tokens, and a sentence made entirely of words in the bank reads
+   as one full of words that are not. */
+function wordToken(text) {
+  return fold(text).replace(/[^\p{L}\p{N}']/gu, "");
+}
+
+function tokenise(es) {
+  return String(es == null ? "" : es).replace(/[{}]/g, "").split(/\s+/)
+    .map(wordToken).filter(Boolean);
+}
+
+/* The surface forms of one word: everything a learner who knows the word
+   could reasonably be expected to recognise in a sentence.
+
+   The headword and its alternatives, each word of a multi-word entry on its
+   own (the entry for how much does it cost teaches "cuesta"), every inflected
+   form the bank itself puts in a sentence for it, and for a verb every form
+   the tables can build. `conjugate` is handed in rather than reached for,
+   because the engine is not allowed to know that Spanish has verbs. */
+function formsOfWord(word, sentencesForWord, conjugate) {
+  const out = new Set();
+  const add = (v) => { const t = wordToken(v); if (t) out.add(t); };
+  add(word.es);
+  for (const alt of word.es_alt || []) add(alt);
+  for (const part of String(word.es).split(/\s+/)) add(part);
+  for (const s of sentencesForWord(word.id) || []) add(s.answer);
+  if (conjugate && word.pos === "verb") for (const form of conjugate(word.es)) add(form);
+  return [...out];
+}
+
+/* An index from surface form to word id, built once over the whole bank.
+   A form two words share goes to whichever is taught first, so "es" counts as
+   ser rather than as some later homograph. */
+function buildFormIndex(words, sentencesForWord, options = {}) {
+  const conjugate = options.conjugate || null;
+  const rankOf = options.rankOf || (() => 0);
+  const index = new Map();
+  for (const w of words) {
+    for (const form of formsOfWord(w, sentencesForWord, conjugate)) {
+      const held = index.get(form);
+      if (held === undefined || rankOf(w.id) < rankOf(held)) index.set(form, w.id);
+    }
+  }
+  return index;
+}
+
+/* Which word a token belongs to, or null.
+
+   Beyond a straight hit, a token counts as the word it is plainly a form of:
+   a plural, or the other gender of an adjective. Deliberately no cleverer
+   than that. Anything more starts claiming the learner knows forms nobody has
+   put in front of them, and a sentence offered on that basis is a sentence
+   they cannot do. */
+function wordForToken(token, index) {
+  if (!token) return null;
+  if (CONFIG.FREE_TOKENS.includes(token)) return FREE_TOKEN;
+  if (index.has(token)) return index.get(token);
+  const tries = [];
+  if (token.endsWith("es")) tries.push(token.slice(0, -2), token.slice(0, -2) + "z");
+  if (token.endsWith("s")) tries.push(token.slice(0, -1));
+  if (/[ao]$/.test(token)) tries.push(token.slice(0, -1) + (token.endsWith("a") ? "o" : "a"));
+  if (/[ao]s$/.test(token)) tries.push(token.slice(0, -2) + "o", token.slice(0, -2) + "a");
+  for (const t of tries) if (index.has(t)) return index.get(t);
+  return null;
+}
+
+/* What a sentence asks of the learner: the bank words it uses, and the tokens
+   the bank cannot account for at all. A sentence with loose tokens is never
+   offered, because there is no honest moment at which it becomes fair. */
+function sentenceNeeds(es, index) {
+  const needs = new Set();
+  const loose = [];
+  for (const t of tokenise(es)) {
+    const id = wordForToken(t, index);
+    if (id === FREE_TOKEN) continue;
+    if (id) needs.add(id);
+    else loose.push(t);
+  }
+  return { needs: [...needs], loose };
+}
+
+/* Ready when every word in it has been met. Not mastered: met. The sentence
+   is the exercise that turns half-known words into something you can say, so
+   requiring mastery of each one first would put it permanently out of reach. */
+function sentenceReady(needs, progressFor) {
+  return needs.every((id) => {
+    const p = progressFor(id);
+    return p.enabled !== false && p.timesSeen > 0;
+  });
+}
+
+/* The hardest word in a sentence decides where the sentence sits, so a round
+   of sentences can be drawn commonest-first the way a round of words is. */
+function sentenceRank(needs, rankOf) {
+  return needs.reduce((worst, id) => Math.max(worst, rankOf(id)), 0);
+}
+
+function shuffle(list) {
+  const out = list.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const held = out[i]; out[i] = out[j]; out[j] = held;
+  }
+  return out;
+}
+
+/* A sentence card. At or below TILE_TOP the words are given and the job is
+   the order; above it, the whole thing is typed. A wrong answer drops the
+   level like any other card, so failing a typed sentence hands the tiles back
+   rather than leaving the learner at a wall.
+
+   Distractor tiles come from `options.distractors`, filled by the caller,
+   because a plausible wrong word is a fact about Spanish and the engine holds
+   no Spanish. */
+function sentenceCard(item, progress, options = {}) {
+  const level = progress.level || CONFIG.LEVEL_MIN;
+  const answer = String(item.es).replace(/[{}]/g, "");
+  /* A stand-in word, the same trick the conjugation drill uses: the practice
+     screen then draws a sentence card without knowing it is one, and only the
+     places that must care (which progress book to write to) ask. */
+  const base = {
+    isSentence: true, item, sentence: null,
+    word: { id: item.id, es: answer, note: item.note || "" },
+    prompt: item.en,
+    promptHint: "",
+    accepted: [answer],
+    reveal: answer,
+    revealContext: "",
+    note: item.note || "",
+    fellBack: false,
+  };
+  if (level > CONFIG.SENTENCE_TILE_TOP) {
+    return { ...base, band: BANDS.translate, tiles: null, tileAnswer: null };
+  }
+  /* Tiles carry bare words. The punctuation belongs to the sentence, not to
+     any one word in it, and a tile reading "ir." or the opening upside-down
+     question mark is a tile that looks like a mistake. The reveal still shows
+     the sentence written properly. */
+  const parts = answer.split(/\s+/)
+    .map((w) => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
+    .filter(Boolean);
+  const extra = (options.distractors || []).slice(0, CONFIG.TILE_DISTRACTORS);
+  /* Tiles are lower case, all of them. Spanish capitalises almost nothing, so
+     the one capital in the tray is the first word of the answer and a free
+     guess; the reveal still shows the sentence written properly. */
+  const lower = (t) => String(t).toLocaleLowerCase("es");
+  const tiles = shuffle(parts.map((text, i) => ({ text: lower(text), key: "w" + i }))
+    .concat(extra.map((text, i) => ({ text: lower(text), key: "x" + i, decoy: true }))));
+  return { ...base, band: BANDS.build, tiles, tileAnswer: parts.map(lower) };
+}
+
+/* Grading a built sentence. The tiles carry the words, so spelling cannot be
+   wrong and the only question is the order; comparing folded tokens keeps
+   capitals and punctuation out of it.
+
+   Two words swapped is amber rather than wrong, for the same reason one
+   letter is: it is a slip in something otherwise right. Wrong words, or the
+   wrong number of them, is not a slip. `wrongAt` is the first position that
+   does not match, which is where the card draws the eye. */
+function checkSequence(picked, want) {
+  const got = picked.map(wordToken).filter(Boolean);
+  const target = (want || []).map(wordToken).filter(Boolean);
+  const miss = { correct: false, almost: false, matched: null, near: false,
+                 reason: null, diff: null, sibling: null, wrongAt: -1 };
+  if (!got.length) return miss;
+  if (got.length === target.length && got.every((t, i) => t === target[i])) {
+    return { ...miss, correct: true, matched: want.join(" ") };
+  }
+  const sameWords = got.length === target.length
+    && got.slice().sort().join("|") === target.slice().sort().join("|");
+  const outOfPlace = got.filter((t, i) => t !== target[i]).length;
+  const swapped = sameWords && outOfPlace === 2;
+  const wrongAt = got.findIndex((t, i) => t !== target[i]);
+  return {
+    ...miss,
+    almost: swapped,
+    matched: swapped ? want.join(" ") : null,
+    reason: swapped ? "order" : sameWords ? "order" : got.length === target.length ? "words" : "length",
+    wrongAt: wrongAt < 0 ? Math.min(got.length, target.length) : wrongAt,
+  };
+}
+
 /* Exported for the browser through the global scope; there is no build
    step and no module loader, which is the point. */
 window.Engine = {
   CONFIG, BANDS, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking,
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
+  wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
+  sentenceRank, sentenceCard, checkSequence, shuffle, FREE_TOKEN,
 };

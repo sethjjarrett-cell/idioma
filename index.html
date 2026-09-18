@@ -211,6 +211,18 @@
   <!-- ============================ PRACTICE ============================ -->
   <section class="screen on" id="screen-practice">
 
+    <div class="modes" id="modes" role="group" aria-label="What to practise">
+      <button class="mode on" data-mode="words">
+        <b>Words</b><span>One word at a time, shown then asked</span>
+      </button>
+      <button class="mode" data-mode="verbs">
+        <b>Verb endings</b><span>Conjugations off the tables</span>
+      </button>
+      <button class="mode" data-mode="sentences">
+        <b>Sentences</b><span>Tap the words into order, then type them</span>
+      </button>
+    </div>
+
     <div class="picked" id="start-picked" hidden>
       <span class="pick-chip" id="start-picked-name"></span>
       <button class="btn" id="btn-clear-pick">Whole bank</button>
@@ -242,6 +254,18 @@
         </div>
         <button class="btn primary big" id="btn-got">Got it</button>
         <p class="muted small" id="teach-then" hidden>You will be asked this one next.</p>
+      </div>
+
+      <!-- Tap the words into order. Shown in place of the answer box on a
+           sentence that has not been got right twice yet. -->
+      <div class="build" id="build" hidden>
+        <div class="build-line" id="build-line" aria-live="polite"></div>
+        <p class="muted small" id="build-hint">Tap the words in order. Tap one you have placed to take it back.</p>
+        <div class="build-tray" id="build-tray"></div>
+        <div class="build-acts">
+          <button class="btn" type="button" id="btn-build-clear">Clear</button>
+          <button class="btn primary" type="button" id="btn-build-check">Check</button>
+        </div>
       </div>
 
       <form id="answer-form" autocomplete="off">
@@ -434,6 +458,7 @@
 <script src="topics.js"></script>
 <script src="order.js"></script>
 <script src="senses.js"></script>
+<script src="phrases.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>
 <script src="engine.js"></script>

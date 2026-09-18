@@ -258,6 +258,21 @@ const VERBS = {
     },
   ],
 
+  /* The future and the conditional are the one place in Spanish where a
+     handful of verbs share one irregularity: they build on a shortened stem
+     instead of the infinitive, and then take the ordinary endings. tendré and
+     tendría, not teneré and tenería.
+
+     There are twelve of them and that is the lot, which is why they are a
+     table rather than twelve entries in `irregulars`. Without it, conjugate
+     would build teneré from the regular rule and hand back a word that does
+     not exist. */
+  futureStems: {
+    tener: "tendr", poner: "pondr", venir: "vendr", salir: "saldr",
+    valer: "valdr", poder: "podr", querer: "querr", saber: "sabr",
+    haber: "habr", caber: "cabr", hacer: "har", decir: "dir",
+  },
+
   /* Short pieces that are not tables. */
   notes: [
     {
@@ -306,8 +321,31 @@ function conjugate(infinitive, tenseId, personId) {
   const family = infinitive.slice(-2);
   const endings = tense.endings[family];
   if (!endings || !endings[personId]) return null;
-  const base = tense.base === "infinitive" ? infinitive : infinitive.slice(0, -2);
+
+  /* A tense built on the infinitive is the future or the conditional, and
+     those are where the shortened stems apply. */
+  let base = tense.base === "infinitive" ? infinitive : infinitive.slice(0, -2);
+  if (tense.base === "infinitive" && VERBS.futureStems[infinitive]) {
+    base = VERBS.futureStems[infinitive];
+  }
   return base + endings[personId];
 }
 
-window.Verbs = { VERBS, conjugate };
+/* Whether the tables can vouch for a form, as against merely produce one.
+
+   A verb with an irregular entry is irregular somewhere, and the entry only
+   lists the tenses somebody checked. For the tenses it does not list, the
+   regular rule is a guess: right for tener in the imperfect, wrong for hacer
+   in the preterite. The Lessons screen only ever shows what is listed, so it
+   never sees the difference; anything generating forms in bulk does, and
+   should ask this first. */
+function isVouchedFor(infinitive, tenseId) {
+  const irregular = VERBS.irregulars.find((v) => v.infinitive === infinitive);
+  if (!irregular) return true;                       // regular: the rule is the truth
+  if (irregular.forms[tenseId]) return true;         // checked by hand
+  const tense = VERBS.tenses.find((t) => t.id === tenseId);
+  // The future and the conditional are covered for everyone by the stem table.
+  return !!(tense && tense.base === "infinitive");
+}
+
+window.Verbs = { VERBS, conjugate, isVouchedFor };

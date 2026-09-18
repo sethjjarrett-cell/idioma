@@ -55,6 +55,19 @@
   // progress row; only answering a card or toggling a word writes one.
   const prog = (id) => Store.peekProgress(state, id);
   const progWrite = (id) => Store.progressFor(state, id);
+
+  /* Sentences keep a separate book, so which one a card writes to is a
+     property of the card rather than of the id. Everything that touches
+     progress goes through these two, and nothing else needs to know. */
+  const bookPeek = (c) => (c && c.isSentence ? Store.peekPhrase : Store.peekProgress);
+  const bookWrite = (c) => (c && c.isSentence ? Store.phraseProgressFor : Store.progressFor);
+  const cardProgress = (c) => bookPeek(c)(state, c.word.id);
+
+  /* What a round is made of. Kept in settings so the choice survives a
+     reload: picking Sentences and then coming back to Words every time would
+     be its own small annoyance. */
+  const MODES = ["words", "verbs", "sentences"];
+  const mode = () => (MODES.includes(state.settings.mode) ? state.settings.mode : "words");
   const sentencesFor = (wordId) => sentences().filter((s) => s.wordId === wordId);
   const commit = () => Store.save(state);
 
@@ -211,6 +224,7 @@
   $("btn-reset").addEventListener("click", () => {
     if (!window.confirm("Reset every level, streak and count? Words and sentences you added are kept. This cannot be undone, so export a backup first if you want one.")) return;
     state.progress = {};
+    state.phrases = {};
     state.stats = { rounds: 0, lastRoundAt: null };
     Store.saveNow(state);
     round = null; card = null;
@@ -335,7 +349,38 @@
   };
   const wordsInTopic = (topicId) => words().filter((w) => topicOf(w) === topicId);
 
+  /* The sentences that can be attempted right now, and where each one sits.
+     Worked out from progress, so it answers itself as words are met. */
+  function sentencePool() {
+    const rows = Store.readyPhrases(state, (id) => prog(id));
+    return rows.map((r) => ({ id: r.item.id, item: r.item, needs: r.needs, rank: r.rank }));
+  }
+
   function updateStartBlurb() {
+    if (mode() === "sentences") {
+      const pool = sentencePool();
+      const met = pool.filter((x) => Store.peekPhrase(state, x.id).timesSeen > 0);
+      const typing = met.filter((x) => Store.peekPhrase(state, x.id).level > Engine.CONFIG.SENTENCE_TILE_TOP);
+      const total = Store.allPhrases(state).length;
+      $("start-picked").hidden = true;
+      $("start-blurb").textContent = pool.length
+        ? `${pool.length} sentences you have the words for, of ${total} in the bank. `
+          + `${met.length} started, ${typing.length} at the point of typing them out. `
+          + `A sentence unlocks once you have met every word in it.`
+        : `No sentences yet: they unlock once you have met every word in one. `
+          + `Practise words for a round or two and the first ones will appear.`;
+      return;
+    }
+    if (mode() === "verbs") {
+      const built = pick && pick.kind === "drill" ? pick : starterDrill();
+      $("start-picked").hidden = !(pick && pick.kind === "drill");
+      if (pick && pick.kind === "drill") $("start-picked-name").textContent = pick.name;
+      $("start-blurb").textContent =
+        `${built.name}. ${built.items.length} forms, asked in a random order. `
+        + `Drills do not move any word's level; they are practice, not assessment. `
+        + `Open the Lessons screen to drill a different table.`;
+      return;
+    }
     const pool = pick && pick.kind === "topic" ? wordsInTopic(pick.id) : words();
     const enabled = pool.filter((w) => prog(w.id).enabled !== false);
     const unseen = enabled.filter((w) => !prog(w.id).lastSeen).length;
@@ -343,12 +388,6 @@
     $("start-picked").hidden = !pick;
     if (pick) $("start-picked-name").textContent = pick.name;
 
-    if (pick && pick.kind === "drill") {
-      $("start-blurb").textContent =
-        `${pick.name}. ${pick.items.length} forms to run through, asked in a random order. `
-        + `Drills do not move any word's level; they are practice, not assessment.`;
-      return;
-    }
     const met = enabled.length - unseen;
     const settling = Engine.stillSettling(words(), (id) => prog(id));
     const allowance = Engine.newWordAllowance(words(), (id) => prog(id));
@@ -360,6 +399,30 @@
         ? `Up to ${allowance} new ${allowance === 1 ? "word" : "words"} this round, commonest first`
           + (state.settings.introduceNew === false ? ", tested straight away." : ".")
         : `No new words until some of those settle; a word settles once you can produce it, not just recognise it.`);
+  }
+
+  $("modes").addEventListener("click", (e) => {
+    const btn = e.target.closest(".mode");
+    if (!btn) return;
+    state.settings.mode = btn.dataset.mode;
+    /* A table picked from the Lessons screen is a verb pick; it has no meaning
+       in the other two modes, and leaving it set would silently drill verbs
+       when the learner asked for sentences. */
+    if (pick && pick.kind === "drill" && btn.dataset.mode !== "verbs") pick = null;
+    // Switching mid-round abandons it. Nothing is lost: every card commits as
+    // it is answered, so a round is only ever a queue.
+    round = null;
+    card = null;
+    commit();
+    drawModes();
+    updateStartBlurb();
+    resetPracticeView();
+  });
+
+  function drawModes() {
+    document.querySelectorAll("#modes .mode").forEach((b) => {
+      b.classList.toggle("on", b.dataset.mode === mode());
+    });
   }
 
   /* Clearing the pick abandons whatever round is running. Nothing is lost by
@@ -382,6 +445,11 @@
 
   function startRound() {
     let picked;
+    if (mode() === "sentences") return startSentenceRound();
+    if (mode() === "verbs" && !(pick && pick.kind === "drill")) {
+      const built = starterDrill();
+      pick = { kind: "drill", id: "starter", name: built.name, items: built.items };
+    }
     if (pick && pick.kind === "drill") {
       // A drill asks every form in the table, shuffled, however many that is;
       // the round size is about how many words to revisit, which is a
@@ -414,17 +482,44 @@
     nextCard();
   }
 
+  /* A round of sentences. The same picker the words use, so sentences get the
+     same weighting, the same pull on the ones that keep going wrong, and the
+     same cap on how many new ones arrive at once. Rank comes from the hardest
+     word in the sentence, so they arrive commonest-first too. */
+  function startSentenceRound() {
+    const pool = sentencePool();
+    if (!pool.length) {
+      toast("No sentences are within reach yet. Practise some words first.", true);
+      return;
+    }
+    const rankById = new Map(pool.map((x) => [x.id, x.rank]));
+    const picked = Engine.pickRound(pool, (id) => Store.peekPhrase(state, id),
+      new Date().toISOString(), Engine.CONFIG.SENTENCE_ROUND_SIZE, {
+        maxNew: Engine.CONFIG.SENTENCE_MAX_NEW,
+        rankOf: (id) => (rankById.has(id) ? rankById.get(id) : Number.MAX_SAFE_INTEGER),
+      });
+    round = { queue: picked, index: 0, results: [], movers: [], drill: false, sentences: true };
+    $("round-start").hidden = true;
+    $("round-end").hidden = true;
+    $("round-bar").hidden = false;
+    nextCard();
+  }
+
   function nextCard() {
     if (!round || round.index >= round.queue.length) return endRound();
     const item = round.queue[round.index];
-    // A drill item is already a card; a word has to be built into one.
-    card = round.drill
-      ? drillCard(item)
+    // A drill item is already a card; a word or a sentence has to be built.
+    card = round.drill ? drillCard(item)
+      : round.sentences
+      ? Engine.sentenceCard(item.item, Store.peekPhrase(state, item.id), {
+          distractors: Store.tileDistractors(state, item.item, item.needs,
+            (id) => prog(id), Engine.CONFIG.TILE_DISTRACTORS),
+        })
       : Engine.buildCard(item, prog(item.id), sentencesFor, {
           introduce: state.settings.introduceNew !== false,
         });
     lastResult = null;
-    cardBefore = round.drill ? null : JSON.parse(JSON.stringify(prog(item.id)));
+    cardBefore = round.drill ? null : JSON.parse(JSON.stringify(cardProgress(card)));
     retypes = 0;
 
     $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
@@ -432,7 +527,7 @@
     // anything; the level appears once it starts meaning something.
     $("card-level").textContent = round.drill ? card.levelLabel
       : (card.intro && !card.relearn) ? ""
-      : `L${prog(item.id).level}`;
+      : `L${cardProgress(card).level}`;
     $("card-prompt").innerHTML = card.band.key === "cloze"
       ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
       : esc(card.prompt);
@@ -441,11 +536,14 @@
       : (card.promptHint ? card.promptHint : "");
     $("card-hint").hidden = !$("card-hint").textContent;
 
-    // An introduction has nothing to answer, so the box gives way to the
-    // teaching block and the only thing to press is Got it.
+    // Three things can occupy the bottom of the card, and only ever one: the
+    // teaching block, the tile tray, or the answer box.
     drawTeach(card);
-    $("answer-form").hidden = !!card.intro;
+    drawBuild(card);
+    const building = card.band.key === "build";
+    $("answer-form").hidden = !!card.intro || building;
     $("card").classList.toggle("teaching", !!card.intro);
+    $("card").classList.toggle("building", building);
 
     $("answer").value = "";
     $("answer").disabled = false;
@@ -455,7 +553,9 @@
     $("card").hidden = false;
     $("round-count").textContent = `${round.index + 1} / ${round.queue.length}`;
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
-    (card.intro ? $("btn-got") : $("answer")).focus();
+    (card.intro ? $("btn-got")
+      : card.band.key === "build" ? $("btn-build-check")
+      : $("answer")).focus();
     window.__card = card;   // handy for debugging and for the UI test
   }
 
@@ -503,6 +603,52 @@
     // word to nod at and forget, it is the answer to the next question.
     $("teach-then").hidden = false;
   }
+
+  /* The tile builder. `placed` is the answer being assembled; the tray is
+     everything not yet placed. Tapping moves a tile between the two, which is
+     the whole interaction. */
+  let placed = [];
+
+  function drawBuild(c) {
+    const on = c.band.key === "build";
+    $("build").hidden = !on;
+    if (!on) { placed = []; return; }
+    placed = [];
+    renderTiles();
+  }
+
+  function renderTiles() {
+    const inUse = new Set(placed.map((t) => t.key));
+    $("build-line").innerHTML = placed.length
+      ? placed.map((t) => `<button class="tile placed" data-key="${esc(t.key)}">${esc(t.text)}</button>`).join("")
+      : '<span class="muted small">Your answer goes here.</span>';
+    $("build-tray").innerHTML = card.tiles
+      .filter((t) => !inUse.has(t.key))
+      .map((t) => `<button class="tile" data-key="${esc(t.key)}">${esc(t.text)}</button>`).join("");
+    $("btn-build-check").disabled = !placed.length;
+  }
+
+  $("build-tray").addEventListener("click", (e) => {
+    const tile = e.target.closest(".tile");
+    if (!tile || !card || card.band.key !== "build") return;
+    const found = card.tiles.find((t) => t.key === tile.dataset.key);
+    if (found) { placed.push(found); renderTiles(); }
+  });
+
+  $("build-line").addEventListener("click", (e) => {
+    const tile = e.target.closest(".tile");
+    if (!tile) return;
+    placed = placed.filter((t) => t.key !== tile.dataset.key);
+    renderTiles();
+  });
+
+  $("btn-build-clear").addEventListener("click", () => { placed = []; renderTiles(); });
+
+  $("btn-build-check").addEventListener("click", () => {
+    if (!card || card.band.key !== "build" || !placed.length) return;
+    const typed = placed.map((t) => t.text).join(" ");
+    applyAndShow(Engine.checkSequence(placed.map((t) => t.text), card.tileAnswer), typed);
+  });
 
   /* Met, not answered: the word is marked seen so it is not introduced
      again, and nothing else about it moves.
@@ -556,7 +702,7 @@
       /* The other Spanish words that answer the same English prompt. A drill
          answer comes off a conjugation table and has no word behind it, so
          there is nothing to be a sibling of. */
-      siblings: card.drill ? [] : Store.siblingsOf(words(), card.word.id),
+      siblings: card.drill || card.isSentence ? [] : Store.siblingsOf(words(), card.word.id),
     }), typed);
   }
 
@@ -572,6 +718,9 @@
     article: "an article apart",
     infinitive: "the infinitive apart",
     spelling: "a letter out",
+    order: "the right words, the wrong way round",
+    words: "the right number of words, not the right ones",
+    length: "not the right number of words",
   };
 
   /* A sibling answer is not a misspelling and saying "a letter out" would be
@@ -579,7 +728,7 @@
      the sense this card wanted. Both tags go in the line, because the pair is
      the thing worth learning and this is the moment it lands. */
   function whySense(res) {
-    const mine = card.word.sense;
+    const mine = card.word && card.word.sense;
     const theirs = res.sibling && res.sibling.sense;
     if (!res.sibling) return "close";
     const left = theirs ? `${res.sibling.es} is ${theirs}` : `${res.sibling.es} means that too`;
@@ -613,9 +762,11 @@
       ? { result: outcome, held: false, movedUp: false, movedDown: false,
           levelBefore: null, levelAfter: null, bandChanged: false }
       : (() => {
-          state.progress[id] = { ...cardBefore };
-          const a = Engine.applyResult(state.progress[id], outcome, new Date().toISOString());
-          state.progress[id] = a.progress;
+          const row = bookWrite(card)(state, id);
+          Object.keys(row).forEach((k) => { delete row[k]; });
+          Object.assign(row, cardBefore);
+          const a = Engine.applyResult(row, outcome, new Date().toISOString());
+          Object.assign(row, a.progress);
           commit();
           return a;
         })();
@@ -666,7 +817,7 @@
        reader. "MEH-sah" under mesa is noise; "HWEH-behs" under jueves is the
        whole point. */
     const spanish = card.band.key === "recognition" ? card.word.es : card.reveal;
-    $("verdict-say").textContent = Pronounce.isTricky(spanish)
+    $("verdict-say").textContent = !card.isSentence && Pronounce.isTricky(spanish)
       ? `Say it: ${Pronounce.respell(spanish)}`
       : "";
     $("verdict-say").hidden = !$("verdict-say").textContent;
@@ -689,6 +840,7 @@
 
     $("answer").disabled = true;
     $("btn-submit").disabled = true;
+    $("build").hidden = true;
     $("verdict").hidden = false;
     (outcome === "almost" ? $("btn-retry") : $("btn-next")).focus();
   }
@@ -699,6 +851,13 @@
     if (!card) return;
     retypes += 1;
     $("verdict").hidden = true;
+    if (card.band.key === "build") {
+      placed = [];
+      $("build").hidden = false;
+      renderTiles();
+      $("btn-build-check").focus();
+      return;
+    }
     $("answer").value = "";
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
@@ -846,6 +1005,10 @@
     const id = btn.closest(".topic").dataset.topic;
     const t = TOPICS.find((x) => x.id === id);
     pick = { kind: "topic", id, name: t ? t.name : id };
+    // Picking a topic is asking for words from it, whatever mode was last set.
+    state.settings.mode = "words";
+    commit();
+    drawModes();
     showScreen("practice");
     updateStartBlurb();
     resetPracticeView();
@@ -936,6 +1099,35 @@
 
   /* Turn a table into cards. Every item's answer is read out of verbs.js, so
      a drill cannot ask for a form the lesson does not show. */
+  /* The Verb endings mode, with no table picked: the present tense of the
+     three regular families and the five verbs you cannot get through a
+     sentence without. Deliberately small. Every tense of every irregular is
+     sixty-odd cards and a reason to stop, and the Lessons screen is still
+     there for anyone who wants a particular table. */
+  const STARTER_VERBS = ["ser", "estar", "tener", "ir", "hacer"];
+
+  function starterDrill() {
+    const tense = Verbs.VERBS.tenses.find((t) => t.id === "present");
+    const items = [];
+    for (const f of FAMILIES) {
+      for (const p of PERSONS) {
+        const answer = Verbs.conjugate(f.example, tense.id, p.id);
+        if (answer) items.push({ infinitive: f.example, gloss: f.gloss, answer,
+          note: tense.note, tenseName: tense.name, personLabel: p.label });
+      }
+    }
+    for (const id of STARTER_VERBS) {
+      const verb = Verbs.VERBS.irregulars.find((v) => v.infinitive === id);
+      if (!verb) continue;
+      for (const p of PERSONS) {
+        const answer = Verbs.conjugate(verb.infinitive, tense.id, p.id);
+        if (answer) items.push({ infinitive: verb.infinitive, gloss: verb.gloss,
+          answer, note: verb.note, tenseName: tense.name, personLabel: p.label });
+      }
+    }
+    return { name: "Present tense, the verbs you need first", items };
+  }
+
   function drillItems(spec) {
     const [kind, key] = spec.split(":");
     const items = [];
@@ -967,6 +1159,9 @@
     const built = drillItems(spec);
     if (!built.items.length) { toast("Nothing to drill in that table.", true); return; }
     pick = { kind: "drill", id: spec, name: built.name, items: built.items };
+    state.settings.mode = "verbs";
+    commit();
+    drawModes();
     showScreen("practice");
     updateStartBlurb();
     resetPracticeView();
@@ -1249,6 +1444,7 @@
   // On load, not blocking it: the app is already usable by the time this runs.
   doSync({ quiet: true });
   refreshMenu();
+  drawModes();
   refreshTopicSelect();
   refreshWordSelect();
   updateStartBlurb();
@@ -1261,6 +1457,10 @@
     if ($("card").hidden) return;
     // On an introduction the only action is Got it.
     if (card && card.intro) { e.preventDefault(); $("btn-got").click(); return; }
+    // On a tile card Enter checks what has been placed so far.
+    if (card && card.band.key === "build" && $("verdict").hidden) {
+      e.preventDefault(); $("btn-build-check").click(); return;
+    }
     if ($("verdict").hidden) return;
     e.preventDefault();
     // Enter takes the primary action, which on an amber card is the second
