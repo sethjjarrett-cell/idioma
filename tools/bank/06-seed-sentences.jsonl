@@ -19,7 +19,7 @@
 {"sentenceOnly":true,"wordId":"cuantos","sent":{"es":"¿{Cuántos} años tienes?","en":"How old are you?"}}
 {"sentenceOnly":true,"wordId":"por-cuanto-tiempo","sent":{"es":"¿{Por cuánto tiempo} se queda en Colombia?","en":"How long are you staying in Colombia?"}}
 {"sentenceOnly":true,"wordId":"alguna","sent":{"es":"¿Tienes {alguna} pregunta?","en":"Do you have any questions?"}}
-{"sentenceOnly":true,"wordId":"asimismo","sent":{"es":"El precio subió; {asimismo} bajó la calidad.","en":"The price went up; furthermore the quality went down."}}
+{"sentenceOnly":true,"wordId":"asimismo","sent":{"es":"El precio subió y {asimismo} subieron los costos.","en":"The price went up and so did the costs."}}
 {"sentenceOnly":true,"wordId":"esto","sent":{"es":"¿Qué es {esto}?","en":"What is this?"}}
 {"sentenceOnly":true,"wordId":"eso","sent":{"es":"{Eso} no me parece bien.","en":"That does not seem right to me."}}
 {"sentenceOnly":true,"wordId":"cuanto-cuesta","sent":{"es":"¿{Cuánto cuesta} el almuerzo del día?","en":"How much is the set lunch?"}}

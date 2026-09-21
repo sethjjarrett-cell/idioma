@@ -30,7 +30,7 @@
 {"id":"reir","es":"reír","en":["to laugh"],"pos":"verb","topic":"verbs","note":"yo río. Usually reflexive: reírse de algo.","sent":{"es":"No te {rías} de mí.","en":"Do not laugh at me."}}
 {"id":"olvidar","es":"olvidar","en":["to forget"],"pos":"verb","topic":"verbs","note":"Often reflexive: se me olvidó, it got forgotten on me.","sent":{"es":"No {olvides} tu paraguas.","en":"Do not forget your umbrella."}}
 {"id":"recordar","es":"recordar","en":["to remember","to remind"],"pos":"verb","topic":"verbs","note":"o to ue: recuerdo.","sent":{"es":"No {recuerdo} su nombre.","en":"I do not remember his name."}}
-{"id":"cambiar","es":"cambiar","en":["to change"],"pos":"verb","topic":"verbs","note":"Regular.","sent":{"es":"Quiero {cambiar} de plan.","en":"I want to change plan."}}
+{"id":"cambiar","es":"cambiar","en":["to change"],"pos":"verb","topic":"verbs","note":"Regular.","sent":{"es":"Quiero {cambiar} de plan.","en":"I want to change my plan."}}
 {"id":"mandar","es":"mandar","en":["to send","to order"],"pos":"verb","topic":"verbs","note":"Enviar also means send.","sent":{"es":"Te {mando} la dirección por mensaje.","en":"I will send you the address by message."}}
 {"id":"preguntar","es":"preguntar","en":["to ask"],"pos":"verb","topic":"verbs","note":"Ask a question. pedir is ask for a thing.","sent":{"es":"Voy a {preguntar} en la recepción.","en":"I am going to ask at reception."}}
 {"id":"contestar","es":"contestar","en":["to answer","to reply"],"pos":"verb","topic":"verbs","note":"Responder is the same thing.","sent":{"es":"Nadie {contesta} el teléfono.","en":"Nobody is answering the phone."}}

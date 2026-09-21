@@ -584,6 +584,24 @@ the ladder exists: at least three sentences after ten words, eight after
 twenty, twenty-five after fifty. If that fails, sentence practice has quietly
 become unreachable again.
 
+`tests/test-translations.mjs` guards the sentences after the fact. All 1010
+pairs have been read by hand once; this is what stops a new one slipping in
+wrong, and it can only catch shapes rather than meaning. No test can tell you
+that "vino rojo" is not what anybody calls red wine.
+
+What it can catch is the wrong-sense homograph, which is the fault that
+matters. Spanish is full of nouns that are also a verb form of something else,
+and an importer matching on spelling cannot tell them apart: "Sal ahora mismo"
+was filed under `sal`, the salt, and is the imperative of `salir`. "No entre
+usted" was filed under `entre`, between, and is the subjunctive of `entrar`. A
+learner meeting either one learns the wrong thing and has no way of knowing.
+
+Ten sentences are flagged by that rule and are correct, because `cocina` really
+is a kitchen as well as "she cooks"; each is listed as reviewed with the sense
+it uses. A new one fails the test, which is the point: it cannot be waved
+through, only read and then listed. The test also holds the line on the
+calques and the regionalisms that were found, so they cannot come back.
+
 `tests/test-british.mjs` checks that the app speaks British English: the page,
 every message `app.js` builds, the lesson notes, the sense tags, the ladder
 and the generated bank. Spelling matters least of it. An English gloss is not
@@ -782,6 +800,25 @@ conditional stems, and everything for a verb with no irregular entry at all.
 That loses `tenía`, which is correct, rather than gaining `tenería`, which is
 not a word. Seven sentences fall out of reach for it and no wrong Spanish gets
 in, which is the right way round.
+
+### What the sentences have been through
+
+The 1010 pairs were read end to end after the bank was built, and the
+generated half needed it. The seed's hundred were all correct. The ladder's
+ninety-eight were correct. Sixty-two of the imported ones were not:
+
+Fifteen taught a different word from the one they were filed under, which is
+the worst of it because nothing about the card gives it away. Seven were bad
+Spanish, mostly calques: "No hay punto en intentar" is word-for-word from
+"there's no point in trying" and is not something anybody says; "vino rojo" is
+not red wine. Seven were Spain or Mexico rather than Colombia. The rest said
+something different in English from what the Spanish said: "Ya lo sé" is "I
+already know", not "I know how it is"; a `maleta` is a suitcase, not a
+briefcase.
+
+Eighty-four more had contractions in the English, which is not an error but
+made the bank read in two voices, since everything written for it is written
+out in full.
 
 ### Why the ladder exists
 
