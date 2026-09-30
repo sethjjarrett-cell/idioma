@@ -163,6 +163,25 @@ function merge(local, remote) {
     return out;
   };
   const progress = mergeBook("progress");
+  const mergeAccepted = (a, b) => {
+    const out = {};
+    for (const id of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+      const rowA = (a || {})[id] || {}, rowB = (b || {})[id] || {};
+      out[id] = {};
+      for (const side of ["es", "en"]) {
+        const seen = new Set();
+        const both = (rowA[side] || []).concat(rowB[side] || []).filter((v) => {
+          const key = String(v).trim().toLowerCase();
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        if (both.length) out[id][side] = both;
+      }
+      if (!Object.keys(out[id]).length) delete out[id];
+    }
+    return out;
+  };
   const phrases = mergeBook("phrases");
 
   // Additions from either device survive; on the same id the younger save
@@ -179,6 +198,10 @@ function merge(local, remote) {
     customWords: [...words.values()],
     customSentences: [...sentences.values()],
     editedWords: { ...staler.editedWords, ...fresher.editedWords },
+    /* Answers said to be right, merged per word and per side rather than by
+       whole object: two devices each teaching the app a different synonym for
+       the same word should end up with both, not with whichever saved last. */
+    accepted: mergeAccepted(local.accepted, remote.accepted),
     stats: {
       // Summed would double-count every time the same pair merged again.
       rounds: Math.max((local.stats || {}).rounds || 0, (remote.stats || {}).rounds || 0),

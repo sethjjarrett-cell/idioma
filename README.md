@@ -18,6 +18,7 @@ styles.css      the theme, one token block; mobile down to a phone
 seed.js         the supplied vocabulary and sentence bank, verbatim
 order.js        the order words are taught in
 senses.js       one line per word that shares an English meaning with another
+equivalents.js  the other ways of saying the same thing, accepted but not shown
 phrases.js      the sentence ladder: short things to say, earliest words first
 vocab.js        the generated bank: 414 more words, 812 more sentences
 topics.js       which context each word belongs to
@@ -712,6 +713,48 @@ answering. `tests/test-ui10.mjs` holds it there, and measures the page height
 rather than the card's rectangle, because a rectangle is measured after the
 browser has already scrolled to bring it into view and so reads as fitting on
 a page that had to be scrolled first.
+
+### The other ways of saying the same thing
+
+A card holds one Spanish word, and "how are you" is `¿qué tal?` and
+`¿cómo estás?` and `¿qué más?`. A learner typing the second one has answered
+correctly and been told Not quite, which is the app being wrong rather than
+them, and the fastest way to stop trusting it.
+
+So both sides carry alternatives. `equivalents.js` lists them per word, `es`
+for the Spanish a production or cloze card accepts and `en` for the English a
+recognition card accepts. Neither is shown: the reveal still gives the word
+the card is teaching, because a prompt reading "pretty, nice, lovely,
+beautiful, good looking" hands the answer over from the other direction. An
+alternative that matches grades **Correct**, with the card saying *also right,
+this one is ¿qué tal?* so there is still something to learn from it.
+
+Three sources: what the bank's own notes already said and never told the
+grader ("Comenzar is the same thing", "Everyday Colombian is mamá"), the other
+countries' words, which are correct Spanish whatever Colombia says, and the
+obvious English synonyms for glosses that picked one of several.
+
+A word with its own bank entry is listed only when the two do not share a
+gloss. `mamá` is its own word and is still a right answer to "mother", so it
+is listed; `autobús` shares the gloss "bus" with `bus`, so the sense rule
+already tells those apart and a plain Correct would undo the distinction the
+tags exist to teach. `tests/test-equivalents.mjs` holds that line, along with
+the ones about not giving the prompt away and not waving a misspelling
+through.
+
+### When the list is wrong
+
+It will be. No list of synonyms is ever complete, so **I was right** does not
+just fix the card in front of you: what you typed is remembered as an accepted
+answer for that word, kept in its own map rather than in the Manage screen's
+edits, and merged across devices per word and per side, so two phones each
+teaching it a different synonym end up with both. Being marked wrong twice for
+the same answer is what makes an app feel broken, and this is the part that
+converges.
+
+Not for a conjugation drill, which has no word behind it, and not for a
+sentence, where remembering one answer would accept a whole sentence for ever
+on the strength of one keystroke.
 
 ### The filter row
 
