@@ -27,6 +27,11 @@
   let cardBefore = null;
   let retypes = 0;
 
+  /* Which cards want Spanish typed back, and so get the accent keys. It is a
+     property of the band: recognition asks for English, and every other
+     band with an answer box asks for Spanish. */
+  const SPANISH_BACK = new Set(["production", "cloze", "translate", "drill"]);
+
   /* What the next round will be drawn from. null is the whole bank; a topic
      narrows the pool; a drill replaces the pool with conjugations and is not
      word practice at all. */
@@ -807,6 +812,7 @@
     drawBuild(card);
     const building = card.band.key === "build";
     $("answer-form").hidden = !!card.intro || building;
+    $("accents").hidden = !SPANISH_BACK.has(card.band.key);
     $("card").classList.toggle("teaching", !!card.intro);
     $("card").classList.toggle("building", building);
 
@@ -961,6 +967,24 @@
       revealContext: english ? `${item.personLabel}: ${english}` : "",
     };
   }
+
+  /* The accent keys. Pressing one must not take focus off the box, or on a
+     phone the keyboard folds away between every letter. Cancelling the press
+     keeps the focus where it is; the click still arrives and does the typing.
+     Both events, because not every browser takes the hint from the first. */
+  for (const type of ["pointerdown", "mousedown"]) {
+    $("accents").addEventListener(type, (e) => {
+      if (e.target.closest(".key")) e.preventDefault();
+    });
+  }
+  $("accents").addEventListener("click", (e) => {
+    const key = e.target.closest(".key");
+    const box = $("answer");
+    if (!key || box.disabled) return;
+    const at = box.selectionStart ?? box.value.length;
+    box.setRangeText(key.dataset.ch, at, box.selectionEnd ?? at, "end");
+    box.focus();
+  });
 
   $("answer-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1786,5 +1810,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast };
 })();
