@@ -44,6 +44,10 @@ function defaultState() {
        Ids cannot collide either way, which is a happy accident rather than
        something to rely on. */
     phrases: {},
+    /* Answers the learner said were right after all, per word and per side.
+       Kept apart from editedWords, which is the Manage screen's, so that
+       editing a word by hand does not silently throw these away. */
+    accepted: {},
     customWords: [],
     customSentences: [],
     editedWords: {},
@@ -105,14 +109,41 @@ function saveNow(state) {
 
 /* The bank the app actually works from: seed, with hand edits applied and
    custom additions appended. */
+/* Everything a card will accept for one word beyond the word itself: the
+   curated list, and whatever the learner has said they were right about.
+
+   Kept out of `es` and `en` on purpose. Those two are what the card shows, and
+   a prompt reading "pretty, nice, lovely, beautiful, good looking" answers
+   itself from the other direction. Accepted and not shown is the whole point. */
+function alternatives(state, id, side) {
+  const curated = (window.EQUIVALENTS || {})[id] || {};
+  const learned = (state.accepted || {})[id] || {};
+  const out = [];
+  for (const v of (curated[side] || []).concat(learned[side] || [])) {
+    // normalise, not fold: fold leaves the punctuation on, so "cómo estás"
+    // and "¿cómo estás?" would read as two different alternatives.
+    const key = Engine.normalise(v);
+    if (key && !out.some((have) => Engine.normalise(have) === key)) out.push(v);
+  }
+  return out;
+}
+
 function allWords(state) {
   const edits = state.editedWords || {};
   const senses = window.SENSES || {};
-  /* A hand edit wins over the sense tag, so a tag can be overridden or
-     cleared from the Manage screen like anything else about a word. */
+  /* A hand edit wins over the sense tag and the alternatives, so any of them
+     can be overridden or cleared from the Manage screen like anything else
+     about a word. */
   const apply = (w) => {
+    let base = w;
     const sense = senses[w.id];
-    const base = sense ? { ...w, sense } : w;
+    if (sense) base = { ...base, sense };
+    const es = alternatives(state, w.id, "es").filter((v) =>
+      Engine.fold(v) !== Engine.fold(w.es));
+    const en = alternatives(state, w.id, "en").filter((v) =>
+      !w.en.some((have) => Engine.fold(have) === Engine.fold(v)));
+    if (es.length) base = { ...base, es_alt: (base.es_alt || []).concat(es) };
+    if (en.length) base = { ...base, en_alt: (base.en_alt || []).concat(en) };
     return edits[w.id] ? { ...base, ...edits[w.id] } : base;
   };
   // Three sources, in the order they were written: the supplied seed, the
@@ -315,6 +346,35 @@ function tileDistractors(state, item, needs, progressFor, count) {
   return Engine.shuffle(out).slice(0, count);
 }
 
+/* Remember that an answer was right after all.
+
+   No curated list of synonyms will ever be complete, and being marked wrong
+   twice for the same answer is what makes an app feel broken. So the override
+   is not just a correction to one card: it is the learner telling the app a
+   word it did not know, and the app is expected to remember.
+
+   Side is "es" or "en" depending on which way the card was asking. Stored
+   folded-unique so pressing it twice does not stack up duplicates. */
+function rememberAccepted(state, wordId, side, answer) {
+  const text = String(answer == null ? "" : answer).trim();
+  if (!wordId || !text || (side !== "es" && side !== "en")) return false;
+  if (!state.accepted) state.accepted = {};
+  if (!state.accepted[wordId]) state.accepted[wordId] = {};
+  const list = state.accepted[wordId][side] || [];
+
+  /* Whether this would already pass is the grader's question, not ours: it
+     strips punctuation and optional articles, so comparing strings here would
+     remember "cómo estás" as new when "¿cómo estás?" is already accepted. */
+  const word = allWords(state).find((w) => w.id === wordId);
+  const already = !word ? list
+    : side === "es" ? [word.es].concat(word.es_alt || [])
+    : word.en.concat(word.en_alt || []);
+  if (already.length && Engine.checkAnswer(text, already).correct) return false;
+
+  state.accepted[wordId][side] = list.concat(text);
+  return true;
+}
+
 /* Read-only: returns defaults for a word that has never been answered,
    without writing anything. Rendering the bank asks about every word, and
    creating a row for each would fill the backup file with 130 identical
@@ -385,6 +445,7 @@ function parseImport(text) {
   for (const [id, p] of Object.entries(merged.progress)) {
     merged.progress[id] = { ...Engine.freshProgress(), ...p };
   }
+  merged.accepted = merged.accepted && typeof merged.accepted === "object" ? merged.accepted : {};
   merged.phrases = merged.phrases && typeof merged.phrases === "object" ? merged.phrases : {};
   for (const [id, p] of Object.entries(merged.phrases)) {
     merged.phrases[id] = { ...Engine.freshProgress(), ...p };
@@ -394,7 +455,7 @@ function parseImport(text) {
 
 window.Store = {
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow,
-  allWords, allSentences, siblingsOf, peekProgress, progressFor,
+  allWords, allSentences, siblingsOf, peekProgress, progressFor, alternatives, rememberAccepted,
   allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,
   peekPhrase, phraseProgressFor, downloadExport, parseImport,
 };

@@ -59,6 +59,10 @@
   /* Sentences keep a separate book, so which one a card writes to is a
      property of the card rather than of the id. Everything that touches
      progress goes through these two, and nothing else needs to know. */
+  /* Which language the answer is in. Recognition shows the Spanish and wants
+     the English; everything else wants the Spanish. */
+  const askedFor = (c) => (c && c.band.key === "recognition" ? "en" : "es");
+
   const bookPeek = (c) => (c && c.isSentence ? Store.peekPhrase : Store.peekProgress);
   const bookWrite = (c) => (c && c.isSentence ? Store.phraseProgressFor : Store.progressFor);
   const cardProgress = (c) => bookPeek(c)(state, c.word.id);
@@ -1069,7 +1073,13 @@
     $("card").classList.toggle("wrong", outcome === "wrong");
 
     let detail = "";
-    if (outcome === "correct" && res.near) detail = "accepted with typo tolerance";
+    /* Right, and not the word this card is teaching. Saying so is the whole
+       reason for accepting it: the answer was correct and there is still
+       something to learn from the card. */
+    if (outcome === "correct" && res.equivalent) {
+      detail = `also right \u00b7 this one is "${card.reveal}"`;
+    }
+    else if (outcome === "correct" && res.near) detail = "accepted with typo tolerance";
     else if (outcome === "almost") {
       detail = res.reason === "sense" ? whySense(res) : (WHY[res.reason] || "close");
     }
@@ -1149,11 +1159,26 @@
 
   /* Mark the last answer correct after all. The snapshot makes this exact:
      it is the same as if the right answer had been typed first time. */
+  /* Marking an answer right is not just a correction to this card. No list of
+     synonyms will ever be complete, and being marked wrong twice for the same
+     answer is what makes an app feel broken, so what was typed is remembered
+     as an accepted answer for that word and never asked about again.
+
+     Not for a drill, which has no word behind it, and not for a sentence,
+     where the answer is a whole sentence and remembering one would accept it
+     for that sentence for ever on the strength of one keystroke. */
   $("btn-override").addEventListener("click", () => {
     if (!lastResult || lastResult.outcome === "correct") return;
-    applyAndShow({ correct: true, almost: false, near: false, reason: null, diff: null },
-      lastResult.typed);
-    toast("Marked correct.");
+    const typed = lastResult.typed;
+    const learnable = !card.drill && !card.isSentence && card.word && card.word.id;
+    const remembered = learnable
+      && Store.rememberAccepted(state, card.word.id, askedFor(card), typed);
+    if (remembered) commit();
+    applyAndShow({ correct: true, almost: false, near: false, reason: null,
+                   diff: null, sibling: null, equivalent: false }, typed);
+    toast(remembered
+      ? `Marked correct, and "${typed.trim()}" will be accepted for this word from now on.`
+      : "Marked correct.");
   });
 
   $("btn-next").addEventListener("click", () => {

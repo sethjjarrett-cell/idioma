@@ -418,11 +418,15 @@ function buildCard(word, progress, sentencesForWord, options = {}) {
 
   if (band.key === BANDS.production.key) return productionCard(word);
 
+  /* `en_alt` is accepted but never shown. The prompt on a production card is
+     the gloss list, so putting every synonym in `en` would turn "pretty" into
+     "pretty, nice, lovely, beautiful, good-looking" and give the answer away
+     from the other direction. Accepted and quiet is what is wanted. */
   return {
     word, band: BANDS.recognition, fellBack: false, sentence: null,
     prompt: word.es,
     promptHint: word.pos,
-    accepted: word.en.slice(),
+    accepted: word.en.concat(word.en_alt || []),
     reveal: word.en.join(", "),
     revealContext: word.es,
   };
@@ -457,9 +461,7 @@ function productionCard(word) {
     promptHint: word.sense ? `${word.pos} · ${word.sense}` : word.pos,
     accepted: [word.es, ...(word.es_alt || [])],
     reveal: word.es,
-    revealContext: (word.es_alt || []).length
-      ? `also accepted: ${word.es_alt.join(", ")}`
-      : "",
+    revealContext: "",
   };
 }
 
@@ -662,14 +664,22 @@ function diffAnswer(typed, expected) {
 function checkAnswer(typed, accepted, options = {}) {
   const typoOn = !!options.typoTolerance;
   const given = variants(normalise(typed));
-  const miss = { correct: false, almost: false, matched: null, near: false, reason: null, diff: null, sibling: null };
+  const miss = { correct: false, almost: false, matched: null, near: false,
+                 reason: null, diff: null, sibling: null, equivalent: false };
   if (!given[0]) return miss;
 
-  for (const candidate of accepted) {
+  /* The first accepted string is the one the card is teaching; anything after
+     it is another way of saying the same thing. Both are right, and the card
+     wants to know which so it can say "also right, and this one is X" rather
+     than nothing at all. */
+  for (let i = 0; i < accepted.length; i++) {
+    const candidate = accepted[i];
     const want = variants(normalise(candidate));
     for (const g of given) {
       for (const w of want) {
-        if (g === w) return { ...miss, correct: true, matched: candidate };
+        if (g === w) {
+          return { ...miss, correct: true, matched: candidate, equivalent: i > 0 };
+        }
       }
     }
   }
@@ -679,7 +689,8 @@ function checkAnswer(typed, accepted, options = {}) {
       for (const g of given) {
         for (const w of want) {
           if (damerau(g, w) <= CONFIG.TYPO_DISTANCE) {
-            return { ...miss, correct: true, matched: candidate, near: true };
+            return { ...miss, correct: true, matched: candidate, near: true,
+                     equivalent: accepted.indexOf(candidate) > 0 };
           }
         }
       }
@@ -901,7 +912,7 @@ function checkSequence(picked, want) {
   const got = picked.map(wordToken).filter(Boolean);
   const target = (want || []).map(wordToken).filter(Boolean);
   const miss = { correct: false, almost: false, matched: null, near: false,
-                 reason: null, diff: null, sibling: null, wrongAt: -1 };
+                 reason: null, diff: null, sibling: null, equivalent: false, wrongAt: -1 };
   if (!got.length) return miss;
   if (got.length === target.length && got.every((t, i) => t === target[i])) {
     return { ...miss, correct: true, matched: want.join(" ") };

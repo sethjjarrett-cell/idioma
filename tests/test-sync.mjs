@@ -24,7 +24,7 @@ const T2 = '2026-09-17T11:00:00.000Z';
 const row = (o = {}) => ({ level: 1, correctStreak: 0, totalCorrect: 0, totalWrong: 0,
   totalAlmost: 0, lastSeen: null, timesSeen: 0, enabled: true, ...o });
 const state = (o = {}) => ({ version: 1, savedAt: T1, settings: { roundSize: 15, typoTolerance: false },
-  progress: {}, phrases: {}, customWords: [], customSentences: [], editedWords: {},
+  progress: {}, phrases: {}, accepted: {}, customWords: [], customSentences: [], editedWords: {},
   stats: { rounds: 0, lastRoundAt: null }, ...o });
 
 console.log('--- a word answered on two devices ---');
@@ -139,6 +139,28 @@ ok('and a host merely pretending to be local is not',
     { v: 1, url: 'http://localhost.evil.com', code: 'abc' })) === null);
 ok('it survives being pasted into a message and back out',
   S.readPairingLink(new URL(encodeURI(decodeURI(link))).hash).code === cfg.code);
+
+console.log('--- answers the learner said were right ---');
+/* Two devices each teaching the app a different synonym for the same word
+   should end up with both. Whichever saved last winning the whole object
+   would silently throw one of them away. */
+const accA = state({ accepted: { 'que-tal': { es: ['qué hubo'] } } });
+const accB = state({ accepted: { 'que-tal': { es: ['cómo te va'] }, hola: { es: ['buenas'] } } });
+const merged = S.merge(accA, accB);
+ok('a word taught on both devices keeps both answers',
+  merged.accepted['que-tal'].es.length === 2, JSON.stringify(merged.accepted['que-tal']));
+ok('and a word only one device knows about survives',
+  merged.accepted.hola.es[0] === 'buenas');
+ok('the same answer on both is not stored twice',
+  S.merge(accA, accA).accepted['que-tal'].es.length === 1);
+ok('case is not a second answer',
+  S.merge(accA, state({ accepted: { 'que-tal': { es: ['QUÉ HUBO'] } } }))
+    .accepted['que-tal'].es.length === 1);
+ok('the two sides do not run into each other',
+  S.merge(state({ accepted: { x: { es: ['uno'] } } }),
+          state({ accepted: { x: { en: ['one'] } } })).accepted.x.es.length === 1);
+ok('a state saved before any of this existed still merges',
+  typeof S.merge({ version: 1, savedAt: T1, settings: {}, progress: {} }, accA).accepted === 'object');
 
 console.log('--- merging is safe to repeat ---');
 const once = S.merge(phone, laptop);
