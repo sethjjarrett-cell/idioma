@@ -25,6 +25,16 @@
 </script>
 <title>Idioma, Spanish trainer</title>
 <link rel="stylesheet" href="styles.css">
+<!-- Installable: added to the home screen it opens full screen, with the fox
+     as its icon, and runs with no signal. See sw.js and pwa.js. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/fox.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Idioma">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
 
@@ -149,6 +159,14 @@
   <button class="btn ghost" id="btn-menu" aria-label="More">&#8943;</button>
 </header>
 
+<!-- A new version has downloaded and is waiting. Nothing changes until this
+     is tapped, so a round is never pulled out from under you. -->
+<div class="update-bar" id="update-bar" role="status" hidden>
+  <span>A new version of Idioma is ready.</span>
+  <button class="btn primary" type="button" id="btn-update">Update</button>
+  <button class="btn ghost" type="button" id="btn-update-later" aria-label="Not now">&times;</button>
+</div>
+
 <div class="menu" id="menu" hidden>
   <label class="toggle">
     <input type="checkbox" id="set-typo">
@@ -206,6 +224,10 @@
   </div>
   <div class="menu-row">
     <button class="btn danger" id="btn-reset">Reset all progress</button>
+  </div>
+  <div class="menu-row" id="app-version-row" hidden>
+    <button class="btn" type="button" id="btn-check-update">Check for updates</button>
+    <span class="muted small" id="app-version"></span>
   </div>
   <p class="muted small" id="saved-at"></p>
   <p class="muted small credit">Example sentences come partly from
@@ -293,6 +315,20 @@
       </div>
 
       <form id="answer-form" autocomplete="off">
+        <!-- The letters a phone keyboard hides behind a long press. Only on a
+             card that wants Spanish back. Grading ignores accents either way,
+             so these are for getting it right, not for getting it past. -->
+        <div class="accents" id="accents" role="group" aria-label="Spanish letters" hidden>
+          <button type="button" class="key" data-ch="á">á</button>
+          <button type="button" class="key" data-ch="é">é</button>
+          <button type="button" class="key" data-ch="í">í</button>
+          <button type="button" class="key" data-ch="ó">ó</button>
+          <button type="button" class="key" data-ch="ú">ú</button>
+          <button type="button" class="key" data-ch="ü">ü</button>
+          <button type="button" class="key" data-ch="ñ">ñ</button>
+          <button type="button" class="key" data-ch="¿">¿</button>
+          <button type="button" class="key" data-ch="¡">¡</button>
+        </div>
         <input type="text" id="answer" placeholder="Type your answer"
                autocapitalize="none" autocorrect="off" spellcheck="false">
         <button class="btn primary" type="submit" id="btn-submit">Check</button>
@@ -490,5 +526,6 @@
 <script src="store.js"></script>
 <script src="sync.js"></script>
 <script src="app.js"></script>
+<script src="pwa.js"></script>
 </body>
 </html>

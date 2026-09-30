@@ -148,7 +148,9 @@ html, body {
 }
 .menu-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
+/* The bottom padding clears the home indicator on a notchless iPhone. */
+main { max-width: 760px; margin: 0 auto;
+       padding: 18px 14px calc(60px + env(safe-area-inset-bottom)); }
 
 .screen { display: none; }
 .screen.on { display: block; }
@@ -243,12 +245,26 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
 .credit a { color: var(--accent-deep); }
 
 .toast {
-  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   background: var(--text); border: none; border-radius: 14px; color: #fff;
   padding: 12px 18px; font: 600 13.5px var(--round); z-index: 50; max-width: 90vw;
   box-shadow: 0 10px 24px rgba(75, 54, 38, 0.28);
 }
 .toast.bad { background: var(--bad); }
+
+/* A new version waiting. A strip under the header rather than a toast,
+   because it stays until it is answered. */
+.update-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px 8px 16px;
+  background: var(--accent-soft); border-bottom: 2px solid var(--accent);
+  color: var(--accent-deep); font: 700 13.5px var(--round);
+  position: sticky; top: 60px; z-index: 18;
+}
+.update-bar span { flex: 1; }
+.update-bar .btn.primary { padding: 8px 14px; }
+.update-bar .btn.ghost { color: var(--accent-deep); }
+#app-version-row { align-items: center; }
 
 /* ----------------------------- practice ----------------------------- */
 
@@ -294,6 +310,20 @@ main { max-width: 760px; margin: 0 auto; padding: 18px 14px 60px; }
 #answer-form { display: flex; gap: 10px; margin-top: 18px; }
 #answer { font-size: 17px; font-weight: 600; }
 #answer-form .btn { flex: none; }
+
+/* The Spanish letters, in a row over the box. Sized for a thumb, not a
+   cursor: nine keys share the width, so they fit a phone without wrapping. */
+.accents { display: flex; gap: 5px; flex: 0 0 100%; }
+#answer-form { flex-wrap: wrap; }
+#answer-form input { flex: 1; min-width: 0; }
+.key {
+  flex: 1 1 0; min-width: 0; height: 40px; padding: 0;
+  background: var(--panel2); border: 2px solid var(--line); border-radius: 11px;
+  color: var(--text); font: 700 18px var(--round); cursor: pointer;
+  box-shadow: 0 3px 0 var(--line2);
+  transition: transform .06s, box-shadow .06s;
+}
+.key:active { transform: translateY(3px); box-shadow: 0 0 0 var(--line2); }
 
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because
@@ -669,7 +699,7 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .prompt { font-size: 23px; }
   /* Under 16px, Safari zooms the page when an input takes focus. */
   .field input, .field select, .filter, #answer { font-size: 16px; }
-  main { padding: 14px 10px 50px; }
+  main { padding: 14px 10px calc(50px + env(safe-area-inset-bottom)); }
   .pane { padding: 14px; }
   .card { padding: 16px; }
   .verdict { margin: 18px -16px -16px; padding: 14px 16px 16px; }
@@ -677,6 +707,9 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .fox-lg { width: 66px; height: 66px; }
   #answer-form { flex-direction: column; }
   #answer-form .btn { width: 100%; }
+  .update-bar { font-size: 12.5px; }
+  /* The form is a column here, where a basis would be a height. */
+  .accents, #answer-form input { flex: none; }
   /* On a phone the wordmark gives way to the fox, and the tabs lose the
      wide tracking, so all three still fit without a sideways scroll. */
   .brand span { display: none; }
@@ -689,6 +722,21 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
           mask-image: linear-gradient(90deg, #000 85%, transparent); }
   table.conj { min-width: 380px; font-size: 13px; }
   .example b { min-width: 0; }
+}
+
+/* ----------------------------- installed ----------------------------- */
+/* Behaviour that only makes sense once it is an app on a home screen, or on
+   a touch screen in general. */
+
+/* No grey flash over whatever was tapped, and no double-tap zoom delay. */
+button, .btn, .pill, .tab, .tile, .key, label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+@media (display-mode: standalone) {
+  /* Pulling past the top would otherwise drag the whole app down like a page. */
+  html, body { overscroll-behavior-y: none; }
+  /* A long press on a button is a slow tap, not a request to copy its label. */
+  .btn, .tab, .pill, .key, .tile, .brand { -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

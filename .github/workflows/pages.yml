@@ -36,6 +36,11 @@ jobs:
         with:
           # Switch Pages on without a trip to the settings screen, where allowed.
           enablement: true
+      # The installed app finds out about a new version by noticing that
+      # sw.js has changed. Stamping the commit into it makes every deploy a
+      # change, even one that only touched vocab.js.
+      - name: Stamp the version into the service worker
+        run: sed -i "s/__BUILD__/${GITHUB_SHA}/" sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

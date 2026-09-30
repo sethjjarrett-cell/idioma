@@ -10,6 +10,37 @@ Double-click `index.html`. That is the whole install. There is no build step,
 no package manager and no server; it is plain HTML, CSS and JavaScript loaded
 with ordinary script tags, so it works straight off the disk and offline.
 
+### On a phone, as an app
+
+Open the GitHub Pages address in the phone's browser and add it to the home
+screen: in Safari, Share then Add to Home Screen; in Chrome, the menu then Add
+to Home screen (or Install app). It then opens full screen with the fox as its
+icon and no browser bar, and runs with no signal.
+
+That works because of two files. `manifest.webmanifest` says what to call it,
+what colour to paint it and which icons to use. `sw.js` is a service worker
+that fetches every file the app needs into one cache when it installs and
+serves them from there, so the app never depends on the network except to
+sync.
+
+**Updates.** The installed app checks for a new version when it opens,
+whenever it comes back into view, and when you tap Check for updates in the
+menu. A new version downloads in the background and then waits: a strip under
+the header says one is ready, and nothing changes until you tap Update. It
+then reloads onto the new version. Your progress lives in the phone's
+storage, not in the cache, so an update leaves it alone; only the round in
+progress starts again.
+
+The check works by noticing that `sw.js` has changed. The deploy workflow
+stamps the commit into it on every push to main, so every deploy counts as a
+change, even one that only touched `vocab.js`. Opened from `file://` none of
+this runs, because browsers only allow a service worker over http(s); the app
+itself behaves exactly as before.
+
+The icons in `icons/` are cut from the fox symbol in `index.html` by
+`node tools/icons/build.mjs`, so if he is ever redrawn, run that once and the
+home-screen icon follows.
+
 ## Files
 
 ```
@@ -31,6 +62,11 @@ engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
 sync.js         the merge, and the two calls that move one JSON blob
 app.js          UI wiring; asks the engine for a card and draws the answer
+pwa.js          registers the service worker and offers updates
+sw.js           the service worker: the offline cache, one per version
+manifest.webmanifest  the home-screen name, colours and icons
+icons/          the fox, as a favicon and as home-screen icons
+tools/icons/    cuts those icons from the fox in index.html
 tests/          see below
 ```
 
@@ -423,6 +459,18 @@ letters costs one edit instead of two. Typing `hunegr` is one slip of the
 fingers and is judged as one; plain Levenshtein calls it two and drops it over
 the threshold into Wrong.
 
+#### The accent keys
+
+A row of á é í ó ú ü ñ ¿ ¡ sits over the answer box on any card that wants
+Spanish back: production, cloze, translate and the verb drills. Recognition
+wants English, so it does not get them. They type wherever the cursor is, and
+pressing one does not take the focus off the box, so a phone keyboard stays
+open between letters.
+
+They are there for the habit, not the mark: grading folds accents away, so
+"manana" still passes for "mañana", and the answer is always shown back with
+its accents.
+
 #### Overrides, and re-grading a card
 
 "I was right" appears on anything short of a clean pass. Grading always works
@@ -657,6 +705,15 @@ builder end to end including taking a tile back, two words swapped grading
 amber and handing the tiles back, a sentence graduating to typing and being
 sent back to tiles by enough wrong answers, and the verb mode starting with
 the present tense rather than every table at once.
+
+`test-pwa.mjs` serves the folder over http, since a service worker will not
+run from a file. It installs the app, checks the manifest and every icon,
+reloads it with the server down, then changes what the server says `sw.js`
+is, the way a deploy does, and checks that the update is offered, is not
+applied until Update is tapped, keeps your settings, and clears the old
+cache. It also checks the accent keys: shown on cards that want Spanish,
+hidden on cards that want English, typing at the caret, and leaving the
+focus in the box so a phone keyboard stays up.
 
 ## Three modes
 

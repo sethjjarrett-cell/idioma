@@ -1,0 +1,19 @@
+{
+  "name": "Idioma, Spanish trainer",
+  "short_name": "Idioma",
+  "description": "Spanish vocabulary and sentences, spaced out so they stick.",
+  "lang": "en-GB",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#efe3c8",
+  "theme_color": "#efe3c8",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/fox.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
