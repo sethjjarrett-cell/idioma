@@ -61,6 +61,7 @@ pronounce.js    Spanish spelling to an English respelling; no data, all rules
 engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
 sync.js         the merge, and the two calls that move one JSON blob
+gdrive.js       signing in with Google, and keeping progress in Drive
 app.js          UI wiring; asks the engine for a card and draws the answer
 pwa.js          registers the service worker and offers updates
 sw.js           the service worker: the offline cache, one per version
@@ -479,6 +480,60 @@ overriding, or fixing a near miss, lands on exactly the progress that answer
 would have produced first time — no doubled counts, and a streak the card
 broke comes back intact rather than restarting.
 
+## Signing in with Google
+
+Progress lives in the browser on each device, and on an iPhone a home-screen
+app's storage goes with the app: delete the icon and the progress is gone.
+That happened once. Signing in with Google is the fix: a copy of the progress
+is kept in the learner's own Google Drive, in the hidden app folder that only
+this app can see, and any device that signs in gets it back.
+
+`gdrive.js` does it with no server. Signing in visits Google and comes back
+with a token that lasts an hour; after that the app renews it with a quick
+trip through Google that asks nothing, only on launch or on coming back to the
+app, and never in the middle of a round. If Google ever wants a tap, the menu
+says Sign in again rather than trying in a loop.
+
+What stops progress being lost again:
+
+- **The merge only adds.** A fresh install signing in pulls everything down;
+  it never pushes its empty state over the top. If a result were ever smaller
+  than what is in Drive, the sync stops instead of writing it.
+- **Yesterday's copy.** The first write of each day keeps the previous copy as
+  `idioma-progress-previous.json` in the same hidden folder.
+- **The state before a sync** is kept on the device under
+  `idioma.state.v1.before-sync`.
+- **Reset** writes the reset over Drive, since a merge would bring it all
+  back. Done offline or with the sign-in run out, it is owed and written at the
+  next sync.
+- **A weekly nudge** when there are ten or more words learned and nothing
+  backing them up: not signed in, not synced, and no export that week.
+- **Persistent storage** is requested from the browser, so the progress is
+  not the first thing cleared when space runs short. Chrome mostly agrees;
+  Safari promises nothing.
+
+### Setting it up, once
+
+The feature stays hidden until `GOOGLE_CLIENT_ID` near the top of `gdrive.js`
+is filled in. Getting one, in [Google Cloud Console](https://console.cloud.google.com/):
+
+1. Create a project, called Idioma or anything else.
+2. **APIs and services, Library**: find **Google Drive API** and enable it.
+3. **Google Auth Platform** (the OAuth consent screen): app name Idioma, your
+   email as the support address, audience **External**. Leave it in
+   **Testing** and add your own Gmail address as a test user. Under data
+   access, add the scope `.../auth/drive.appdata`.
+4. **Clients, Create client**, type **Web application**:
+   - Authorised JavaScript origins: `https://sethjjarrett-cell.github.io`
+   - Authorised redirect URIs: `https://sethjjarrett-cell.github.io/idioma/`
+     exactly, with the slash at the end.
+5. Copy the client ID, which ends in `.apps.googleusercontent.com`, into
+   `GOOGLE_CLIENT_ID`. It is not a secret; it is in every page that uses it.
+
+Because the app stays in Testing, Google shows a "Google hasn't verified this
+app" screen at the first sign-in. That is expected for an app only you use:
+choose Continue.
+
 ## Syncing a phone and a laptop
 
 Optional, off until you set it up, and the app is unchanged if you never do.
@@ -705,6 +760,14 @@ builder end to end including taking a tile back, two words swapped grading
 amber and handing the tiles back, a sentence graduating to typing and being
 sent back to tiles by enough wrong answers, and the verb mode starting with
 the present tense rather than every table at once.
+
+`test-drive.mjs` fakes Google and Drive and plays out the case that lost
+progress once: forty words on one device, an empty fresh install, a sign-in,
+and all forty back. It also covers the daily copy, an hour-old sign-in
+renewing itself on launch but not mid-round, Google refusing a renewal
+without the app looping, a forged reply being ignored, a reset reaching Drive
+even when made with the sign-in run out, the weekly nudge, and every script
+the page loads being in the offline cache.
 
 `test-pwa.mjs` serves the folder over http, since a service worker will not
 run from a file. It installs the app, checks the manifest and every icon,

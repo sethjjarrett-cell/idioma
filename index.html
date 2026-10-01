@@ -159,6 +159,14 @@
   <button class="btn ghost" id="btn-menu" aria-label="More">&#8943;</button>
 </header>
 
+<!-- Progress that exists only on this device, with nothing backing it up.
+     Shown at most once a week, and never once it is signed in or synced. -->
+<div class="update-bar" id="backup-bar" role="status" hidden>
+  <span>Your progress is only on this phone.</span>
+  <button class="btn primary" type="button" id="btn-backup-fix">Back it up</button>
+  <button class="btn ghost" type="button" id="btn-backup-later" aria-label="Not now">&times;</button>
+</div>
+
 <!-- A new version has downloaded and is waiting. Nothing changes until this
      is tapped, so a round is never pulled out from under you. -->
 <div class="update-bar" id="update-bar" role="status" hidden>
@@ -168,6 +176,22 @@
 </div>
 
 <div class="menu" id="menu" hidden>
+  <!-- Google sign-in. Hidden until a client ID is set in gdrive.js. -->
+  <div class="sync" id="gsync" hidden>
+    <div class="sync-head">
+      <b>Keep progress in Google Drive</b>
+      <span class="muted small" id="g-state">Not signed in</span>
+    </div>
+    <p class="muted small">Your progress is only on this device until you do
+      this. Signed in, a copy is kept in a hidden folder in your Google Drive
+      that only this app can see, and any device you sign in on gets it back.</p>
+    <div class="menu-row">
+      <button class="btn primary" type="button" id="btn-g-in">Sign in with Google</button>
+      <button class="btn" type="button" id="btn-g-sync" hidden>Sync now</button>
+      <button class="btn danger" type="button" id="btn-g-out" hidden>Sign out</button>
+    </div>
+  </div>
+
   <label class="toggle">
     <input type="checkbox" id="set-typo">
     <span>Typo tolerance <em>lets a single-letter slip through outright; off, it comes back as Almost</em></span>
@@ -525,6 +549,7 @@
 <script src="engine.js"></script>
 <script src="store.js"></script>
 <script src="sync.js"></script>
+<script src="gdrive.js"></script>
 <script src="app.js"></script>
 <script src="pwa.js"></script>
 </body>
