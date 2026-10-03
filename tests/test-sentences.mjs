@@ -66,8 +66,10 @@ ok('an article is grammar, not vocabulary',
   E.wordForToken('la', idx.forms) === E.FREE_TOKEN);
 ok('and so is the que that joins two clauses',
   E.wordForToken('que', idx.forms) === E.FREE_TOKEN);
+// sacacorchos, a corkscrew. paraguas was the example until the second word
+// list put it in the bank.
 ok('a word that is simply not in the bank is not in the bank',
-  E.wordForToken('paraguas', idx.forms) === null);
+  E.wordForToken('sacacorchos', idx.forms) === null);
 
 console.log('--- what a sentence needs ---');
 const needsOf = (es) => E.sentenceNeeds(es, idx.forms);
@@ -75,7 +77,7 @@ ok('the words it uses, and nothing else',
   JSON.stringify(needsOf('Tengo que ir.').needs.sort()) === JSON.stringify(['ir', 'tener']));
 ok('articles do not count against it', needsOf('Voy a la playa.').loose.length === 0);
 ok('a word the bank has never heard of is loose, not silently ignored',
-  needsOf('Necesito un paraguas.').loose.join(',') === 'paraguas');
+  needsOf('Necesito un sacacorchos.').loose.join(',') === 'sacacorchos');
 
 console.log('--- the ladder ---');
 ok('every item has an id, Spanish and English',

@@ -1,0 +1,48 @@
+{"id":"nombre","es":"nombre","en":["name"],"pos":"noun","topic":"people","note":"m. Your first name. Your surname is el apellido.","sent":{"es":"¿Cuál es tu {nombre}?","en":"What is your name?"}}
+{"id":"apellido","es":"apellido","en":["surname"],"pos":"noun","topic":"people","note":"m. Colombians carry two: the father's, then the mother's.","sent":{"es":"¿Cómo se escribe su {apellido}?","en":"How do you spell your surname?"}}
+{"id":"vida","es":"vida","en":["life"],"pos":"noun","topic":"people","note":"f. mi vida is also a term of endearment.","sent":{"es":"Así es la {vida}.","en":"That is life."}}
+{"id":"padres","es":"padres","en":["parents"],"pos":"noun","topic":"people","note":"m. pl. Means parents, not fathers, unless the context says otherwise.","sent":{"es":"Mis {padres} viven en Inglaterra.","en":"My parents live in England."}}
+{"id":"abuela","es":"abuela","en":["grandmother","grandma"],"pos":"noun","topic":"people","note":"f. abuelo for grandfather, abuelos for grandparents.","sent":{"es":"Mi {abuela} cocina muy rico.","en":"My grandmother cooks really well."}}
+{"id":"primo","es":"primo","en":["cousin"],"pos":"noun","topic":"people","note":"m. prima for a female cousin.","sent":{"es":"Mi {primo} vive en Cali.","en":"My cousin lives in Cali."}}
+{"id":"tio","es":"tío","en":["uncle"],"pos":"noun","topic":"people","note":"m. In Spain also mate, but not in Colombia.","sent":{"es":"Mi {tío} tiene una finca.","en":"My uncle has a farm."}}
+{"id":"tia","es":"tía","en":["aunt"],"pos":"noun","topic":"people","note":"f.","sent":{"es":"Voy a visitar a mi {tía}.","en":"I am going to visit my aunt."}}
+{"id":"sobrino","es":"sobrino","en":["nephew"],"pos":"noun","topic":"people","note":"m. sobrina for a niece.","sent":{"es":"Mi {sobrino} tiene cinco años.","en":"My nephew is five."}}
+{"id":"nieto","es":"nieto","en":["grandson","grandchild"],"pos":"noun","topic":"people","note":"m. nieta for a granddaughter, nietos for grandchildren.","sent":{"es":"Mi abuelo tiene diez {nietos}.","en":"My grandfather has ten grandchildren."}}
+{"id":"pareja","es":"pareja","en":["partner","couple"],"pos":"noun","topic":"people","note":"f. even for a man: mi pareja es Juan.","sent":{"es":"Vine con mi {pareja}.","en":"I came with my partner."}}
+{"id":"chica","es":"chica","en":["girl","young woman"],"pos":"noun","topic":"people","note":"f. Casual, for a woman of about your own age. niña is a child.","sent":{"es":"Esa {chica} es mi compañera de clase.","en":"That girl is my classmate."}}
+{"id":"parce","es":"parce","en":["mate"],"pos":"noun","topic":"people","note":"Medellín slang, short for parcero. Friendly and very informal.","sent":{"es":"¿Qué más, {parce}?","en":"How is it going, mate?"}}
+{"id":"cliente","es":"cliente","en":["customer","client"],"pos":"noun","topic":"work","note":"Same form for a man or a woman.","sent":{"es":"El {cliente} siempre tiene la razón.","en":"The customer is always right."}}
+{"id":"companero","es":"compañero","en":["colleague","classmate"],"pos":"noun","topic":"work","note":"m. compañera for a woman. compañero de cuarto is a flatmate.","sent":{"es":"Mi {compañero} de trabajo es de Bogotá.","en":"My colleague is from Bogotá."}}
+{"id":"policia","es":"policía","en":["police officer","police"],"pos":"noun","topic":"people","note":"la policía is the police force. el policía or la policía for one officer.","sent":{"es":"Llame a la {policía}.","en":"Call the police."}}
+{"id":"mesero","es":"mesero","en":["waiter"],"pos":"noun","topic":"food","note":"m. The Colombian word. mesera for a waitress. Spain says camarero.","sent":{"es":"El {mesero} nos trajo la carta.","en":"The waiter brought us the menu."}}
+{"id":"conductor","es":"conductor","en":["driver"],"pos":"noun","topic":"travel","note":"m. conductora for a woman.","sent":{"es":"El {conductor} del bus fue muy amable.","en":"The bus driver was very kind."}}
+{"id":"enfermera","es":"enfermera","en":["nurse"],"pos":"noun","topic":"body","note":"f. enfermero for a man.","sent":{"es":"La {enfermera} me tomó la temperatura.","en":"The nurse took my temperature."}}
+{"id":"ingeniero","es":"ingeniero","en":["engineer"],"pos":"noun","topic":"work","note":"m. ingeniera for a woman. Colombians address engineers as ingeniero, like a title.","sent":{"es":"Soy {ingeniero}.","en":"I am an engineer."}}
+{"id":"invitado","es":"invitado","en":["guest"],"pos":"noun","topic":"people","note":"m. invitada for a woman.","sent":{"es":"Eres mi {invitado}.","en":"You are my guest."}}
+{"id":"dueno","es":"dueño","en":["owner"],"pos":"noun","topic":"people","note":"m. dueña for a woman.","sent":{"es":"El {dueño} del apartamento vive arriba.","en":"The owner of the flat lives upstairs."}}
+{"id":"cuerpo","es":"cuerpo","en":["body"],"pos":"noun","topic":"body","note":"m.","sent":{"es":"Me duele todo el {cuerpo}.","en":"My whole body aches."}}
+{"id":"brazo","es":"brazo","en":["arm"],"pos":"noun","topic":"body","note":"m.","sent":{"es":"Me rompí el {brazo}.","en":"I broke my arm."}}
+{"id":"pierna","es":"pierna","en":["leg"],"pos":"noun","topic":"body","note":"f.","sent":{"es":"Me duele la {pierna}.","en":"My leg hurts."}}
+{"id":"espalda","es":"espalda","en":["back"],"pos":"noun","topic":"body","note":"f. The body part. Coming back is volver.","sent":{"es":"Tengo dolor de {espalda}.","en":"I have backache."}}
+{"id":"diente","es":"diente","en":["tooth"],"pos":"noun","topic":"body","note":"m. Plural dientes. lavarse los dientes, to brush your teeth.","sent":{"es":"Me duele un {diente}.","en":"I have a toothache."}}
+{"id":"nariz","es":"nariz","en":["nose"],"pos":"noun","topic":"body","note":"f. Plural narices.","sent":{"es":"Tengo la {nariz} tapada.","en":"My nose is blocked."}}
+{"id":"oreja","es":"oreja","en":["ear"],"pos":"noun","topic":"body","note":"f. The outside of the ear. oído is the inner ear and hearing.","sent":{"es":"Tiene un arete en la {oreja}.","en":"He has an earring in his ear."}}
+{"id":"cuello","es":"cuello","en":["neck"],"pos":"noun","topic":"body","note":"m. Also a collar.","sent":{"es":"Me duele el {cuello}.","en":"My neck hurts."}}
+{"id":"dedo","es":"dedo","en":["finger","toe"],"pos":"noun","topic":"body","note":"m. Spanish uses the one word for both.","sent":{"es":"Me corté el {dedo}.","en":"I cut my finger."}}
+{"id":"estomago","es":"estómago","en":["stomach"],"pos":"noun","topic":"body","note":"m. dolor de estómago is a stomach ache.","sent":{"es":"Me duele el {estómago}.","en":"I have a stomach ache."}}
+{"id":"piel","es":"piel","en":["skin"],"pos":"noun","topic":"body","note":"f.","sent":{"es":"Usa bloqueador, el sol quema la {piel}.","en":"Wear sun cream, the sun burns your skin."}}
+{"id":"sangre","es":"sangre","en":["blood"],"pos":"noun","topic":"body","note":"f.","sent":{"es":"No me gusta ver {sangre}.","en":"I do not like seeing blood."}}
+{"id":"rodilla","es":"rodilla","en":["knee"],"pos":"noun","topic":"body","note":"f.","sent":{"es":"Me lastimé la {rodilla} escalando.","en":"I hurt my knee climbing."}}
+{"id":"hombro","es":"hombro","en":["shoulder"],"pos":"noun","topic":"body","note":"m.","sent":{"es":"Tengo el {hombro} rígido.","en":"My shoulder is stiff."}}
+{"id":"garganta","es":"garganta","en":["throat"],"pos":"noun","topic":"body","note":"f. dolor de garganta is a sore throat.","sent":{"es":"Me duele la {garganta}.","en":"I have a sore throat."}}
+{"id":"fiebre","es":"fiebre","en":["fever","temperature"],"pos":"noun","topic":"body","note":"f. tener fiebre, to have a temperature.","sent":{"es":"Tengo {fiebre}.","en":"I have a temperature."}}
+{"id":"gripa","es":"gripa","en":["flu"],"pos":"noun","topic":"body","note":"f. Colombian. Spain says gripe. Covers a bad cold as well.","sent":{"es":"Creo que tengo {gripa}.","en":"I think I have a cold."}}
+{"id":"tos","es":"tos","en":["cough"],"pos":"noun","topic":"body","note":"f. To cough is toser.","sent":{"es":"Tengo {tos} desde ayer.","en":"I have had a cough since yesterday."}}
+{"id":"pastilla","es":"pastilla","en":["pill","tablet"],"pos":"noun","topic":"body","note":"f.","sent":{"es":"Tómate una {pastilla} cada ocho horas.","en":"Take one tablet every eight hours."}}
+{"id":"drogueria","es":"droguería","en":["chemist's","pharmacy"],"pos":"noun","topic":"body","note":"f. The everyday Colombian word. farmacia is understood too.","sent":{"es":"¿Hay una {droguería} cerca?","en":"Is there a chemist's nearby?"}}
+{"id":"cita","es":"cita","en":["appointment","date"],"pos":"noun","topic":"body","note":"f. Both the doctor and the romantic kind.","sent":{"es":"Tengo {cita} con el médico mañana.","en":"I have a doctor's appointment tomorrow."}}
+{"id":"accidente","es":"accidente","en":["accident"],"pos":"noun","topic":"body","note":"m.","sent":{"es":"Hubo un {accidente} en la autopista.","en":"There was an accident on the motorway."}}
+{"id":"emergencia","es":"emergencia","en":["emergency"],"pos":"noun","topic":"body","note":"f. In Colombia, dial 123.","sent":{"es":"Es una {emergencia}.","en":"It is an emergency."}}
+{"id":"ayuda","es":"ayuda","en":["help"],"pos":"noun","topic":"body","note":"f. Shouted for help, ¡auxilio! is more urgent.","sent":{"es":"Necesito {ayuda}.","en":"I need help."}}
+{"id":"embarazada","es":"embarazada","en":["pregnant"],"pos":"adjective","topic":"body","note":"A famous trap: it does not mean embarrassed. That is avergonzado, or qué pena.","sent":{"es":"Mi hermana está {embarazada}.","en":"My sister is pregnant."}}
+{"id":"sed","es":"sed","en":["thirst"],"pos":"noun","topic":"food","note":"f. tener sed, to be thirsty.","sent":{"es":"Tengo mucha {sed}.","en":"I am very thirsty."}}

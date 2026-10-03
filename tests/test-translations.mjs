@@ -54,6 +54,25 @@ const REVIEWED = new Set([
   'camino:camino',    // the road, not "I walk"
   'se:se',            // the reflexive pronoun, not "I know"
   'bebe:bebe',        // the baby, not the subjunctive of beber
+  /* Flagged when the second word list added the verbs, and read then. */
+  'lleno:lleno',      // full, not "I fill"
+  'para:para',        // for, not "it stops"
+  'entre:entre',      // between, not the subjunctive of entrar
+  'nada:nada',        // nothing, not "she swims"
+  'desayuno:desayuno',// breakfast, not "I have breakfast"
+  'cena:cena',        // dinner, not "she has dinner"
+  'corto:corta',      // short, not "she cuts"
+  'corto:corto',      // short, not "I cut"
+  'bajo:bajo',        // low and short, not "I go down"
+  'limpio:limpio',    // clean, not "I clean"
+  'falta:falta',      // a lack, not "it is missing"
+  'llamarse:llama',   // se llama is llamarse itself, filed where it belongs
+  'ayuda:ayuda',      // help, the noun, not "she helps"
+  'vino:vino',        // wine, not "he came"
+  'reserva:reserva',  // a booking, not "she books"
+  'recibo:recibo',    // a receipt, not "I receive"
+  'baile:baile',      // a dance, not the subjunctive of bailar
+  'saco:saco',        // a jumper, not "I take out"
 ]);
 
 const verbForm = new Map();
@@ -124,7 +143,8 @@ const REGIONAL = [
   [/\b¿a poco\b/i, 'a poco', 'Mexican'],
   [/\bme pilló\b/i, 'pillar', 'peninsular; Colombia says coger'],
   [/\bno casa con\b/i, 'casar con', 'peninsular; combinar is what is said here'],
-  [/\bvosotros\b|\b\w+áis\b|\b\w+éis\b/i, 'vosotros', 'Spain only; this bank uses ustedes'],
+  // dieciséis ends like a vosotros verb and is not one.
+  [/\bvosotros\b|\b\w+áis\b|\b(?!dieci)\w+éis\b/i, 'vosotros', 'Spain only; this bank uses ustedes'],
 ];
 const regional = [];
 for (const s of sentences) {

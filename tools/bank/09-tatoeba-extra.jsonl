@@ -237,9 +237,9 @@
 {"sentenceOnly":true,"wordId":"azucar","sent":{"es":"No hay {azúcar}.","en":"There is no sugar."}}
 {"sentenceOnly":true,"wordId":"sal","sent":{"es":"¿Me pasas la {sal}, por favor?","en":"Could you pass me the salt, please?"}}
 {"sentenceOnly":true,"wordId":"sopa","sent":{"es":"Me gusta comer {sopa} caliente.","en":"I enjoy eating hot soup."}}
-{"sentenceOnly":true,"wordId":"desayuno","sent":{"es":"{Desayuno} antes de trabajar.","en":"I eat breakfast before work."}}
+{"sentenceOnly":true,"wordId":"desayunar","sent":{"es":"{Desayuno} antes de trabajar.","en":"I eat breakfast before work."}}
 {"sentenceOnly":true,"wordId":"almuerzo","sent":{"es":"¿Desayuno, {almuerzo} o cena?","en":"Breakfast, lunch, or dinner?"}}
-{"sentenceOnly":true,"wordId":"cena","sent":{"es":"¿Con quién {cena} usted?","en":"With whom are you eating dinner?"}}
+{"sentenceOnly":true,"wordId":"cenar","sent":{"es":"¿Con quién {cena} usted?","en":"With whom are you eating dinner?"}}
 {"sentenceOnly":true,"wordId":"cuenta","sent":{"es":"Pedimos la {cuenta} y nos fuimos.","en":"We asked for the bill and left."}}
 {"sentenceOnly":true,"wordId":"dinero","sent":{"es":"Hay mucho {dinero}.","en":"There is a lot of money."}}
 {"sentenceOnly":true,"wordId":"plata","sent":{"es":"Él siempre está corto de {plata}.","en":"He is always short of money."}}
