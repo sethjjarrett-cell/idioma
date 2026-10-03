@@ -51,7 +51,7 @@ order.js        the order words are taught in
 senses.js       one line per word that shares an English meaning with another
 equivalents.js  the other ways of saying the same thing, accepted but not shown
 phrases.js      the sentence ladder: short things to say, earliest words first
-vocab.js        the generated bank: 414 more words, 812 more sentences
+vocab.js        the generated bank: 985 more words, 1383 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
 tools/tatoeba/  importers for Tatoeba sentences and Wiktionary glosses
@@ -173,8 +173,53 @@ Two sources, loaded together and merged by `store.js`:
 | | words | sentences |
 |---|---|---|
 | `seed.js`, as supplied | 130 | 100 |
-| `vocab.js`, generated for this app | 404 | 802 |
-| **total** | **534** | **902** |
+| `vocab.js`, generated for this app | 985 | 1383 |
+| **total** | **1115** | **1483** |
+
+### The second word list
+
+The first 534 words were the commonest a learner needs, by judgement. The
+second list was checked against a count: the 2,000 commonest word forms in
+Spanish film and television subtitles, from the OpenSubtitles frequency list.
+Against the bank's own form index, about 820 of those 2,000 were covered.
+The rest were read one by one and reduced to the words behind them: the plural
+and the participle go back to a word the bank already teaches, the names and
+the swearing and the police-drama vocabulary are left out, and what remained,
+plus the everyday words a subtitle count under-represents (the fridge, the
+bus stop, the chemist's), became batches 11 to 20 in `tools/bank/`:
+
+| batch | what | words |
+|---|---|---|
+| 11 | small words: connectors, adverbs, pronouns, where things are | 55 |
+| 12 | everyday verbs, including the daily routine ones that take se | 94 |
+| 13 | people, the body, and being ill | 48 |
+| 14 | food, drink and eating out | 46 |
+| 15 | home, town and getting around | 61 |
+| 16 | the rest of the numbers, months, seasons, time | 46 |
+| 17 | phones, work and money | 29 |
+| 18 | describing people and things, and feelings | 54 |
+| 19 | weather, outdoors, sport, clothes | 45 |
+| 20 | everyday expressions, as phrases | 93 |
+
+Colombian where Colombia differs: celular, computador, nevera, estufa,
+parqueadero, droguería, cobija, arriendo, trancón, gaseosa, aromática,
+¿me regala...?, a la orden, ¿qué más?, qué pena. Each such word says so in its
+note, along with what Spain says instead.
+
+The commonest of them are not at the end of the teaching order. tomar,
+llamar, conocer, nombre and vida are in the top two hundred of any count, so
+they sit just after the first verbs; the greetings sit with the first
+greetings; the numbers to a million sit with the first numbers. The rest come
+after everything that was already there, topic by topic.
+
+Three words could not be added, because with the accents folded away they are
+words the bank already has: papa (potato) is papá, té (tea) is te, and sí
+(yes) is si. A card cannot tell them apart from the typed answer, so they are
+covered in notes and phrases instead.
+
+The ladder in `phrases.js` grew from 98 items to 160 with the same list: a day
+in Colombia, from getting up through ordering, getting about and being ill to
+small talk.
 
 `seed.js` is untouched and stays that way. `vocab.js` holds the rest: the
 common words the seed did not reach, each with an example sentence, plus

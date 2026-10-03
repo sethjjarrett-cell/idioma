@@ -1,0 +1,45 @@
+{"id":"tierra","es":"tierra","en":["earth","land","ground"],"pos":"noun","topic":"nature","note":"f. la Tierra, the planet. Also soil and your home region: mi tierra.","sent":{"es":"Me caí a la {tierra}.","en":"I fell to the ground."}}
+{"id":"luna","es":"luna","en":["moon"],"pos":"noun","topic":"nature","note":"f. luna de miel, honeymoon.","sent":{"es":"Hay {luna} llena esta noche.","en":"There is a full moon tonight."}}
+{"id":"estrella","es":"estrella","en":["star"],"pos":"noun","topic":"nature","note":"f.","sent":{"es":"En el desierto se ven muchas {estrellas}.","en":"In the desert you can see lots of stars."}}
+{"id":"viento","es":"viento","en":["wind"],"pos":"noun","topic":"nature","note":"m. hace viento, it is windy.","sent":{"es":"Hace mucho {viento} hoy.","en":"It is very windy today."}}
+{"id":"nube","es":"nube","en":["cloud"],"pos":"noun","topic":"nature","note":"f.","sent":{"es":"No hay ni una {nube}.","en":"There is not a single cloud."}}
+{"id":"nublado","es":"nublado","en":["cloudy"],"pos":"adjective","topic":"nature","sent":{"es":"Está {nublado}, va a llover.","en":"It is cloudy, it is going to rain."}}
+{"id":"tormenta","es":"tormenta","en":["storm"],"pos":"noun","topic":"nature","note":"f.","sent":{"es":"Anoche hubo una {tormenta} muy fuerte.","en":"Last night there was a very strong storm."}}
+{"id":"grado","es":"grado","en":["degree"],"pos":"noun","topic":"nature","note":"m. For temperature. A university degree is un título.","sent":{"es":"Hace treinta {grados}.","en":"It is thirty degrees."}}
+{"id":"flor","es":"flor","en":["flower"],"pos":"noun","topic":"nature","note":"f. Colombia is one of the world's great flower exporters.","sent":{"es":"Te traje unas {flores}.","en":"I brought you some flowers."}}
+{"id":"planta","es":"planta","en":["plant"],"pos":"noun","topic":"nature","note":"f. Also a factory or a power station: planta eléctrica.","sent":{"es":"Riega las {plantas}, por favor.","en":"Water the plants, please."}}
+{"id":"animal","es":"animal","en":["animal"],"pos":"noun","topic":"nature","note":"m.","sent":{"es":"¿Cuál es tu {animal} favorito?","en":"What is your favourite animal?"}}
+{"id":"pajaro","es":"pájaro","en":["bird"],"pos":"noun","topic":"nature","note":"m. Colombia has more bird species than any other country.","sent":{"es":"Hay un {pájaro} en la ventana.","en":"There is a bird at the window."}}
+{"id":"pez","es":"pez","en":["fish"],"pos":"noun","topic":"nature","note":"m. Plural peces. A live fish. On a plate it is pescado.","sent":{"es":"Vimos un {pez} enorme en el río.","en":"We saw an enormous fish in the river."}}
+{"id":"vaca","es":"vaca","en":["cow"],"pos":"noun","topic":"nature","note":"f. hacer una vaca, in Colombia, is to have a whip-round.","sent":{"es":"Hay {vacas} en la carretera.","en":"There are cows on the road."}}
+{"id":"bosque","es":"bosque","en":["forest","woods"],"pos":"noun","topic":"nature","note":"m.","sent":{"es":"Caminamos por el {bosque}.","en":"We walked through the woods."}}
+{"id":"selva","es":"selva","en":["jungle","rainforest"],"pos":"noun","topic":"nature","note":"f.","sent":{"es":"El Amazonas es una {selva} enorme.","en":"The Amazon is an enormous rainforest."}}
+{"id":"lago","es":"lago","en":["lake"],"pos":"noun","topic":"nature","note":"m.","sent":{"es":"Hay un {lago} cerca del pueblo.","en":"There is a lake near the town."}}
+{"id":"piedra","es":"piedra","en":["stone","rock"],"pos":"noun","topic":"nature","note":"f. Also, in Colombia, anger: me da piedra, it makes me cross.","sent":{"es":"Guatapé tiene una {piedra} enorme.","en":"Guatapé has an enormous rock."}}
+{"id":"arena","es":"arena","en":["sand"],"pos":"noun","topic":"nature","note":"f.","sent":{"es":"La {arena} está muy caliente.","en":"The sand is very hot."}}
+{"id":"campo","es":"campo","en":["countryside","field"],"pos":"noun","topic":"nature","note":"m. Also a sports pitch.","sent":{"es":"Mis abuelos viven en el {campo}.","en":"My grandparents live in the countryside."}}
+{"id":"naturaleza","es":"naturaleza","en":["nature"],"pos":"noun","topic":"nature","note":"f.","sent":{"es":"Me encanta estar en la {naturaleza}.","en":"I love being out in nature."}}
+{"id":"gimnasio","es":"gimnasio","en":["gym"],"pos":"noun","topic":"leisure","note":"m. Colombians shorten it to el gym.","sent":{"es":"Voy al {gimnasio} por la mañana.","en":"I go to the gym in the morning."}}
+{"id":"partido","es":"partido","en":["match"],"pos":"noun","topic":"leisure","note":"m. Also a political party.","sent":{"es":"¿Viste el {partido} anoche?","en":"Did you see the match last night?"}}
+{"id":"deporte","es":"deporte","en":["sport"],"pos":"noun","topic":"leisure","note":"m.","sent":{"es":"¿Qué {deporte} practicas?","en":"What sport do you play?"}}
+{"id":"pelota","es":"pelota","en":["ball"],"pos":"noun","topic":"leisure","note":"f. Colombians also say balón for a football.","sent":{"es":"Pásame la {pelota}.","en":"Pass me the ball."}}
+{"id":"concierto","es":"concierto","en":["concert","gig"],"pos":"noun","topic":"leisure","note":"m.","sent":{"es":"Fuimos a un {concierto} de salsa.","en":"We went to a salsa concert."}}
+{"id":"teatro","es":"teatro","en":["theatre"],"pos":"noun","topic":"leisure","note":"m.","sent":{"es":"Esta noche vamos al {teatro}.","en":"Tonight we are going to the theatre."}}
+{"id":"baile","es":"baile","en":["dance","dancing"],"pos":"noun","topic":"leisure","note":"m. The noun. To dance is bailar.","sent":{"es":"El {baile} típico de la costa es la cumbia.","en":"The typical dance of the coast is cumbia."}}
+{"id":"arte","es":"arte","en":["art"],"pos":"noun","topic":"leisure","note":"m. in the singular, but las artes in the plural.","sent":{"es":"Me interesa mucho el {arte}.","en":"I am very interested in art."}}
+{"id":"serie","es":"serie","en":["series"],"pos":"noun","topic":"leisure","note":"f. A television series.","sent":{"es":"Estoy viendo una {serie} colombiana.","en":"I am watching a Colombian series."}}
+{"id":"noticias","es":"noticias","en":["news"],"pos":"noun","topic":"leisure","note":"f. pl. Always plural for the news.","sent":{"es":"¿Viste las {noticias}?","en":"Did you see the news?"}}
+{"id":"periodico","es":"periódico","en":["newspaper"],"pos":"noun","topic":"leisure","note":"m.","sent":{"es":"Mi papá lee el {periódico} todos los días.","en":"My dad reads the newspaper every day."}}
+{"id":"escalada","es":"escalada","en":["climbing"],"pos":"noun","topic":"leisure","note":"f. The sport. To climb is escalar.","sent":{"es":"La {escalada} es mi deporte favorito.","en":"Climbing is my favourite sport."}}
+{"id":"pantalon","es":"pantalón","en":["trousers"],"pos":"noun","topic":"clothes","note":"m. Colombians usually say it in the singular.","sent":{"es":"Este {pantalón} me queda grande.","en":"These trousers are too big for me."}}
+{"id":"camiseta","es":"camiseta","en":["T-shirt"],"pos":"noun","topic":"clothes","note":"f. Also a football shirt.","sent":{"es":"Llevo una {camiseta} blanca.","en":"I am wearing a white T-shirt."}}
+{"id":"chaqueta","es":"chaqueta","en":["jacket"],"pos":"noun","topic":"clothes","note":"f.","sent":{"es":"Lleva una {chaqueta}, en Bogotá hace frío.","en":"Bring a jacket, it is cold in Bogotá."}}
+{"id":"saco","es":"saco","en":["jumper","cardigan"],"pos":"noun","topic":"clothes","note":"m. The Colombian word. In Spain a saco is a sack.","sent":{"es":"Ponte un {saco}, que está haciendo frío.","en":"Put a jumper on, it is getting cold."}}
+{"id":"falda","es":"falda","en":["skirt"],"pos":"noun","topic":"clothes","note":"f.","sent":{"es":"Me gusta tu {falda}.","en":"I like your skirt."}}
+{"id":"medias","es":"medias","en":["socks"],"pos":"noun","topic":"clothes","note":"f. pl. In Colombia socks. Elsewhere it can mean tights.","sent":{"es":"Necesito {medias} limpias.","en":"I need clean socks."}}
+{"id":"chanclas","es":"chanclas","en":["flip-flops"],"pos":"noun","topic":"clothes","note":"f. pl.","sent":{"es":"En la playa solo uso {chanclas}.","en":"On the beach I only wear flip-flops."}}
+{"id":"gorra","es":"gorra","en":["cap"],"pos":"noun","topic":"clothes","note":"f.","sent":{"es":"Ponte una {gorra}, el sol está muy fuerte.","en":"Put a cap on, the sun is very strong."}}
+{"id":"gafas","es":"gafas","en":["glasses"],"pos":"noun","topic":"clothes","note":"f. pl. gafas de sol, sunglasses. Colombians say gafas; some other countries say lentes.","sent":{"es":"No veo nada sin {gafas}.","en":"I cannot see a thing without glasses."}}
+{"id":"mochila","es":"mochila","en":["rucksack","backpack"],"pos":"noun","topic":"clothes","note":"f. Also the woven Wayuu bag.","sent":{"es":"Llevo todo en la {mochila}.","en":"I carry everything in my rucksack."}}
+{"id":"talla","es":"talla","en":["size"],"pos":"noun","topic":"clothes","note":"f. For clothes. Shoe size is número.","sent":{"es":"¿Tiene una {talla} más grande?","en":"Do you have a bigger size?"}}
+{"id":"paraguas","es":"paraguas","en":["umbrella"],"pos":"noun","topic":"clothes","note":"m. Same in the plural. Colombians also say sombrilla.","sent":{"es":"No olvides el {paraguas}.","en":"Do not forget the umbrella."}}
