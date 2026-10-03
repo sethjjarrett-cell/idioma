@@ -1,0 +1,54 @@
+{"id":"amable","es":"amable","en":["kind"],"pos":"adjective","topic":"describing","note":"Same form for a man or a woman. muy amable is the usual thanks for a favour.","sent":{"es":"Muy {amable}, gracias.","en":"That is very kind, thank you."}}
+{"id":"simpatico","es":"simpático","en":["nice","friendly"],"pos":"adjective","topic":"describing","note":"For people: pleasant company. Not sympathetic.","sent":{"es":"Tu hermano es muy {simpático}.","en":"Your brother is very nice."}}
+{"id":"antipatico","es":"antipático","en":["unfriendly","unpleasant"],"pos":"adjective","topic":"describing","sent":{"es":"El vecino es un poco {antipático}.","en":"The neighbour is a bit unfriendly."}}
+{"id":"timido","es":"tímido","en":["shy"],"pos":"adjective","topic":"describing","sent":{"es":"Al principio soy un poco {tímido}.","en":"I am a bit shy at first."}}
+{"id":"perezoso","es":"perezoso","en":["lazy"],"pos":"adjective","topic":"describing","note":"Colombians say ¡qué pereza! for can't be bothered.","sent":{"es":"Hoy estoy muy {perezoso}.","en":"I am feeling very lazy today."}}
+{"id":"guapo","es":"guapo","en":["good-looking","handsome"],"pos":"adjective","topic":"describing","note":"For both sexes. In Colombia also brave.","sent":{"es":"Tu novio es muy {guapo}.","en":"Your boyfriend is very good-looking."}}
+{"id":"lindo","es":"lindo","en":["lovely","pretty"],"pos":"adjective","topic":"describing","note":"Used constantly in Colombia, for people, places and kind gestures.","sent":{"es":"¡Qué {lindo} día!","en":"What a lovely day!"}}
+{"id":"hermoso","es":"hermoso","en":["beautiful"],"pos":"adjective","topic":"describing","sent":{"es":"El paisaje es {hermoso}.","en":"The scenery is beautiful."}}
+{"id":"raro","es":"raro","en":["strange","odd","rare"],"pos":"adjective","topic":"describing","note":"The everyday word for weird.","sent":{"es":"Qué {raro}, no contesta.","en":"That is odd, she is not answering."}}
+{"id":"tranquilo","es":"tranquilo","en":["calm","quiet","relaxed"],"pos":"adjective","topic":"describing","note":"On its own, tranquilo means do not worry, which you will hear all the time.","sent":{"es":"Es un pueblo muy {tranquilo}.","en":"It is a very quiet town."}}
+{"id":"emocionado","es":"emocionado","en":["excited"],"pos":"adjective","topic":"feelings","note":"Excited or moved. Not emotional in the English sense of upset.","sent":{"es":"Estoy muy {emocionado} por el viaje.","en":"I am very excited about the trip."}}
+{"id":"sorprendido","es":"sorprendido","en":["surprised"],"pos":"adjective","topic":"feelings","sent":{"es":"Me quedé {sorprendido}.","en":"I was surprised."}}
+{"id":"orgulloso","es":"orgulloso","en":["proud"],"pos":"adjective","topic":"feelings","sent":{"es":"Estoy {orgulloso} de ti.","en":"I am proud of you."}}
+{"id":"avergonzado","es":"avergonzado","en":["embarrassed","ashamed"],"pos":"adjective","topic":"feelings","note":"Colombians mostly say ¡qué pena! instead. Never embarazada, which is pregnant.","sent":{"es":"Estaba muy {avergonzado}.","en":"I was very embarrassed."}}
+{"id":"celoso","es":"celoso","en":["jealous"],"pos":"adjective","topic":"feelings","sent":{"es":"No seas {celoso}.","en":"Do not be jealous."}}
+{"id":"asustado","es":"asustado","en":["scared","frightened"],"pos":"adjective","topic":"feelings","sent":{"es":"El perro está {asustado}.","en":"The dog is scared."}}
+{"id":"enamorado","es":"enamorado","en":["in love"],"pos":"adjective","topic":"feelings","note":"estar enamorado de alguien.","sent":{"es":"Está {enamorado} de su vecina.","en":"He is in love with his neighbour."}}
+{"id":"borracho","es":"borracho","en":["drunk"],"pos":"adjective","topic":"feelings","note":"Colombians say prendido for merry and borracho for drunk.","sent":{"es":"Anoche estaba {borracho}.","en":"Last night he was drunk."}}
+{"id":"agradecido","es":"agradecido","en":["grateful"],"pos":"adjective","topic":"feelings","sent":{"es":"Estoy muy {agradecido}.","en":"I am very grateful."}}
+{"id":"harto","es":"harto","en":["fed up"],"pos":"adjective","topic":"feelings","note":"estar harto de algo.","sent":{"es":"Estoy {harto} de la lluvia.","en":"I am fed up with the rain."}}
+{"id":"confundido","es":"confundido","en":["confused"],"pos":"adjective","topic":"feelings","sent":{"es":"Estoy un poco {confundido}.","en":"I am a bit confused."}}
+{"id":"ancho","es":"ancho","en":["wide","loose"],"pos":"adjective","topic":"describing","note":"For clothes, loose: esta camisa me queda ancha.","sent":{"es":"La calle es muy {ancha}.","en":"The street is very wide."}}
+{"id":"delgado","es":"delgado","en":["thin","slim"],"pos":"adjective","topic":"describing","note":"Colombians also say flaco, and use it as a nickname.","sent":{"es":"Estás más {delgado}.","en":"You look slimmer."}}
+{"id":"gordo","es":"gordo","en":["fat"],"pos":"adjective","topic":"describing","note":"In Colombia gordo and gordita are also affectionate nicknames, without offence.","sent":{"es":"El gato está muy {gordo}.","en":"The cat is very fat."}}
+{"id":"pesado","es":"pesado","en":["heavy","annoying"],"pos":"adjective","topic":"describing","note":"In Colombia, said of a person, it means tiresome.","sent":{"es":"Esta maleta es muy {pesada}.","en":"This suitcase is very heavy."}}
+{"id":"oscuro","es":"oscuro","en":["dark"],"pos":"adjective","topic":"describing","note":"For colours, the opposite of claro: azul oscuro.","sent":{"es":"La calle está muy {oscura}.","en":"The street is very dark."}}
+{"id":"mojado","es":"mojado","en":["wet"],"pos":"adjective","topic":"describing","sent":{"es":"Tengo los zapatos {mojados}.","en":"My shoes are wet."}}
+{"id":"seco","es":"seco","en":["dry"],"pos":"adjective","topic":"describing","sent":{"es":"La ropa ya está {seca}.","en":"The washing is dry now."}}
+{"id":"suave","es":"suave","en":["soft","gentle"],"pos":"adjective","topic":"describing","note":"In Colombia also take it easy: suave, suave.","sent":{"es":"Esta toalla es muy {suave}.","en":"This towel is very soft."}}
+{"id":"vacio","es":"vacío","en":["empty"],"pos":"adjective","topic":"describing","sent":{"es":"La nevera está {vacía}.","en":"The fridge is empty."}}
+{"id":"comodo","es":"cómodo","en":["comfortable"],"pos":"adjective","topic":"describing","sent":{"es":"Este sofá es muy {cómodo}.","en":"This sofa is very comfortable."}}
+{"id":"anterior","es":"anterior","en":["previous","earlier"],"pos":"adjective","topic":"describing","note":"el día anterior, the day before.","sent":{"es":"Llegué el día {anterior}.","en":"I arrived the day before."}}
+{"id":"correcto","es":"correcto","en":["correct"],"pos":"adjective","topic":"describing","sent":{"es":"La respuesta es {correcta}.","en":"The answer is correct."}}
+{"id":"perfecto","es":"perfecto","en":["perfect"],"pos":"adjective","topic":"describing","note":"On its own as a reply, it means great or fine.","sent":{"es":"El clima está {perfecto}.","en":"The weather is perfect."}}
+{"id":"increible","es":"increíble","en":["incredible","amazing"],"pos":"adjective","topic":"describing","sent":{"es":"La vista es {increíble}.","en":"The view is amazing."}}
+{"id":"genial","es":"genial","en":["brilliant","great"],"pos":"adjective","topic":"describing","sent":{"es":"¡Qué {genial}!","en":"How brilliant!"}}
+{"id":"terrible","es":"terrible","en":["terrible","awful"],"pos":"adjective","topic":"describing","sent":{"es":"El tráfico está {terrible}.","en":"The traffic is terrible."}}
+{"id":"chevere","es":"chévere","en":["cool"],"pos":"adjective","topic":"describing","note":"The Colombian word for anything good.","sent":{"es":"La fiesta estuvo muy {chévere}.","en":"The party was really great."}}
+{"id":"gris","es":"gris","en":["grey"],"pos":"adjective","topic":"describing","note":"Bogotá's sky, most afternoons.","sent":{"es":"El cielo está {gris}.","en":"The sky is grey."}}
+{"id":"morado","es":"morado","en":["purple"],"pos":"adjective","topic":"describing","sent":{"es":"Me gusta la camisa {morada}.","en":"I like the purple shirt."}}
+{"id":"rosado","es":"rosado","en":["pink"],"pos":"adjective","topic":"describing","note":"The Colombian word. rosa is common elsewhere.","sent":{"es":"Compré un vestido {rosado}.","en":"I bought a pink dress."}}
+{"id":"marron","es":"marrón","en":["brown"],"pos":"adjective","topic":"describing","note":"Colombians usually say café for brown.","sent":{"es":"Tengo unos zapatos {marrones}.","en":"I have a pair of brown shoes."}}
+{"id":"color","es":"color","en":["colour"],"pos":"noun","topic":"describing","note":"m.","sent":{"es":"¿De qué {color} es tu carro?","en":"What colour is your car?"}}
+{"id":"alegria","es":"alegría","en":["joy","happiness"],"pos":"noun","topic":"feelings","note":"f.","sent":{"es":"¡Qué {alegría} verte!","en":"How lovely to see you!"}}
+{"id":"carino","es":"cariño","en":["affection","darling"],"pos":"noun","topic":"feelings","note":"m. Also a term of endearment, for anyone from a partner to a stranger in a shop.","sent":{"es":"Te lo digo con {cariño}.","en":"I say it with affection."}}
+{"id":"esperanza","es":"esperanza","en":["hope"],"pos":"noun","topic":"feelings","note":"f.","sent":{"es":"Todavía hay {esperanza}.","en":"There is still hope."}}
+{"id":"verguenza","es":"vergüenza","en":["embarrassment","shame"],"pos":"noun","topic":"feelings","note":"f. ¡qué vergüenza! is how embarrassing! Colombians often say ¡qué pena!","sent":{"es":"Me da {vergüenza} hablar en público.","en":"I get embarrassed speaking in public."}}
+{"id":"rabia","es":"rabia","en":["anger","rage"],"pos":"noun","topic":"feelings","note":"f. me da rabia, it makes me angry.","sent":{"es":"Me da {rabia} cuando llega tarde.","en":"It makes me angry when he is late."}}
+{"id":"estres","es":"estrés","en":["stress"],"pos":"noun","topic":"feelings","note":"m.","sent":{"es":"Tengo mucho {estrés} en el trabajo.","en":"I have a lot of stress at work."}}
+{"id":"paciencia","es":"paciencia","en":["patience"],"pos":"noun","topic":"feelings","note":"f.","sent":{"es":"Hay que tener {paciencia} con el tráfico.","en":"You have to be patient with the traffic."}}
+{"id":"sorpresa","es":"sorpresa","en":["surprise"],"pos":"noun","topic":"feelings","note":"f.","sent":{"es":"¡Qué {sorpresa}!","en":"What a surprise!"}}
+{"id":"duda","es":"duda","en":["doubt"],"pos":"noun","topic":"feelings","note":"f. tengo una duda is I have a question.","sent":{"es":"Tengo una {duda}.","en":"I have a question."}}
+{"id":"confianza","es":"confianza","en":["trust","confidence"],"pos":"noun","topic":"feelings","note":"f. de confianza, trustworthy.","sent":{"es":"Le tengo mucha {confianza}.","en":"I trust him a lot."}}
+{"id":"paz","es":"paz","en":["peace"],"pos":"noun","topic":"feelings","note":"f. Plural paces. A word with real weight in Colombia.","sent":{"es":"Solo quiero un poco de {paz}.","en":"I just want a bit of peace."}}

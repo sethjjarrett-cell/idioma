@@ -30,6 +30,11 @@ for (const f of readdirSync(DIR).filter(f => f.endsWith('.jsonl')).sort()) {
   });
 }
 
+/* Every word id in every batch, collected before anything is checked. A
+   sentence-only row may point at a word from a later batch: rows are never
+   moved between files, because a sentence's id is its position in the build
+   and saved progress is keyed by that id. */
+const allIds = new Set(rows.filter(r => !r.sentenceOnly && r.id).map(r => r.id));
 const problems = [];
 const warnings = [];
 const seenId = new Map(), seenEs = new Map();
@@ -39,7 +44,7 @@ let n = 0;
 for (const r of rows) {
   const where = r._src;
   if (r.sentenceOnly) {
-    if (!seedIds.has(r.wordId) && !seenId.has(r.wordId)) {
+    if (!seedIds.has(r.wordId) && !allIds.has(r.wordId)) {
       problems.push(`${where}: sentence-only row points at unknown word "${r.wordId}"`);
       continue;
     }

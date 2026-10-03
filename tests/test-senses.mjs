@@ -93,9 +93,11 @@ ok('a word with a unique meaning has no siblings',
   Store.siblingsOf(words, 'perro').length === 0);
 ok('siblings are symmetric',
   Store.siblingsOf(words, 'estar').some((s) => s.es === 'ser'));
+// time: vez, hora and tiempo. camino used to be the example, until carretera
+// joined it under road and gave it a third.
 ok('a three-way group gives two siblings',
-  Store.siblingsOf(words, 'camino').length === 2,
-  JSON.stringify(Store.siblingsOf(words, 'camino')));
+  Store.siblingsOf(words, 'tiempo').length === 2,
+  JSON.stringify(Store.siblingsOf(words, 'tiempo')));
 ok('the same word is never its own sibling',
   words.every((w) => Store.siblingsOf(words, w.id).every((s) => s.es !== w.es)
     || w.en.length === 0));

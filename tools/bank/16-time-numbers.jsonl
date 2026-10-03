@@ -1,0 +1,46 @@
+{"id":"once","es":"once","en":["eleven"],"pos":"number","topic":"numbers","note":"Also, in Colombia, an afternoon snack: tomar las onces.","sent":{"es":"Son las {once} de la mañana.","en":"It is eleven in the morning."}}
+{"id":"doce","es":"doce","en":["twelve"],"pos":"number","topic":"numbers","sent":{"es":"Tengo {doce} primos.","en":"I have twelve cousins."}}
+{"id":"trece","es":"trece","en":["thirteen"],"pos":"number","topic":"numbers","sent":{"es":"El bus número {trece} va al centro.","en":"The number thirteen bus goes to the centre."}}
+{"id":"catorce","es":"catorce","en":["fourteen"],"pos":"number","topic":"numbers","sent":{"es":"Mi sobrina tiene {catorce} años.","en":"My niece is fourteen."}}
+{"id":"quince","es":"quince","en":["fifteen"],"pos":"number","topic":"numbers","note":"Also a girl's fifteenth birthday party: los quince.","sent":{"es":"Llego en {quince} minutos.","en":"I will be there in fifteen minutes."}}
+{"id":"dieciseis","es":"dieciséis","en":["sixteen"],"pos":"number","topic":"numbers","note":"One word: diez y seis run together.","sent":{"es":"Somos {dieciséis} en el grupo.","en":"There are sixteen of us in the group."}}
+{"id":"diecisiete","es":"diecisiete","en":["seventeen"],"pos":"number","topic":"numbers","sent":{"es":"Tenía {diecisiete} años cuando aprendí a manejar.","en":"I was seventeen when I learnt to drive."}}
+{"id":"dieciocho","es":"dieciocho","en":["eighteen"],"pos":"number","topic":"numbers","sent":{"es":"El vuelo sale a las {dieciocho} horas.","en":"The flight leaves at eighteen hundred hours."}}
+{"id":"diecinueve","es":"diecinueve","en":["nineteen"],"pos":"number","topic":"numbers","sent":{"es":"Hay {diecinueve} grados.","en":"It is nineteen degrees."}}
+{"id":"treinta","es":"treinta","en":["thirty"],"pos":"number","topic":"numbers","note":"From here on the units are a separate word: treinta y uno.","sent":{"es":"El mes tiene {treinta} días.","en":"The month has thirty days."}}
+{"id":"cuarenta","es":"cuarenta","en":["forty"],"pos":"number","topic":"numbers","sent":{"es":"Esperé {cuarenta} minutos.","en":"I waited forty minutes."}}
+{"id":"cincuenta","es":"cincuenta","en":["fifty"],"pos":"number","topic":"numbers","sent":{"es":"Son {cincuenta} mil pesos.","en":"That is fifty thousand pesos."}}
+{"id":"sesenta","es":"sesenta","en":["sixty"],"pos":"number","topic":"numbers","sent":{"es":"Una hora tiene {sesenta} minutos.","en":"An hour has sixty minutes."}}
+{"id":"setenta","es":"setenta","en":["seventy"],"pos":"number","topic":"numbers","sent":{"es":"Mi abuelo tiene {setenta} años.","en":"My grandfather is seventy."}}
+{"id":"ochenta","es":"ochenta","en":["eighty"],"pos":"number","topic":"numbers","sent":{"es":"Eso cuesta {ochenta} mil.","en":"That costs eighty thousand."}}
+{"id":"noventa","es":"noventa","en":["ninety"],"pos":"number","topic":"numbers","sent":{"es":"Mi abuela tiene {noventa} años.","en":"My grandmother is ninety."}}
+{"id":"quinientos","es":"quinientos","en":["five hundred"],"pos":"number","topic":"numbers","note":"An irregular hundred, like setecientos and novecientos.","sent":{"es":"Un tinto vale {quinientos} pesos en la calle.","en":"A coffee costs five hundred pesos on the street."}}
+{"id":"millon","es":"millón","en":["million"],"pos":"number","topic":"numbers","note":"m. Takes de before a noun: un millón de pesos.","sent":{"es":"El arriendo es un {millón} de pesos.","en":"The rent is a million pesos."}}
+{"id":"enero","es":"enero","en":["January"],"pos":"noun","topic":"time","note":"m. Months take no capital letter in Spanish.","sent":{"es":"Llegué en {enero}.","en":"I arrived in January."}}
+{"id":"febrero","es":"febrero","en":["February"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"Mi cumpleaños es en {febrero}.","en":"My birthday is in February."}}
+{"id":"marzo","es":"marzo","en":["March"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"Vuelvo a Inglaterra en {marzo}.","en":"I go back to England in March."}}
+{"id":"abril","es":"abril","en":["April"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"En {abril} llueve mucho.","en":"It rains a lot in April."}}
+{"id":"mayo","es":"mayo","en":["May"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"La boda es en {mayo}.","en":"The wedding is in May."}}
+{"id":"junio","es":"junio","en":["June"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"En {junio} hay vacaciones.","en":"There are holidays in June."}}
+{"id":"julio","es":"julio","en":["July"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"Nos vemos en {julio}.","en":"See you in July."}}
+{"id":"agosto","es":"agosto","en":["August"],"pos":"noun","topic":"time","note":"m. Kite season in Colombia: the winds pick up.","sent":{"es":"En {agosto} hace mucho viento.","en":"It is very windy in August."}}
+{"id":"septiembre","es":"septiembre","en":["September"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"Empecé el curso en {septiembre}.","en":"I started the course in September."}}
+{"id":"octubre","es":"octubre","en":["October"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"En {octubre} llueve todos los días.","en":"In October it rains every day."}}
+{"id":"noviembre","es":"noviembre","en":["November"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"Me mudo en {noviembre}.","en":"I am moving in November."}}
+{"id":"diciembre","es":"diciembre","en":["December"],"pos":"noun","topic":"time","note":"m. The big holiday month in Colombia, lights everywhere.","sent":{"es":"En {diciembre} todo el mundo está de vacaciones.","en":"In December everyone is on holiday."}}
+{"id":"invierno","es":"invierno","en":["winter"],"pos":"noun","topic":"time","note":"m. Near the equator Colombians use it for the rainy season.","sent":{"es":"Estamos en pleno {invierno}.","en":"We are right in the middle of the rainy season."}}
+{"id":"primavera","es":"primavera","en":["spring"],"pos":"noun","topic":"time","note":"f. Colombia has no seasons as such; you will hear it about other countries.","sent":{"es":"En {primavera} hay flores por todas partes.","en":"In spring there are flowers everywhere."}}
+{"id":"otono","es":"otoño","en":["autumn"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"En Inglaterra el {otoño} es muy bonito.","en":"Autumn in England is very pretty."}}
+{"id":"fin-de-semana","es":"fin de semana","en":["weekend"],"pos":"phrase","topic":"time","note":"m. el fin de semana. Colombians shorten it to el finde.","sent":{"es":"¿Qué vas a hacer el {fin de semana}?","en":"What are you doing at the weekend?"}}
+{"id":"mediodia","es":"mediodía","en":["midday","noon"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"Almorzamos al {mediodía}.","en":"We have lunch at midday."}}
+{"id":"medianoche","es":"medianoche","en":["midnight"],"pos":"noun","topic":"time","note":"f.","sent":{"es":"La fiesta terminó a {medianoche}.","en":"The party finished at midnight."}}
+{"id":"madrugada","es":"madrugada","en":["early hours"],"pos":"noun","topic":"time","note":"f. From midnight until dawn. madrugar is to get up very early.","sent":{"es":"Llegamos a las tres de la {madrugada}.","en":"We got in at three in the morning."}}
+{"id":"rato","es":"rato","en":["a while","a little while"],"pos":"noun","topic":"time","note":"m. un rato, a little while.","sent":{"es":"Espérame un {rato}.","en":"Wait for me a while."}}
+{"id":"siglo","es":"siglo","en":["century"],"pos":"noun","topic":"time","note":"m.","sent":{"es":"La iglesia es del {siglo} diecisiete.","en":"The church is from the seventeenth century."}}
+{"id":"fecha","es":"fecha","en":["date"],"pos":"noun","topic":"time","note":"f. A calendar date. A romantic date is una cita.","sent":{"es":"¿Qué {fecha} es hoy?","en":"What is the date today?"}}
+{"id":"navidad","es":"Navidad","en":["Christmas"],"pos":"noun","topic":"time","note":"f. In Colombia it starts on the seventh of December with the candles.","sent":{"es":"¿Dónde pasas la {Navidad}?","en":"Where are you spending Christmas?"}}
+{"id":"vacaciones","es":"vacaciones","en":["holiday","holidays"],"pos":"noun","topic":"time","note":"f. pl. Always plural: estar de vacaciones, to be on holiday.","sent":{"es":"Me voy de {vacaciones} a la costa.","en":"I am going on holiday to the coast."}}
+{"id":"festivo","es":"festivo","en":["bank holiday"],"pos":"noun","topic":"time","note":"m. Colombia has eighteen, and most are moved to a Monday.","sent":{"es":"El lunes es {festivo}.","en":"Monday is a bank holiday."}}
+{"id":"anteayer","es":"anteayer","en":["the day before yesterday"],"pos":"adverb","topic":"time","note":"Colombians often say antier.","sent":{"es":"Llegué {anteayer}.","en":"I arrived the day before yesterday."}}
+{"id":"pasado-manana","es":"pasado mañana","en":["the day after tomorrow"],"pos":"adverb","topic":"time","sent":{"es":"Nos vemos {pasado mañana}.","en":"See you the day after tomorrow."}}
+{"id":"a-tiempo","es":"a tiempo","en":["on time"],"pos":"adverb","topic":"time","note":"A Colombian hora is famously elastic.","sent":{"es":"El vuelo salió {a tiempo}.","en":"The flight left on time."}}

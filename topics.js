@@ -155,6 +155,18 @@ const TOPICS = [
     words: [],
   },
   {
+    id: "expressions",
+    name: "Everyday expressions",
+    blurb: "The set phrases that get you through a day: greetings, thanks, sorry, help.",
+    words: [],
+  },
+  {
+    id: "routine",
+    name: "Daily routine",
+    blurb: "Getting up, getting ready, going to bed: the verbs that take se.",
+    words: [],
+  },
+  {
     id: "feelings",
     name: "Feelings",
     blurb: "How someone is, as opposed to what they are like.",

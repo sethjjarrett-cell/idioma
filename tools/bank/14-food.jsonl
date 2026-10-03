@@ -1,0 +1,46 @@
+{"id":"pescado","es":"pescado","en":["fish"],"pos":"noun","topic":"food","note":"m. Fish as food. A live fish is un pez.","sent":{"es":"Quiero el {pescado} frito.","en":"I would like the fried fish."}}
+{"id":"queso","es":"queso","en":["cheese"],"pos":"noun","topic":"food","note":"m. In Colombia it goes in hot chocolate.","sent":{"es":"Una arepa con {queso}, por favor.","en":"An arepa with cheese, please."}}
+{"id":"jamon","es":"jamón","en":["ham"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Un sándwich de {jamón} y queso.","en":"A ham and cheese sandwich."}}
+{"id":"mantequilla","es":"mantequilla","en":["butter"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"¿Me pasas la {mantequilla}?","en":"Can you pass me the butter?"}}
+{"id":"verdura","es":"verdura","en":["vegetables","vegetable"],"pos":"noun","topic":"food","note":"f. Usually plural: las verduras.","sent":{"es":"Hay que comer más {verduras}.","en":"You have to eat more vegetables."}}
+{"id":"ensalada","es":"ensalada","en":["salad"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"Una {ensalada} sin cebolla, por favor.","en":"A salad without onion, please."}}
+{"id":"tomate","es":"tomate","en":["tomato"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Compra dos {tomates} en la tienda.","en":"Buy two tomatoes at the shop."}}
+{"id":"cebolla","es":"cebolla","en":["onion"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"La sopa lleva {cebolla}.","en":"The soup has onion in it."}}
+{"id":"ajo","es":"ajo","en":["garlic"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Me encanta el pan de {ajo}.","en":"I love garlic bread."}}
+{"id":"papas-fritas","es":"papas fritas","en":["chips"],"pos":"phrase","topic":"food","note":"In Latin America a potato is una papa. Crisps are papas de paquete.","sent":{"es":"Una hamburguesa con {papas fritas}.","en":"A burger and chips."}}
+{"id":"aguacate","es":"aguacate","en":["avocado"],"pos":"noun","topic":"food","note":"m. A slice comes with almost every Colombian lunch.","sent":{"es":"El almuerzo viene con {aguacate}.","en":"Lunch comes with avocado."}}
+{"id":"platano","es":"plátano","en":["plantain"],"pos":"noun","topic":"food","note":"m. In Colombia a plátano is a plantain, for cooking. A banana is a banano.","sent":{"es":"Me gusta el {plátano} maduro.","en":"I like ripe plantain."}}
+{"id":"banano","es":"banano","en":["banana"],"pos":"noun","topic":"food","note":"m. The Colombian word for the sweet one you peel and eat.","sent":{"es":"Me comí un {banano} en el desayuno.","en":"I had a banana for breakfast."}}
+{"id":"arepa","es":"arepa","en":["arepa"],"pos":"noun","topic":"food","note":"f. The maize flatbread at the heart of Colombian breakfast.","sent":{"es":"Desayuno {arepa} con huevo.","en":"I have an arepa with egg for breakfast."}}
+{"id":"frijoles","es":"frijoles","en":["beans"],"pos":"noun","topic":"food","note":"m. pl. The base of a bandeja paisa.","sent":{"es":"La bandeja paisa lleva {frijoles}.","en":"A bandeja paisa comes with beans."}}
+{"id":"maiz","es":"maíz","en":["sweetcorn","maize"],"pos":"noun","topic":"food","note":"m. Arepas are made from it.","sent":{"es":"La arepa es de {maíz}.","en":"The arepa is made of maize."}}
+{"id":"naranja","es":"naranja","en":["orange"],"pos":"noun","topic":"food","note":"f. The fruit. Fresh juice is jugo de naranja.","sent":{"es":"Un jugo de {naranja}, por favor.","en":"An orange juice, please."}}
+{"id":"limon","es":"limón","en":["lime","lemon"],"pos":"noun","topic":"food","note":"m. In Colombia the usual limón is green: a lime.","sent":{"es":"Échale {limón} a la sopa.","en":"Put some lime in the soup."}}
+{"id":"fresa","es":"fresa","en":["strawberry"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"Me gusta el helado de {fresa}.","en":"I like strawberry ice cream."}}
+{"id":"pina","es":"piña","en":["pineapple"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"Un jugo de {piña} bien frío.","en":"A really cold pineapple juice."}}
+{"id":"galleta","es":"galleta","en":["biscuit"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"¿Quieres una {galleta}?","en":"Would you like a biscuit?"}}
+{"id":"chocolate","es":"chocolate","en":["chocolate","hot chocolate"],"pos":"noun","topic":"food","note":"m. In Colombia, often the hot drink, with cheese dropped in.","sent":{"es":"Un {chocolate} caliente con queso.","en":"A hot chocolate with cheese."}}
+{"id":"helado","es":"helado","en":["ice cream"],"pos":"noun","topic":"food","note":"m. As an adjective, freezing cold.","sent":{"es":"Vamos por un {helado}.","en":"Let us go and get an ice cream."}}
+{"id":"postre","es":"postre","en":["dessert","pudding"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"¿Qué hay de {postre}?","en":"What is there for pudding?"}}
+{"id":"torta","es":"torta","en":["cake"],"pos":"noun","topic":"food","note":"f. The Colombian word. ponqué is common too.","sent":{"es":"Hice una {torta} de chocolate.","en":"I made a chocolate cake."}}
+{"id":"vino","es":"vino","en":["wine"],"pos":"noun","topic":"food","note":"m. vino tinto is red, vino blanco is white. Careful: vino is also he came.","sent":{"es":"¿Prefieres {vino} blanco o tinto?","en":"Do you prefer white or red wine?"}}
+{"id":"gaseosa","es":"gaseosa","en":["fizzy drink"],"pos":"noun","topic":"food","note":"f. The Colombian word for any soft drink with bubbles.","sent":{"es":"Una {gaseosa} bien fría, por favor.","en":"A really cold fizzy drink, please."}}
+{"id":"aromatica","es":"aromática","en":["herbal tea"],"pos":"noun","topic":"food","note":"f. Colombian. Hot water on fruit or herbs, offered when you feel ill.","sent":{"es":"¿Quieres una {aromática}?","en":"Would you like a herbal tea?"}}
+{"id":"tenedor","es":"tenedor","en":["fork"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"¿Me trae un {tenedor}, por favor?","en":"Could you bring me a fork, please?"}}
+{"id":"cuchillo","es":"cuchillo","en":["knife"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Este {cuchillo} no corta.","en":"This knife does not cut."}}
+{"id":"cuchara","es":"cuchara","en":["spoon"],"pos":"noun","topic":"food","note":"f. cucharita is a teaspoon.","sent":{"es":"Necesito una {cuchara} para la sopa.","en":"I need a spoon for the soup."}}
+{"id":"taza","es":"taza","en":["cup","mug"],"pos":"noun","topic":"food","note":"f. una taza de café.","sent":{"es":"Una {taza} de chocolate, por favor.","en":"A cup of hot chocolate, please."}}
+{"id":"botella","es":"botella","en":["bottle"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"Una {botella} de agua, por favor.","en":"A bottle of water, please."}}
+{"id":"servilleta","es":"servilleta","en":["napkin","serviette"],"pos":"noun","topic":"food","note":"f.","sent":{"es":"¿Me da una {servilleta}?","en":"Could I have a napkin?"}}
+{"id":"menu","es":"menú","en":["menu"],"pos":"noun","topic":"food","note":"m. In a restaurant you also ask for la carta. menú del día is the set lunch.","sent":{"es":"¿Me trae el {menú}, por favor?","en":"Could you bring me the menu, please?"}}
+{"id":"propina","es":"propina","en":["tip"],"pos":"noun","topic":"paying","note":"f. In Colombian restaurants a ten per cent service charge is often added, and you will be asked whether to include it.","sent":{"es":"¿La {propina} está incluida?","en":"Is the tip included?"}}
+{"id":"delicioso","es":"delicioso","en":["delicious"],"pos":"adjective","topic":"food","note":"rico is the more everyday way to say it.","sent":{"es":"Todo estuvo {delicioso}.","en":"Everything was delicious."}}
+{"id":"dulce","es":"dulce","en":["sweet"],"pos":"adjective","topic":"food","note":"As a noun, un dulce is a sweet.","sent":{"es":"Este café está muy {dulce}.","en":"This coffee is very sweet."}}
+{"id":"salado","es":"salado","en":["salty"],"pos":"adjective","topic":"food","note":"In Colombia also unlucky: ¡qué salado!","sent":{"es":"La sopa está muy {salada}.","en":"The soup is very salty."}}
+{"id":"picante","es":"picante","en":["spicy"],"pos":"adjective","topic":"food","note":"Colombian food is mild; ají, the hot sauce, is served on the side.","sent":{"es":"¿Esto es {picante}?","en":"Is this spicy?"}}
+{"id":"hielo","es":"hielo","en":["ice"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Una limonada sin {hielo}.","en":"A lemonade without ice."}}
+{"id":"aceite","es":"aceite","en":["oil"],"pos":"noun","topic":"food","note":"m.","sent":{"es":"Fríelo en un poco de {aceite}.","en":"Fry it in a little oil."}}
+{"id":"cerdo","es":"cerdo","en":["pork","pig"],"pos":"noun","topic":"food","note":"m. Both the animal and the meat. Colombians also say marrano.","sent":{"es":"La bandeja lleva chicharrón de {cerdo}.","en":"The platter comes with crispy pork."}}
+{"id":"res","es":"res","en":["beef"],"pos":"noun","topic":"food","note":"f. carne de res is beef.","sent":{"es":"Prefiero carne de {res}.","en":"I prefer beef."}}
+{"id":"mariscos","es":"mariscos","en":["seafood"],"pos":"noun","topic":"food","note":"m. pl. On the Caribbean coast they are everywhere.","sent":{"es":"En la costa se comen muchos {mariscos}.","en":"On the coast people eat a lot of seafood."}}
+{"id":"camaron","es":"camarón","en":["prawn"],"pos":"noun","topic":"food","note":"m. Plural camarones.","sent":{"es":"Un arroz con {camarones}, por favor.","en":"Prawn rice, please."}}
