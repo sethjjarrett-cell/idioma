@@ -202,6 +202,7 @@
     $("set-round").value = state.settings.roundSize;
     applyPace();
     drawSync();
+    drawGoogle();
     $("saved-at").textContent = state.savedAt
       ? `Last saved ${new Date(state.savedAt).toLocaleString("en-GB")}`
       : "Nothing saved yet.";
@@ -239,6 +240,7 @@
   $("btn-export").addEventListener("click", () => {
     Store.saveNow(state);
     Store.downloadExport(state);
+    writeBackupNote({ exportedAt: new Date().toISOString() });
     toast("Backup downloaded.");
   });
 
@@ -261,7 +263,7 @@
   });
 
   $("btn-reset").addEventListener("click", () => {
-    if (!window.confirm("Reset every level, streak and count? Words and sentences you added are kept. This cannot be undone, so export a backup first if you want one.")) return;
+    if (!window.confirm("Reset every level, streak and count? Words and sentences you added are kept. This cannot be undone, so export a backup first if you want one. If you are signed in to Google, the copy there is reset too.")) return;
     state.progress = {};
     state.phrases = {};
     state.stats = { rounds: 0, lastRoundAt: null };
@@ -269,6 +271,11 @@
     round = null; card = null;
     resetPracticeView();
     updateStartBlurb();
+    // Merged with Drive, a reset would come straight back, so it overwrites.
+    // Drive keeps the day's earlier copy as the previous file regardless.
+    resets += 1;
+    if (gAuth.signedIn) rememberGoogle({ ...gAuth, replaceOwed: true });
+    driveSync({ quiet: true });
     toast("Progress reset.");
   });
 
@@ -374,6 +381,207 @@
     rememberSync({ url: "", code: "", rev: 0, lastSyncedAt: null, lastError: null });
     toast("Syncing off.");
   });
+
+  /* ------------------------------------------------------------------
+     Google Drive
+
+     The copy of progress that is not on this device. gdrive.js does the
+     talking to Google; this decides when. Syncing happens on load, after a
+     round, and on coming back to the app. The sign-in lasts an hour, and
+     renewing it means a quick trip through Google that reloads the page, so
+     that only ever happens between rounds.
+     ------------------------------------------------------------------ */
+
+  let gAuth = Drive.loadAuth();
+  let gSyncing = false;
+  /* Bumped by Reset. A sync that was already under way when the reset
+     happened carries the old progress, so its answer is thrown away. The
+     reset itself is owed to Drive until it has been written there, and that
+     debt is saved with the sign-in, so a reset made offline or with an
+     expired sign-in still lands rather than being merged away later. */
+  let resets = 0;
+  const rememberGoogle = (next) => { gAuth = Drive.saveAuth(next); drawGoogle(); };
+  const midRound = () => !!(round && round.index < round.queue.length);
+
+  function drawGoogle() {
+    $("gsync").hidden = !Drive.configured();
+    const el = $("g-state");
+    el.classList.remove("on", "bad");
+    $("btn-g-in").hidden = gAuth.signedIn && !gAuth.needsTap;
+    $("btn-g-in").textContent = gAuth.needsTap ? "Sign in again" : "Sign in with Google";
+    $("btn-g-sync").hidden = !gAuth.signedIn || gAuth.needsTap;
+    $("btn-g-out").hidden = !gAuth.signedIn;
+    if (!gAuth.signedIn) { el.textContent = "Not signed in"; return; }
+    if (gSyncing) { el.textContent = "Syncing..."; return; }
+    if (gAuth.lastError) { el.textContent = gAuth.lastError; el.classList.add("bad"); return; }
+    const who = gAuth.email ? `${gAuth.email}, ` : "";
+    el.textContent = gAuth.lastSyncedAt
+      ? `${who}synced ${new Date(gAuth.lastSyncedAt).toLocaleString("en-GB")}`
+      : `${who}not synced yet`;
+    el.classList.add("on");
+  }
+
+  /* Swap in a state that came back from a sync. The one it replaces is kept
+     under its own key first: if a merge ever does something wrong, the
+     progress from just before it is still on the device. */
+  function adopt(next) {
+    try {
+      window.localStorage.setItem(Store.STORAGE_KEY + ".before-sync", JSON.stringify(state));
+    } catch (e) { /* full or private: the sync itself still stands */ }
+    state = next;
+    Store.saveNow(state);
+    round = null; card = null;
+    resetPracticeView();
+    refreshMenu(); refreshTopicSelect(); refreshWordSelect(); updateStartBlurb();
+  }
+
+  async function driveSync({ quiet = false, replace = false } = {}) {
+    if (!Drive.configured() || !gAuth.signedIn || gSyncing) return false;
+    if (gAuth.replaceOwed) replace = true;
+    if (!Drive.tokenValid(gAuth)) {
+      if (!quiet) renewGoogle({ asked: true });
+      return false;
+    }
+    gSyncing = true;
+    const gen = resets;
+    drawGoogle();
+    try {
+      Store.saveNow(state);
+      const before = JSON.stringify(state.progress) + JSON.stringify(state.phrases);
+      const merged = await Drive.run(gAuth.token, state, { replace });
+      // Only redraw when something actually came down; a round's end screen
+      // is worth keeping if the sync changed nothing.
+      if (gen === resets
+          && JSON.stringify(merged.progress) + JSON.stringify(merged.phrases) !== before) adopt(merged);
+      rememberGoogle({ ...gAuth, lastSyncedAt: new Date().toISOString(), lastError: null,
+        // Paid only by a replace that started after the latest reset.
+        replaceOwed: gAuth.replaceOwed && !(replace && gen === resets) });
+      if (!quiet) toast("Synced with Google Drive.");
+      return true;
+    } catch (e) {
+      if (e.expired) {
+        rememberGoogle({ ...gAuth, token: null, expiresAt: 0 });
+      } else {
+        rememberGoogle({ ...gAuth, lastError: e.message || "sync failed" });
+      }
+      if (!quiet) toast(`Could not sync: ${e.message}`, true);
+      return false;
+    } finally {
+      gSyncing = false;
+      drawGoogle();
+      if (gAuth.replaceOwed && Drive.tokenValid(gAuth)) driveSync({ quiet: true });
+    }
+  }
+
+  /* Renew an expired sign-in by going through Google and back. Automatic
+     renewals are held to once every ten minutes and never mid-round, so a
+     Google that keeps saying no cannot put the app in a loop. */
+  function renewGoogle({ asked = false } = {}) {
+    if (!Drive.configured() || !gAuth.signedIn) return;
+    if (!asked) {
+      if (gAuth.needsTap || midRound() || !navigator.onLine) return;
+      if (Date.now() - (gAuth.lastBounce || 0) < 10 * 60 * 1000) return;
+    }
+    Store.saveNow(state);
+    rememberGoogle({ ...gAuth, lastBounce: Date.now() });
+    Drive.begin({ silent: !asked || !gAuth.needsTap, hint: gAuth.email });
+  }
+
+  /* Back from Google, or an ordinary load. */
+  function startGoogle() {
+    const back = Drive.readReturn(location.hash);
+    if (back) {
+      history.replaceState(null, "", location.pathname + location.search);
+      if (back.ignored) {
+        if (Drive.tokenValid(gAuth)) driveSync({ quiet: true });
+        return;
+      }
+      if (back.error) {
+        // A silent renewal Google would not do: it needs a tap now.
+        if (gAuth.signedIn) rememberGoogle({ ...gAuth, needsTap: true, token: null, expiresAt: 0 });
+        if (!back.silent) toast("Google sign-in did not finish.", true);
+        return;
+      }
+      rememberGoogle({
+        ...gAuth, signedIn: true, needsTap: false, lastError: null, token: back.token,
+        // A minute early, so a sync never starts on a token about to lapse.
+        expiresAt: Date.now() + (back.expiresIn - 60) * 1000,
+      });
+      Drive.email(back.token).then((email) => rememberGoogle({ ...gAuth, email })).catch(() => {});
+      driveSync({ quiet: true }).then((worked) => {
+        if (back.silent) return;
+        toast(worked
+          ? "Signed in. Your progress is now kept in Google Drive."
+          : "Signed in, but the first sync failed. Try Sync now from the menu.", !worked);
+      });
+      return;
+    }
+    if (Drive.tokenValid(gAuth)) driveSync({ quiet: true });
+    else renewGoogle();
+  }
+
+  $("btn-g-in").addEventListener("click", () => {
+    if (!navigator.onLine) { toast("You are offline. Sign in when you have signal.", true); return; }
+    Store.saveNow(state);
+    Drive.begin({ silent: false, hint: gAuth.email });
+  });
+  $("btn-g-sync").addEventListener("click", () => driveSync());
+  $("btn-g-out").addEventListener("click", () => {
+    if (!window.confirm("Sign out of Google on this device? Your progress here stays, and so does the copy in Google Drive.")) return;
+    Drive.revoke(gAuth.token);
+    rememberGoogle({ ...Drive.loadAuth(), signedIn: false, token: null, expiresAt: 0, email: "",
+      lastSyncedAt: null, lastError: null, needsTap: false });
+    toast("Signed out of Google.");
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" || !gAuth.signedIn) return;
+    if (Drive.tokenValid(gAuth)) {
+      // Coming back to the app is when another device may have moved on.
+      if (!midRound() && Date.now() - new Date(gAuth.lastSyncedAt || 0) > 5 * 60 * 1000) {
+        driveSync({ quiet: true });
+      }
+    } else {
+      renewGoogle();
+    }
+  });
+
+  /* ------------------------------------------------------------------
+     Nothing backing it up
+
+     Progress that exists on one device and nowhere else is one deleted icon
+     from gone. Once there is enough to lose, and at most once a week, say so.
+     ------------------------------------------------------------------ */
+
+  const BACKUP_KEY = "idioma.backup.v1";
+  const readBackupNote = () => {
+    try { return JSON.parse(window.localStorage.getItem(BACKUP_KEY) || "{}"); } catch (e) { return {}; }
+  };
+  const writeBackupNote = (patch) => {
+    try { window.localStorage.setItem(BACKUP_KEY, JSON.stringify({ ...readBackupNote(), ...patch })); } catch (e) { /* private */ }
+  };
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+  function maybeNudgeBackup() {
+    if (gAuth.signedIn || Sync.configured(syncCfg)) return;
+    if (Drive.amount(state) < 10) return;
+    const note = readBackupNote();
+    const since = (t) => Date.now() - new Date(t || 0).getTime();
+    if (since(note.exportedAt) < WEEK || since(note.nudgedAt) < WEEK) return;
+    writeBackupNote({ nudgedAt: new Date().toISOString() });
+    $("backup-bar").hidden = false;
+  }
+
+  $("btn-backup-fix").addEventListener("click", () => {
+    $("backup-bar").hidden = true;
+    if (Drive.configured()) {
+      Store.saveNow(state);
+      Drive.begin({ silent: false });
+    } else {
+      $("btn-export").click();
+    }
+  });
+  $("btn-backup-later").addEventListener("click", () => { $("backup-bar").hidden = true; });
 
   /* ------------------------------------------------------------------
      Practice
@@ -1267,6 +1475,7 @@
     // The end of a round is the moment worth pushing: the most progress has
     // just been made and nobody is mid-card.
     doSync({ quiet: true });
+    driveSync({ quiet: true });
   }
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
@@ -1804,6 +2013,12 @@
     // On load, not blocking it: the app is already usable by the time this runs.
     doSync({ quiet: true });
   }
+  startGoogle();
+  maybeNudgeBackup();
+  /* Ask the browser to treat this site's storage as something to keep, not
+     a cache to clear when space runs short. Chrome mostly says yes; Safari
+     promises nothing, which is why Google Drive exists. */
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   refreshMenu();
   applyPace();
   drawModes();
