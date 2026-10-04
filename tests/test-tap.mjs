@@ -40,7 +40,10 @@ console.log('what a word means');
   const g = (t) => p.evaluate((tok) => window.Idioma.glossFor(tok), t);
   let x = await g('tengo');
   ok('tengo is tener', x && x.es === 'tener', JSON.stringify(x));
-  ok('and says which form', x && /I have/.test(x.form) && /present/.test(x.form), x && x.form);
+  ok('and says which form: tense, person and English', x && x.verb && x.verb.tense === 'present'
+    && x.verb.person === 'yo' && x.verb.english === 'I have', JSON.stringify(x && x.verb));
+  x = await g('tiene');
+  ok('the él form is he and she alike', x && x.verb && /^he \/ she has/.test(x.verb.english), JSON.stringify(x && x.verb));
   x = await g('fui');
   ok('an irregular past is found too', x && (x.es === 'ir' || x.es === 'ser'), JSON.stringify(x));
   x = await g('casas');
@@ -78,6 +81,17 @@ console.log('the teaching card');
     await taps[taps.length - 1].click();
     ok('tapping one opens what it means', await p.isVisible('#gloss')
       && (await p.textContent('#gloss-en')).length > 0);
+    // A verb form, in a sentence fixed here so it does not depend on which
+    // example the card drew: the rows are labelled, not run together.
+    await p.evaluate(() => { document.getElementById('teach-es').innerHTML = window.Idioma.tappable('Ella tiene hambre.'); });
+    await p.click('#teach-es .tap[data-tok="tiene"]');
+    const rows = await p.$$eval('#gloss-rows dt', (els) => els.map((e) => [e.textContent, e.nextElementSibling.textContent]));
+    const row = Object.fromEntries(rows);
+    ok('a verb shows labelled rows: what was tapped, tense, person, English',
+      row['You tapped'] === 'tiene' && row.Tense === 'present' && /él/.test(row.Person)
+      && /he \/ she has/.test(row['In English']), JSON.stringify(row));
+    await p.click('#teach-es .tap[data-tok="hambre"]');
+    ok('a plain word has no rows at all', await p.isHidden('#gloss-rows'));
     const box = await p.evaluate(() => {
       const g = document.getElementById('gloss').getBoundingClientRect();
       const t = document.querySelector('.tap.on').getBoundingClientRect();

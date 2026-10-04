@@ -270,7 +270,9 @@
         if (form && Engine.wordToken(form) === token) {
           let english = null;
           try { english = Verbs.englishPhrase(gloss, p.id, t.id); } catch (e) { english = null; }
-          return english ? `${english} \u00b7 ${t.name.toLowerCase()}` : `${p.label}, ${t.name.toLowerCase()}`;
+          // The tables translate the él form as he; it is just as much she.
+          if (english && p.id === "el") english = english.replace(/^he /, "he / she ");
+          return { tense: t.name.toLowerCase(), person: p.label, english };
         }
       }
     }
@@ -289,15 +291,15 @@
     const word = words().find((w) => w.id === id);
     if (!word) return null;
     let form = "";
+    let verb = null;
     if (Engine.wordToken(word.es) !== token && !word.es.includes(" ")) {
-      form = word.pos === "verb"
-        ? (verbFormOf(word, token) || `a form of ${word.es}`)
-        : `a form of ${word.es}`;
+      verb = word.pos === "verb" ? verbFormOf(word, token) : null;
+      form = verb ? "" : `a form of ${word.es}`;
     }
     // A word met inside a set phrase: say which phrase, so "cuesta" is not
     // explained as "how much does it cost?" with no warning.
     if (word.es.includes(" ")) form = `part of ${word.es}`;
-    return { es: word.es, en: word.en.join(", "), form, id: word.id };
+    return { es: word.es, en: word.en.join(", "), form, verb, id: word.id };
   }
 
   /* A Spanish string as markup with every word tappable. Punctuation and the
@@ -335,8 +337,20 @@
     $("gloss-es").textContent = g ? g.es : el.textContent;
     $("gloss-en").textContent = g ? g.en : "Not in the word list yet.";
     $("gloss-en").classList.toggle("muted", !g);
-    $("gloss-form").textContent = g && g.form ? g.form : "";
-    $("gloss-form").hidden = !(g && g.form);
+    /* Labelled rows, so "he / she is" never has to be decoded: what was
+       tapped, and for a verb which tense, which person and what that means in
+       English. Rows with nothing to say are left out. */
+    const rows = [];
+    if (g && (g.verb || g.form) && Engine.wordToken(g.es) !== token) rows.push(["You tapped", el.textContent]);
+    if (g && g.verb) {
+      rows.push(["Tense", g.verb.tense]);
+      rows.push(["Person", g.verb.person]);
+      if (g.verb.english) rows.push(["In English", g.verb.english]);
+    } else if (g && g.form) {
+      rows.push(["Form", g.form]);
+    }
+    $("gloss-rows").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+    $("gloss-rows").hidden = !rows.length;
     $("gloss-say").dataset.say = el.textContent;
     $("gloss-say").hidden = !Speech.supported;
     box.hidden = false;
