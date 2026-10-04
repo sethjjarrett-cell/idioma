@@ -193,6 +193,18 @@ main { max-width: 760px; margin: 0 auto;
   font-size: 22px; line-height: 1; padding: 4px 10px; letter-spacing: 0;
 }
 .btn.ghost:active { transform: none; }
+
+/* The sound switch in the header. On, it is the speaker in the accent
+   colour; off, it greys out and a line strikes through it, so the state reads
+   at a glance without a label. */
+.btn.sound-toggle { position: relative; display: inline-flex; align-items: center;
+  justify-content: center; width: 40px; height: 40px; padding: 0; color: var(--accent-deep); }
+.sound-toggle svg { width: 22px; height: 22px; display: block; }
+.sound-toggle .sound-off { display: none; position: absolute; left: 50%; top: 50%;
+  width: 26px; height: 2.5px; border-radius: 2px; background: currentColor;
+  transform: translate(-50%, -50%) rotate(-45deg); }
+.btn.sound-toggle[aria-pressed="false"] { color: var(--muted); opacity: 0.75; }
+.sound-toggle[aria-pressed="false"] .sound-off { display: block; }
 .btn.big { width: 100%; padding: 15px; font-size: 15px; }
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn:disabled:active { transform: none; box-shadow: 0 4px 0 var(--line2); }
