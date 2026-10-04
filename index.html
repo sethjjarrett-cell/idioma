@@ -281,6 +281,17 @@
 
 <div id="toast" class="toast" hidden></div>
 
+<!-- What a tapped word means. Placed under the word by app.js. -->
+<div class="gloss" id="gloss" role="dialog" aria-live="polite" hidden>
+  <div class="gloss-head">
+    <b id="gloss-es"></b>
+    <button class="say-btn" type="button" id="gloss-say" aria-label="Hear it"><svg aria-hidden="true"
+      focusable="false"><use href="#speaker-sym"/></svg></button>
+  </div>
+  <p id="gloss-en"></p>
+  <p class="muted small" id="gloss-form" hidden></p>
+</div>
+
 <main>
 
   <!-- ============================ PRACTICE ============================ -->

@@ -824,6 +824,11 @@ slower, marking with and without accents, one word missed, a second go, and
 nothing written to saved progress), the lesson tables reading themselves,
 the Check button on screen on a phone, and a browser with no voice at all.
 
+`test-tap.mjs` checks the lookup (forms, plurals, feminines, articles, a
+place name the bank does not have) and the page: which Spanish can be tapped
+and which cannot, the pop-up opening under the word and on screen, closing,
+and a tap while typing leaving the keyboard up.
+
 `test-pwa.mjs` serves the folder over http, since a service worker will not
 run from a file. It installs the app, checks the manifest and every icon,
 reloads it with the server down, then changes what the server says `sw.js`
@@ -858,6 +863,18 @@ buttons work either way. The choice is saved the moment it is made, so it is
 the same after a reload, a closed app or an update. It is kept on the device
 rather than synced, like dark mode. Nothing can tell a page that a phone is on silent, so if nothing is
 heard, the silent switch and the volume are the first things to check.
+
+## Tap a word
+
+Any word in a Spanish sentence on a card can be tapped for what it means: the
+teaching card's example, the sentence around a cloze blank, and the answer
+once it is shown. A small card opens under the word with the dictionary form,
+the English, which form it was (tengo: I have, present) and a speaker. It
+comes from the bank itself, through the same index that decides when a
+sentence is ready, so it is free, works offline, and knows tengo is tener,
+casas is casa and bonita is bonito. Articles and contractions get a line of
+grammar instead. Where the Spanish is the question, as on a recognition card,
+nothing can be tapped, because a tap would answer it.
 
 ## Four modes
 

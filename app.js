@@ -234,6 +234,132 @@
   }
 
   /* ------------------------------------------------------------------
+     Tap a word
+
+     Any word in a Spanish sentence on a card can be tapped for what it means.
+     The answer comes from the bank itself, through the same index that
+     decides when a sentence is ready, so it costs nothing and works offline:
+     tengo is found as tener, casas as casa, bonita as bonito.
+
+     Not on a card that is asking for the meaning: tapping the word on a
+     recognition card would answer it. So the taps go where the Spanish is
+     context rather than the question: the teaching card's example, a cloze
+     sentence around its blank, and the answer once it is shown.
+     ------------------------------------------------------------------ */
+
+  /* The grammar words the bank treats as free. Not vocabulary to be tested,
+     but a learner tapping one still wants to know what it is doing there. */
+  const GRAMMAR_WORDS = {
+    el: "the", la: "the", los: "the", las: "the",
+    un: "a, an", una: "a, an", unos: "some", unas: "some",
+    del: "of the: de and el run together", al: "to the: a and el run together",
+    lo: "it, or the before an adjective: lo bueno, the good thing",
+    que: "that, which, who; and than after más",
+  };
+
+  /* Which form of a verb this is, as English: tengo is "I have, present".
+     Only forms the tables actually produce, and a verb ending in se is looked
+     up without it, since the tables conjugate llamar, not llamarse. */
+  function verbFormOf(word, token) {
+    const base = /se$/.test(word.es) && word.es.length > 4 ? word.es.slice(0, -2) : word.es;
+    const gloss = (word.en && word.en[0]) || "";
+    for (const t of Verbs.VERBS.tenses) {
+      for (const p of Verbs.VERBS.persons) {
+        let form = null;
+        try { form = Verbs.conjugate(base, t.id, p.id); } catch (e) { form = null; }
+        if (form && Engine.wordToken(form) === token) {
+          let english = null;
+          try { english = Verbs.englishPhrase(gloss, p.id, t.id); } catch (e) { english = null; }
+          return english ? `${english} \u00b7 ${t.name.toLowerCase()}` : `${p.label}, ${t.name.toLowerCase()}`;
+        }
+      }
+    }
+    return null;
+  }
+
+  /* What a tapped word means, or null when the bank has never heard of it,
+     which is mostly names of places and people. */
+  function glossFor(token) {
+    const forms = Store.sentenceIndex(state).forms;
+    const id = Engine.wordForToken(token, forms);
+    if (!id) return null;
+    if (id === Engine.FREE_TOKEN) {
+      return GRAMMAR_WORDS[token] ? { es: token, en: GRAMMAR_WORDS[token], form: "", id: null } : null;
+    }
+    const word = words().find((w) => w.id === id);
+    if (!word) return null;
+    let form = "";
+    if (Engine.wordToken(word.es) !== token && !word.es.includes(" ")) {
+      form = word.pos === "verb"
+        ? (verbFormOf(word, token) || `a form of ${word.es}`)
+        : `a form of ${word.es}`;
+    }
+    // A word met inside a set phrase: say which phrase, so "cuesta" is not
+    // explained as "how much does it cost?" with no warning.
+    if (word.es.includes(" ")) form = `part of ${word.es}`;
+    return { es: word.es, en: word.en.join(", "), form, id: word.id };
+  }
+
+  /* A Spanish string as markup with every word tappable. Punctuation and the
+     cloze blank stay plain. `mark` is the part to pick out in bold, as the
+     teaching card does with the word it is teaching. */
+  function tappable(es, mark) {
+    const marked = new Set(mark ? Engine.tokenise(mark) : []);
+    return String(es == null ? "" : es).split(/(\s+)/).map((chunk) => {
+      if (!chunk.trim()) return chunk;
+      const m = chunk.match(/^([^\p{L}\p{N}]*)([\p{L}\p{N}'][\p{L}\p{N}'\-]*)([^\p{L}\p{N}]*)$/u);
+      // No word in it: punctuation, or the cloze blank, which may have a full
+      // stop or a question mark stuck to it.
+      if (!m) return esc(chunk).replace("_____", '<span class="blank">_____</span>');
+      const [, before, word, after] = m;
+      const token = Engine.wordToken(word);
+      const inner = `<span class="tap" data-tok="${esc(token)}">${esc(word)}</span>`;
+      return esc(before) + (marked.has(token) ? `<b>${inner}</b>` : inner) + esc(after);
+    }).join("");
+  }
+
+  function closeGloss() {
+    $("gloss").hidden = true;
+    document.querySelectorAll(".tap.on").forEach((t) => t.classList.remove("on"));
+  }
+
+  /* Open under the word, not at the foot of the screen: on a phone with the
+     keyboard up the foot of the screen is the keyboard. Clamped to the page
+     width so it never runs off the side. */
+  function openGloss(el) {
+    const token = el.dataset.tok;
+    const g = glossFor(token);
+    const box = $("gloss");
+    document.querySelectorAll(".tap.on").forEach((t) => t.classList.remove("on"));
+    el.classList.add("on");
+    $("gloss-es").textContent = g ? g.es : el.textContent;
+    $("gloss-en").textContent = g ? g.en : "Not in the word list yet.";
+    $("gloss-en").classList.toggle("muted", !g);
+    $("gloss-form").textContent = g && g.form ? g.form : "";
+    $("gloss-form").hidden = !(g && g.form);
+    $("gloss-say").dataset.say = el.textContent;
+    $("gloss-say").hidden = !Speech.supported;
+    box.hidden = false;
+    const r = el.getBoundingClientRect();
+    const width = box.offsetWidth;
+    const left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - width - 8));
+    box.style.left = `${left}px`;
+    box.style.top = `${r.bottom + window.scrollY + 6}px`;
+    autoSay(el.textContent);
+  }
+
+  document.addEventListener("click", (e) => {
+    const tap = e.target.closest(".tap");
+    if (tap) { openGloss(tap); return; }
+    if (!e.target.closest("#gloss")) closeGloss();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGloss(); });
+  // A tap on a word while typing a cloze answer must not fold the keyboard away.
+  for (const type of ["pointerdown", "mousedown"]) {
+    document.addEventListener(type, (e) => { if (e.target.closest(".tap, #gloss")) e.preventDefault(); });
+  }
+
+  /* ------------------------------------------------------------------
      Menu, settings, backup
      ------------------------------------------------------------------ */
 
@@ -1019,6 +1145,7 @@
   });
 
   function resetPracticeView() {
+    closeGloss();
     pickersOpen = false;
     $("card").hidden = true;
     $("round-bar").hidden = true;
@@ -1193,8 +1320,11 @@
       : (card.intro && !card.relearn) ? ""
       : `L${cardProgress(card).level}`;
     const shown = spanishPrompt(card);
+    closeGloss();
+    // A cloze sentence is context around the blank, so its words can be
+    // tapped; any other prompt is the question itself and cannot.
     $("card-prompt").innerHTML = (card.band.key === "cloze"
-      ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
+      ? tappable(card.prompt)
       : esc(card.prompt)) + sayButton(shown);
     $("card-prompt").hidden = !!card.listen;
     $("listen").hidden = !card.listen;
@@ -1264,8 +1394,7 @@
 
     if (c.example) {
       // The word is picked out of the sentence so the eye lands on it.
-      $("teach-es").innerHTML = esc(c.example.es)
-        .replace(esc(c.example.target), `<b>${esc(c.example.target)}</b>`);
+      $("teach-es").innerHTML = tappable(c.example.es, c.example.target);
       $("teach-en").textContent = c.example.en;
       $("btn-say-example").dataset.say = c.example.es;
       $("btn-say-example").hidden = !Speech.supported;
@@ -1534,7 +1663,11 @@
     $("verdict-diff").innerHTML = res.diff ? renderDiff(res.diff) : "";
     $("verdict-diff").hidden = !res.diff;
 
-    $("verdict-answer").textContent = card.reveal;
+    // The answer is tappable when it is Spanish of more than one word: a
+    // sentence, a phrase, or what a listening card read out.
+    const spanishAnswer = askedFor(card) === "es" && /\s/.test(String(card.reveal).trim());
+    if (spanishAnswer) $("verdict-answer").innerHTML = tappable(card.reveal);
+    else $("verdict-answer").textContent = card.reveal;
     const spoken = spanishOf(card);
     $("btn-say-answer").dataset.say = spoken || "";
     $("btn-say-answer").hidden = !Speech.supported || !spoken;
@@ -1551,7 +1684,8 @@
       : "";
     $("verdict-say").hidden = !$("verdict-say").textContent;
 
-    $("verdict-context").textContent = card.listen ? "" : card.revealContext || "";
+    if (card.band.key === "cloze") $("verdict-context").innerHTML = tappable(card.revealContext);
+    else $("verdict-context").textContent = card.listen ? "" : card.revealContext || "";
     $("verdict-context").hidden = card.listen || !card.revealContext;
 
     const note = card.word.note;
@@ -2279,5 +2413,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable };
 })();
