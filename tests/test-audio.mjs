@@ -207,6 +207,29 @@ console.log('reading aloud switched off');
   await ctx.close();
 }
 
+console.log('the switch in the header');
+{
+  const { ctx, p } = await page(FAKE_VOICE);
+  ok('is there, and on', await p.isVisible('#btn-sound')
+    && await p.getAttribute('#btn-sound', 'aria-pressed') === 'true');
+  await p.click('#btn-sound');
+  ok('one tap turns reading aloud off', await p.getAttribute('#btn-sound', 'aria-pressed') === 'false'
+    && await p.evaluate(() => JSON.parse(localStorage.getItem('idioma.audio.v1')).auto === false));
+  await p.click('#btn-menu');
+  ok('and the menu agrees', !(await p.isChecked('#set-audio')));
+  await p.click('#btn-menu');
+  await p.reload(); await p.waitForTimeout(300);
+  ok('it is still off after a reload', await p.getAttribute('#btn-sound', 'aria-pressed') === 'false');
+  await p.evaluate(() => { window.__spoken.length = 0; });
+  await p.click('#btn-start'); await p.waitForTimeout(200);
+  ok('so a new word arrives in silence', await said(p) === 0);
+  await p.click('#btn-sound');
+  ok('and one more tap turns it back on', await p.getAttribute('#btn-sound', 'aria-pressed') === 'true');
+  await p.click('#btn-menu');
+  ok('with the menu following', await p.isChecked('#set-audio'));
+  await ctx.close();
+}
+
 console.log('tapping a speaker keeps the keyboard up');
 {
   const { ctx, p } = await page(FAKE_VOICE);
@@ -360,6 +383,7 @@ console.log('a browser with no voice at all');
 {
   const { ctx, p } = await page(NO_VOICE);
   ok('Listen is not offered', await p.isHidden('#modes [data-mode="listen"]'));
+  ok('and there is no sound switch to tap', await p.isHidden('#btn-sound'));
   await setMode(p, 'listen');
   await p.reload(); await p.waitForTimeout(300);
   ok('a saved choice of it falls back to words', await p.evaluate(() =>

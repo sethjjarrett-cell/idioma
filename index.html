@@ -163,6 +163,13 @@
     <button class="tab" data-screen="progress">Progress</button>
   </nav>
   <div class="spacer"></div>
+  <!-- Reading aloud, on or off, one tap from anywhere. The same setting as
+       the one in the menu, and remembered on this device. -->
+  <button class="btn ghost sound-toggle" id="btn-sound" type="button" aria-pressed="true"
+          aria-label="Read Spanish aloud" title="Read Spanish aloud">
+    <svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg>
+    <i class="sound-off" aria-hidden="true"></i>
+  </button>
   <button class="btn ghost" id="btn-menu" aria-label="More">&#8943;</button>
 </header>
 

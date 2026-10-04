@@ -852,9 +852,11 @@ one word. A speaker button sits beside the Spanish wherever it appears, and on
 the Lessons screen every form in a verb table and every pronunciation example
 reads itself when tapped.
 
-Read Spanish aloud, in the menu, turns the automatic reading off; the
-buttons still work. It is kept on the device rather than synced, like dark
-mode. Nothing can tell a page that a phone is on silent, so if nothing is
+The speaker in the header turns the automatic reading off and on in one tap,
+from any screen; Read Spanish aloud in the menu is the same setting. The
+buttons work either way. The choice is saved the moment it is made, so it is
+the same after a reload, a closed app or an update. It is kept on the device
+rather than synced, like dark mode. Nothing can tell a page that a phone is on silent, so if nothing is
 heard, the silent switch and the volume are the first things to check.
 
 ## Four modes

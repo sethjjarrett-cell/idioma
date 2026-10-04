@@ -292,14 +292,31 @@
       : "Nothing saved yet.";
   }
 
-  $("set-audio").addEventListener("change", (e) => {
-    audio.auto = e.target.checked;
+  /* Two switches for one setting: the checkbox in the menu and the speaker
+     in the header. Both go through here, so they can never disagree, and the
+     choice is saved at once, so it is the same after a reload, a closed app
+     or an update. Off also stops anything already being read. */
+  function setAudio(on) {
+    audio.auto = !!on;
     saveAudio();
-    toast(audio.auto
-      ? "Spanish will be read aloud, on this device."
-      : "Reading aloud off. The speaker buttons still work.");
+    drawSoundToggle();
+    $("set-audio").checked = Speech.supported && audio.auto;
     if (audio.auto) say("Hola.");
-  });
+    else Speech.stop();
+    toast(audio.auto
+      ? "Reading Spanish aloud."
+      : "Reading aloud off. The speaker buttons still work.");
+  }
+
+  function drawSoundToggle() {
+    const btn = $("btn-sound");
+    btn.hidden = !Speech.supported;
+    btn.setAttribute("aria-pressed", audio.auto ? "true" : "false");
+    btn.title = audio.auto ? "Reading Spanish aloud: tap to turn off" : "Not reading aloud: tap to turn on";
+  }
+
+  $("set-audio").addEventListener("change", (e) => setAudio(e.target.checked));
+  $("btn-sound").addEventListener("click", () => setAudio(!audio.auto));
 
   $("set-dark").addEventListener("change", (e) => {
     applyTheme(e.target.checked ? "dark" : "paper");
@@ -2202,6 +2219,7 @@
      works as it did before there was any sound. */
   document.body.classList.toggle("no-speech", !Speech.supported);
   document.querySelector('#modes [data-mode="listen"]').hidden = !Speech.supported;
+  drawSoundToggle();
   drawSync();
   /* A pairing link opened on the second device. Taken before the first sync,
      so the very next thing that happens is a pull from the box the link
