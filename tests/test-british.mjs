@@ -149,7 +149,7 @@ console.log('--- practice the noun, practise the verb ---');
 /* Both spellings are correct British English in their own place, so only the
    forms that can only be one thing are checked. */
 const everything = [read('index.html'), read('app.js'), read('verbs.js'),
-                    read('phrases.js'), read('topics.js'), read('senses.js')].join('\n');
+                    read('phrases.js'), read('topics.js'), read('senses.js'), read('grammar.js')].join('\n');
 const prose = proseOf(read('index.html')) + '\n' + read('app.js');
 ok('no "practicing" or "practiced"',
   !/\bpractic(ing|ed)\b/i.test(everything),

@@ -370,6 +370,20 @@ main { max-width: 760px; margin: 0 auto;
 td[data-say]:active, .example b[data-say]:active { background: var(--accent-soft); }
 body.no-speech .say-hint { display: none; }
 
+/* A grammar card's choices: two to four big targets, two to a row. */
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.choices .btn { text-transform: none; letter-spacing: 0; font-size: 17px; padding: 13px 10px; }
+.choices .btn.long { grid-column: 1 / -1; }
+
+/* A lesson's classic mistake: the wrong version struck out, the right one
+   beside it. */
+.mistake { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+  background: var(--panel2); border: 2px solid var(--line); border-radius: 12px; padding: 9px 12px; }
+.mistake s { color: var(--bad-deep); }
+.mistake b { color: var(--good-deep); }
+.mistake .muted { flex-basis: 100%; }
+.lesson-body p { margin: 0 0 8px; }
+
 /* Tappable words. A dotted underline says "there is more here" without
    turning a sentence into a row of buttons. */
 .tap { cursor: pointer; border-radius: 4px;
@@ -644,7 +658,10 @@ table.conj td b { color: var(--accent-deep); }
   display: grid; gap: 8px; margin: 0 0 14px;
   grid-template-columns: 1fr 1fr;
 }
-@media (min-width: 620px) { .modes { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 620px) { .modes { grid-template-columns: repeat(5, 1fr); } }
+/* Five on a phone is two rows of two and one on its own, which reads better
+   across the full width than as half a row with a hole beside it. */
+@media (max-width: 619px) { .modes .mode:last-child:nth-child(odd) { grid-column: 1 / -1; } }
 .mode {
   display: flex; flex-direction: column; gap: 2px; text-align: left;
   background: var(--panel); border: 2px solid var(--line); color: var(--muted);
