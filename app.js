@@ -77,7 +77,7 @@
      be its own small annoyance. */
   // Listening needs a voice. Without one the mode is not offered at all, and
   // a saved choice of it falls back to words like any unknown mode does.
-  const MODES = ["words", "verbs", "sentences"].concat(Speech.supported ? ["listen"] : []);
+  const MODES = ["words", "verbs", "sentences", "grammar"].concat(Speech.supported ? ["listen"] : []);
   const mode = () => (MODES.includes(state.settings.mode) ? state.settings.mode : "words");
   const sentencesFor = (wordId) => sentences().filter((s) => s.wordId === wordId);
   const commit = () => Store.save(state);
@@ -211,7 +211,7 @@
      a recognition or teaching card, the infinitive on a drill. Never the
      prompt of a card that asks for Spanish, which would answer it. */
   function spanishPrompt(c) {
-    if (c.listen) return "";
+    if (c.listen || c.grammar) return "";
     if (c.intro || c.band.key === "recognition") return c.word.es;
     if (c.drill) return c.prompt;
     return "";
@@ -231,6 +231,146 @@
     document.addEventListener(type, (e) => {
       if (e.target.closest(".say-btn, #listen .btn")) e.preventDefault();
     });
+  }
+
+  /* ------------------------------------------------------------------
+     Tap a word
+
+     Any word in a Spanish sentence on a card can be tapped for what it means.
+     The answer comes from the bank itself, through the same index that
+     decides when a sentence is ready, so it costs nothing and works offline:
+     tengo is found as tener, casas as casa, bonita as bonito.
+
+     Not on a card that is asking for the meaning: tapping the word on a
+     recognition card would answer it. So the taps go where the Spanish is
+     context rather than the question: the teaching card's example, a cloze
+     sentence around its blank, and the answer once it is shown.
+     ------------------------------------------------------------------ */
+
+  /* The grammar words the bank treats as free. Not vocabulary to be tested,
+     but a learner tapping one still wants to know what it is doing there. */
+  const GRAMMAR_WORDS = {
+    el: "the", la: "the", los: "the", las: "the",
+    un: "a, an", una: "a, an", unos: "some", unas: "some",
+    del: "of the: de and el run together", al: "to the: a and el run together",
+    lo: "it, or the before an adjective: lo bueno, the good thing",
+    que: "that, which, who; and than after más",
+  };
+
+  /* Which form of a verb this is, as English: tengo is "I have, present".
+     Only forms the tables actually produce, and a verb ending in se is looked
+     up without it, since the tables conjugate llamar, not llamarse. */
+  function verbFormOf(word, token) {
+    const base = /se$/.test(word.es) && word.es.length > 4 ? word.es.slice(0, -2) : word.es;
+    const gloss = (word.en && word.en[0]) || "";
+    for (const t of Verbs.VERBS.tenses) {
+      for (const p of Verbs.VERBS.persons) {
+        let form = null;
+        try { form = Verbs.conjugate(base, t.id, p.id); } catch (e) { form = null; }
+        if (form && Engine.wordToken(form) === token) {
+          let english = null;
+          try { english = Verbs.englishPhrase(gloss, p.id, t.id); } catch (e) { english = null; }
+          // The tables translate the él form as he; it is just as much she.
+          if (english && p.id === "el") english = english.replace(/^he /, "he / she ");
+          return { tense: t.name.toLowerCase(), person: p.label, english };
+        }
+      }
+    }
+    return null;
+  }
+
+  /* What a tapped word means, or null when the bank has never heard of it,
+     which is mostly names of places and people. */
+  function glossFor(token) {
+    const forms = Store.sentenceIndex(state).forms;
+    const id = Engine.wordForToken(token, forms);
+    if (!id) return null;
+    if (id === Engine.FREE_TOKEN) {
+      return GRAMMAR_WORDS[token] ? { es: token, en: GRAMMAR_WORDS[token], form: "", id: null } : null;
+    }
+    const word = words().find((w) => w.id === id);
+    if (!word) return null;
+    let form = "";
+    let verb = null;
+    if (Engine.wordToken(word.es) !== token && !word.es.includes(" ")) {
+      verb = word.pos === "verb" ? verbFormOf(word, token) : null;
+      form = verb ? "" : `a form of ${word.es}`;
+    }
+    // A word met inside a set phrase: say which phrase, so "cuesta" is not
+    // explained as "how much does it cost?" with no warning.
+    if (word.es.includes(" ")) form = `part of ${word.es}`;
+    return { es: word.es, en: word.en.join(", "), form, verb, id: word.id };
+  }
+
+  /* A Spanish string as markup with every word tappable. Punctuation and the
+     cloze blank stay plain. `mark` is the part to pick out in bold, as the
+     teaching card does with the word it is teaching. */
+  function tappable(es, mark) {
+    const marked = new Set(mark ? Engine.tokenise(mark) : []);
+    return String(es == null ? "" : es).split(/(\s+)/).map((chunk) => {
+      if (!chunk.trim()) return chunk;
+      const m = chunk.match(/^([^\p{L}\p{N}]*)([\p{L}\p{N}'][\p{L}\p{N}'\-]*)([^\p{L}\p{N}]*)$/u);
+      // No word in it: punctuation, or the cloze blank, which may have a full
+      // stop or a question mark stuck to it.
+      if (!m) return esc(chunk).replace(/_{3,}/, (b) => `<span class="blank">${b}</span>`);
+      const [, before, word, after] = m;
+      const token = Engine.wordToken(word);
+      const inner = `<span class="tap" data-tok="${esc(token)}">${esc(word)}</span>`;
+      return esc(before) + (marked.has(token) ? `<b>${inner}</b>` : inner) + esc(after);
+    }).join("");
+  }
+
+  function closeGloss() {
+    $("gloss").hidden = true;
+    document.querySelectorAll(".tap.on").forEach((t) => t.classList.remove("on"));
+  }
+
+  /* Open under the word, not at the foot of the screen: on a phone with the
+     keyboard up the foot of the screen is the keyboard. Clamped to the page
+     width so it never runs off the side. */
+  function openGloss(el) {
+    const token = el.dataset.tok;
+    const g = glossFor(token);
+    const box = $("gloss");
+    document.querySelectorAll(".tap.on").forEach((t) => t.classList.remove("on"));
+    el.classList.add("on");
+    $("gloss-es").textContent = g ? g.es : el.textContent;
+    $("gloss-en").textContent = g ? g.en : "Not in the word list yet.";
+    $("gloss-en").classList.toggle("muted", !g);
+    /* Labelled rows, so "he / she is" never has to be decoded: what was
+       tapped, and for a verb which tense, which person and what that means in
+       English. Rows with nothing to say are left out. */
+    const rows = [];
+    if (g && (g.verb || g.form) && Engine.wordToken(g.es) !== token) rows.push(["You tapped", el.textContent]);
+    if (g && g.verb) {
+      rows.push(["Tense", g.verb.tense]);
+      rows.push(["Person", g.verb.person]);
+      if (g.verb.english) rows.push(["In English", g.verb.english]);
+    } else if (g && g.form) {
+      rows.push(["Form", g.form]);
+    }
+    $("gloss-rows").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+    $("gloss-rows").hidden = !rows.length;
+    $("gloss-say").dataset.say = el.textContent;
+    $("gloss-say").hidden = !Speech.supported;
+    box.hidden = false;
+    const r = el.getBoundingClientRect();
+    const width = box.offsetWidth;
+    const left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - width - 8));
+    box.style.left = `${left}px`;
+    box.style.top = `${r.bottom + window.scrollY + 6}px`;
+    autoSay(el.textContent);
+  }
+
+  document.addEventListener("click", (e) => {
+    const tap = e.target.closest(".tap");
+    if (tap) { openGloss(tap); return; }
+    if (!e.target.closest("#gloss")) closeGloss();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGloss(); });
+  // A tap on a word while typing a cloze answer must not fold the keyboard away.
+  for (const type of ["pointerdown", "mousedown"]) {
+    document.addEventListener(type, (e) => { if (e.target.closest(".tap, #gloss")) e.preventDefault(); });
   }
 
   /* ------------------------------------------------------------------
@@ -745,6 +885,17 @@
   };
 
   function updateStartBlurb() {
+    if (mode() === "grammar") {
+      const lesson = grammarLesson();
+      $("start-picked").hidden = true;
+      const count = lesson ? lesson.items.length : GRAMMAR.lessons.reduce((n, l) => n + l.items.length, 0);
+      $("start-blurb").textContent = lesson
+        ? `${lesson.title}: ${lesson.blurb} ${Math.min(count, Engine.CONFIG.GRAMMAR_ROUND_SIZE)} questions from ${count}, `
+          + `each with the reason. New to it? Read the lesson on the Lessons screen first.`
+        : `A mix of all ${GRAMMAR.lessons.length} topics, ${Engine.CONFIG.GRAMMAR_ROUND_SIZE} questions a round, `
+          + `each with the reason. Pick a topic above to drill just one. Practice only: no word's level moves.`;
+      return;
+    }
     if (mode() === "listen") {
       const pool = listenPool();
       const n = pool.sentences.length + pool.words.length;
@@ -860,12 +1011,14 @@
      anything. "Words" on its own is the whole truth when nothing is filtered,
      and "Words · all" would be noise. */
   function pickerSummaryText() {
-    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences", listen: "Listen" }[mode()];
+    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences", listen: "Listen", grammar: "Grammar" }[mode()];
     let narrowed = null;
     if (mode() === "verbs") {
       narrowed = pick && pick.kind === "drill" ? pick.name
         : tenseName() === "mixed" ? "mixed tenses"
         : (Verbs.VERBS.tenses.find((t) => t.id === tenseName()) || {}).name;
+    } else if (mode() === "grammar") {
+      narrowed = grammarLesson() ? grammarLesson().title : null;
     } else if (mode() === "words") {
       narrowed = [pick && pick.kind === "topic" ? pick.name : null,
                   posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
@@ -902,6 +1055,12 @@
   const tenseName = () => state.settings.tense || "present";
   const posName = () => state.settings.pos || "all";
   const subjectName = () => state.settings.subject || "all";
+  /* Which grammar topic a round drills. Not set in a state saved before there
+     was any grammar, which reads as mixed, so old progress needs nothing done
+     to it. */
+  const GRAMMAR = window.GRAMMAR || { lessons: [] };
+  const grammarName = () => state.settings.grammar || "mixed";
+  const grammarLesson = () => GRAMMAR.lessons.find((l) => l.id === grammarName()) || null;
 
   /* Parts of speech, grouped. The bank has twelve of them and twelve pills is
      not a choice, it is a menu; these are the distinctions a learner would
@@ -941,7 +1100,8 @@
     const showTense = mode() === "verbs" && !(pick && pick.kind === "drill");
     const showPos = mode() === "words" && !(pick && pick.kind === "drill");
     const showTheme = mode() === "sentences";
-    $("filters").hidden = !(showTense || showPos || showTheme);
+    const showGrammar = mode() === "grammar";
+    $("filters").hidden = !(showTense || showPos || showTheme || showGrammar);
     if ($("filters").hidden) return;
 
     let label, options, current, attr;
@@ -959,6 +1119,12 @@
       options = POS_GROUPS
         .map((g) => ({ id: g.id, name: g.name, n: pool.filter(g.has).length }))
         .filter((o) => o.id === "all" || o.n > 0);
+    } else if (showGrammar) {
+      label = "Topic";
+      attr = "grammar";
+      current = grammarLesson() ? grammarName() : "mixed";
+      options = [{ id: "mixed", name: "Mixed" }]
+        .concat(GRAMMAR.lessons.map((l) => ({ id: l.id, name: l.short })));
     } else {
       label = "About";
       attr = "subject";
@@ -1019,6 +1185,7 @@
   });
 
   function resetPracticeView() {
+    closeGloss();
     pickersOpen = false;
     $("card").hidden = true;
     $("round-bar").hidden = true;
@@ -1031,6 +1198,7 @@
     let picked;
     if (mode() === "sentences") return startSentenceRound();
     if (mode() === "listen") return startListenRound();
+    if (mode() === "grammar") return startGrammarRound();
 
     /* A table picked from the Lessons screen is a standing choice and lives in
        `pick`. The starter drill is not: it is rebuilt from the tense pills on
@@ -1148,6 +1316,88 @@
     nextCard();
   }
 
+  /* Grammar. A round is one topic's questions shuffled, or for Mixed, an even
+     spread across every topic so a round is not all ser and estar. */
+  function startGrammarRound() {
+    const size = Engine.CONFIG.GRAMMAR_ROUND_SIZE;
+    const lesson = grammarLesson();
+    let picked;
+    if (lesson) {
+      picked = Engine.shuffle(lesson.items).slice(0, size).map((item) => ({ lesson, item }));
+    } else {
+      const decks = Engine.shuffle(GRAMMAR.lessons).map((l) => Engine.shuffle(l.items).map((item) => ({ lesson: l, item })));
+      picked = [];
+      for (let i = 0; picked.length < size && decks.some((d) => d.length); i = (i + 1) % decks.length) {
+        if (decks[i].length) picked.push(decks[i].shift());
+      }
+    }
+    if (!picked.length) { toast("No grammar questions to drill.", true); return; }
+    round = { queue: picked, index: 0, results: [], movers: [], drill: true, grammar: true };
+    pickersOpen = false;
+    $("round-start").hidden = true;
+    $("round-end").hidden = true;
+    $("round-bar").hidden = false;
+    nextCard();
+  }
+
+  /* The sentence with the gap filled in. "—" means nothing goes there. */
+  const fillGap = (es, option) => (option === "—"
+    ? es.replace(/___\s?/, "")
+    : es.replace("___", option));
+  const optionLabel = (option) => (option === "—" ? "nothing" : option);
+
+  /* A grammar question as a card. It counts as a drill, so it moves no level
+     and is never written to saved progress; the reason for the answer rides in
+     the note slot the verdict already shows. */
+  function grammarCard(entry) {
+    const { lesson, item } = entry;
+    const full = fillGap(item.es, item.answer);
+    return {
+      drill: true, grammar: true, isSentence: true,
+      word: { id: null, es: full, note: item.why },
+      band: { key: "grammar", label: lesson.title },
+      levelLabel: "",
+      fellBack: false,
+      prompt: item.es,
+      promptHint: item.en,
+      accepted: [item.answer],
+      reveal: full,
+      revealContext: "",
+      options: Engine.shuffle(item.options),
+      answer: item.answer,
+    };
+  }
+
+  function drawChoices(c) {
+    $("choices").hidden = !c.grammar;
+    if (!c.grammar) { $("choices").innerHTML = ""; return; }
+    $("choices").innerHTML = c.options.map((o, i) => {
+      const label = optionLabel(o);
+      return `<button class="btn choice${label.length > 14 ? " long" : ""}" type="button" data-choice="${esc(o)}"`
+        + ` aria-keyshortcuts="${i + 1}">${esc(label)}</button>`;
+    }).join("");
+  }
+
+  function choose(option) {
+    if (!card || !card.grammar || !$("verdict").hidden) return;
+    const right = option === card.answer;
+    $("choices").hidden = true;
+    applyAndShow({ correct: right, almost: false, matched: right ? option : null, near: false,
+      reason: null, diff: null, sibling: null, equivalent: false }, option);
+  }
+
+  $("choices").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-choice]");
+    if (btn) choose(btn.dataset.choice);
+  });
+
+  // On a keyboard, 1 to 4 pick the choices in the order they are shown.
+  document.addEventListener("keydown", (e) => {
+    if (!card || !card.grammar || !$("verdict").hidden || $("card").hidden) return;
+    const n = Number(e.key);
+    if (n >= 1 && n <= card.options.length) { e.preventDefault(); choose(card.options[n - 1]); }
+  });
+
   /* A listening card, dressed like any other so the practice screen draws it
      without special cases: the answer is the Spanish that was read, and the
      English waits for the verdict. */
@@ -1173,6 +1423,7 @@
     const item = round.queue[round.index];
     // A drill item is already a card; a word or a sentence has to be built.
     card = round.listen ? listenCard(item)
+      : round.grammar ? grammarCard(item)
       : round.drill ? drillCard(item)
       : round.sentences
       ? Engine.sentenceCard(item.item, Store.peekPhrase(state, item.id), {
@@ -1193,8 +1444,11 @@
       : (card.intro && !card.relearn) ? ""
       : `L${cardProgress(card).level}`;
     const shown = spanishPrompt(card);
-    $("card-prompt").innerHTML = (card.band.key === "cloze"
-      ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
+    closeGloss();
+    // A cloze sentence is context around the blank, so its words can be
+    // tapped; any other prompt is the question itself and cannot.
+    $("card-prompt").innerHTML = (card.band.key === "cloze" || card.grammar
+      ? tappable(card.prompt)
       : esc(card.prompt)) + sayButton(shown);
     $("card-prompt").hidden = !!card.listen;
     $("listen").hidden = !card.listen;
@@ -1214,7 +1468,8 @@
     drawTeach(card);
     drawBuild(card);
     const building = card.band.key === "build";
-    $("answer-form").hidden = !!card.intro || building;
+    drawChoices(card);
+    $("answer-form").hidden = !!card.intro || building || !!card.grammar;
     $("accents").hidden = !SPANISH_BACK.has(card.band.key);
     $("card").classList.toggle("teaching", !!card.intro);
     $("card").classList.toggle("building", building);
@@ -1230,6 +1485,7 @@
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
     (card.intro ? $("btn-got")
       : card.band.key === "build" ? $("btn-build-check")
+      : card.grammar ? $("choices").querySelector(".choice")
       : $("answer")).focus();
     // A listening card is nothing without its sound, so it always plays. Any
     // other card reads its Spanish only if reading aloud is on.
@@ -1270,8 +1526,7 @@
 
     if (c.example) {
       // The word is picked out of the sentence so the eye lands on it.
-      $("teach-es").innerHTML = esc(c.example.es)
-        .replace(esc(c.example.target), `<b>${esc(c.example.target)}</b>`);
+      $("teach-es").innerHTML = tappable(c.example.es, c.example.target);
       $("teach-en").textContent = c.example.en;
       $("btn-say-example").dataset.say = c.example.es;
       $("btn-say-example").hidden = !Speech.supported;
@@ -1525,6 +1780,8 @@
       detail = res.reason === "sense" ? whySense(res) : (WHY[res.reason] || "close");
     }
     else if (outcome === "wrong" && typed.trim()) detail = `you typed "${typed.trim()}"`;
+    // For a choice, the choice is what was "typed", and saying so is enough.
+    if (card.grammar) detail = outcome === "correct" ? "" : `you chose "${optionLabel(typed)}"`;
     // How much of it came through says more about listening than a verdict does.
     if (card.listen) {
       detail = res.of ? `${res.heard} of ${res.of} ${res.of === 1 ? "word" : "words"}` : "";
@@ -1541,7 +1798,11 @@
     $("verdict-diff").innerHTML = res.diff ? renderDiff(res.diff) : "";
     $("verdict-diff").hidden = !res.diff;
 
-    $("verdict-answer").textContent = card.reveal;
+    // The answer is tappable when it is Spanish of more than one word: a
+    // sentence, a phrase, or what a listening card read out.
+    const spanishAnswer = askedFor(card) === "es" && /\s/.test(String(card.reveal).trim());
+    if (spanishAnswer) $("verdict-answer").innerHTML = tappable(card.reveal);
+    else $("verdict-answer").textContent = card.reveal;
     const spoken = spanishOf(card);
     $("btn-say-answer").dataset.say = spoken || "";
     $("btn-say-answer").hidden = !Speech.supported || !spoken;
@@ -1558,7 +1819,8 @@
       : "";
     $("verdict-say").hidden = !$("verdict-say").textContent;
 
-    $("verdict-context").textContent = card.listen ? "" : card.revealContext || "";
+    if (card.band.key === "cloze") $("verdict-context").innerHTML = tappable(card.revealContext);
+    else $("verdict-context").textContent = card.listen ? "" : card.revealContext || "";
     $("verdict-context").hidden = card.listen || !card.revealContext;
 
     const note = card.word.note;
@@ -1827,7 +2089,40 @@
       <thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
+  function renderGrammarLessons() {
+    $("grammar-lessons").innerHTML = GRAMMAR.lessons.map((l) => `
+      <details class="lesson" data-grammar="${esc(l.id)}">
+        <summary>${esc(l.title)}<span class="muted small">${esc(l.blurb)}</span></summary>
+        <div class="lesson-body">${l.explain.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+        <div class="examples">
+          ${l.examples.map(([es, en]) => `
+            <div class="example">
+              <span>${tappable(es)}${sayButton(es)}</span>
+              <span class="muted small">${esc(en)}</span>
+            </div>`).join("")}
+        </div>
+        ${l.mistake ? `<p class="mistake"><s>${esc(l.mistake[0])}</s><b>${tappable(l.mistake[1])}</b>`
+          + `<span class="muted small">${esc(l.mistake[2])}</span></p>` : ""}
+        <button class="btn" data-act="grammar">Practise this</button>
+      </details>`).join("");
+  }
+
+  $("grammar-lessons").addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-act="grammar"]');
+    if (!btn) return;
+    state.settings.mode = "grammar";
+    state.settings.grammar = btn.closest("[data-grammar]").dataset.grammar;
+    commit();
+    round = null; card = null;
+    drawModes();
+    showScreen("practice");
+    updateStartBlurb();
+    resetPracticeView();
+    startRound();
+  });
+
   function renderLessons() {
+    renderGrammarLessons();
     $("verb-tenses").innerHTML = Verbs.VERBS.tenses.map((t) => `
       <details class="lesson" data-drill="tense:${esc(t.id)}">
         <summary>${esc(t.name)}<span class="muted small">${esc(t.blurb)}</span></summary>
@@ -2286,5 +2581,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable };
 })();

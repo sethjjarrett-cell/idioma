@@ -59,6 +59,7 @@ tools/sync/     the forty-line server, and how to deploy it once
 verbs.js        the ending tables, and the one function that reads them
 pronounce.js    Spanish spelling to an English respelling; no data, all rules
 speak.js        reads Spanish aloud with the device's own voice
+grammar.js      fifteen grammar lessons and their drills
 engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
 sync.js         the merge, and the two calls that move one JSON blob
@@ -824,6 +825,11 @@ slower, marking with and without accents, one word missed, a second go, and
 nothing written to saved progress), the lesson tables reading themselves,
 the Check button on screen on a phone, and a browser with no voice at all.
 
+`test-tap.mjs` checks the lookup (forms, plurals, feminines, articles, a
+place name the bank does not have) and the page: which Spanish can be tapped
+and which cannot, the pop-up opening under the word and on screen, closing,
+and a tap while typing leaving the keyboard up.
+
 `test-pwa.mjs` serves the folder over http, since a service worker will not
 run from a file. It installs the app, checks the manifest and every icon,
 reloads it with the server down, then changes what the server says `sw.js`
@@ -858,6 +864,46 @@ buttons work either way. The choice is saved the moment it is made, so it is
 the same after a reload, a closed app or an update. It is kept on the device
 rather than synced, like dark mode. Nothing can tell a page that a phone is on silent, so if nothing is
 heard, the silent switch and the volume are the first things to check.
+
+## Grammar
+
+Fifteen short lessons in `grammar.js`, each with a drill, on the Lessons
+screen and as the Grammar mode on Practice. The list is the one that comes up
+again and again in teachers' and learners' accounts of what English speakers
+get wrong, ordered roughly as the Instituto Cervantes curriculum orders A1 and
+A2: ser and estar; tener for age, hunger and cold; gender and agreement;
+where adjectives go; gustar and the verbs like it; por and para; the personal
+a; hay or está; al, del, muy and mucho; ir a for the future; the two past
+tenses; lo, la, le and se; reflexive verbs; the subjunctive after wishes and
+doubts; and false friends.
+
+Each lesson is a few paragraphs of rule, examples that can be heard and
+tapped for meaning, and the classic mistake beside its correction. Each drill
+question is a sentence with a gap and two to four choices, with the English as
+the hint and the reason shown at the verdict, wrong or right. Choices are
+tapped rather than typed, because the question is which word, not how to spell
+it. Mixed spreads a round of ten across every topic; a pill or the lesson's
+Practise this narrows it to one. Like the verb drills, grammar is practice:
+it moves no level and writes nothing but the chosen topic, and a state saved
+before grammar existed loads on Mixed.
+
+`tests/test-grammar.mjs` checks every question has exactly one gap, its
+answer among its options, a reason and English, and no vosotros; then a mixed
+round, a right and a wrong choice, keyboard choice, the lesson's Practise this,
+an old state with no topic saved, and the choices and Next on screen on a
+phone.
+
+## Tap a word
+
+Any word in a Spanish sentence on a card can be tapped for what it means: the
+teaching card's example, the sentence around a cloze blank, and the answer
+once it is shown. A small card opens under the word with the dictionary form,
+the English, which form it was (tengo: I have, present) and a speaker. It
+comes from the bank itself, through the same index that decides when a
+sentence is ready, so it is free, works offline, and knows tengo is tener,
+casas is casa and bonita is bonito. Articles and contractions get a line of
+grammar instead. Where the Spanish is the question, as on a recognition card,
+nothing can be tapped, because a tap would answer it.
 
 ## Four modes
 
