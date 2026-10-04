@@ -1456,6 +1456,12 @@
       ? card.promptHint
       : (card.promptHint ? card.promptHint : "");
     $("card-hint").hidden = !$("card-hint").textContent;
+    const t = card.target;
+    $("card-target").innerHTML = t
+      ? `<span class="tchip"><i>Person</i><b>${esc(t.person)}</b><em>(${esc(t.personEn)})</em></span>`
+        + `<span class="tchip"><i>Tense</i><b>${esc(t.tense.toLowerCase())}</b></span>`
+      : "";
+    $("card-target").hidden = !t;
 
     // Three things can occupy the bottom of the card, and only ever one: the
     // teaching block, the tile tray, or the answer box.
@@ -1613,13 +1619,14 @@
     return {
       drill: true,
       word: { id: null, es: item.answer, note: item.note || "" },
-      band: { key: "drill", label: item.tenseName },
-      levelLabel: `${item.personLabel} (${item.personShort})`,
+      band: { key: "drill", label: "Verb ending" },
+      // Who and when get their own labelled row under the verb, rather than
+      // being squeezed into the corner and the hint where nobody reads them.
+      levelLabel: "",
+      target: { person: item.personLabel, personEn: item.personShort, tense: item.tenseName },
       fellBack: false,
       prompt: item.infinitive,
-      promptHint: english
-        ? `${item.gloss} \u2014 say "${english}"`
-        : `${item.gloss} \u2014 the ${item.personLabel} form (${item.personShort}), ${item.tenseName.toLowerCase()}`,
+      promptHint: english ? `${item.gloss} \u00b7 say "${english}"` : item.gloss,
       accepted: [item.answer],
       reveal: item.answer,
       revealContext: english ? `${item.personLabel}: ${english}` : "",
