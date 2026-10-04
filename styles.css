@@ -419,6 +419,8 @@ body.no-speech .say-hint { display: none; }
 .gloss-rows dt { font: 800 10.5px/1.9 var(--round); letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--muted); }
 .gloss-rows dd { margin: 0; font-weight: 700; }
+/* The same rows under a drill's answer, without the rule above them. */
+.verdict-rows { border-top: none; padding-top: 0; margin: 6px 0 10px; }
 
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because
