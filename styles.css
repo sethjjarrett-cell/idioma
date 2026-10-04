@@ -370,6 +370,31 @@ main { max-width: 760px; margin: 0 auto;
 td[data-say]:active, .example b[data-say]:active { background: var(--accent-soft); }
 body.no-speech .say-hint { display: none; }
 
+/* Tappable words. A dotted underline says "there is more here" without
+   turning a sentence into a row of buttons. */
+.tap { cursor: pointer; border-radius: 4px;
+  text-decoration: underline dotted; text-decoration-color: var(--line2);
+  text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.tap.on { background: var(--accent-soft); text-decoration-color: var(--accent); }
+
+/* What a tapped word means: a small card under the word. */
+.gloss {
+  position: absolute; z-index: 40; width: min(300px, calc(100vw - 16px));
+  background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+  padding: 10px 12px; box-shadow: 0 8px 20px rgba(60, 40, 20, 0.22);
+  font: 500 14px/1.4 var(--round); color: var(--text);
+}
+.gloss-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gloss-head b { font: 800 18px var(--round); color: var(--accent-deep); }
+.gloss p { margin: 4px 0 0; }
+/* Which form was tapped, as labelled rows: label on the left, small capitals,
+   answer on the right. */
+.gloss-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px;
+  margin: 10px 0 0; padding-top: 8px; border-top: 2px solid var(--line); }
+.gloss-rows dt { font: 800 10.5px/1.9 var(--round); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted); }
+.gloss-rows dd { margin: 0; font-weight: 700; }
+
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because
    it is the thing being taught. */
