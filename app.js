@@ -30,7 +30,7 @@
   /* Which cards want Spanish typed back, and so get the accent keys. It is a
      property of the band: recognition asks for English, and every other
      band with an answer box asks for Spanish. */
-  const SPANISH_BACK = new Set(["production", "cloze", "translate", "drill"]);
+  const SPANISH_BACK = new Set(["production", "cloze", "translate", "drill", "listen"]);
 
   /* What the next round will be drawn from. null is the whole bank; a topic
      narrows the pool; a drill replaces the pool with conjugations and is not
@@ -75,7 +75,9 @@
   /* What a round is made of. Kept in settings so the choice survives a
      reload: picking Sentences and then coming back to Words every time would
      be its own small annoyance. */
-  const MODES = ["words", "verbs", "sentences"];
+  // Listening needs a voice. Without one the mode is not offered at all, and
+  // a saved choice of it falls back to words like any unknown mode does.
+  const MODES = ["words", "verbs", "sentences"].concat(Speech.supported ? ["listen"] : []);
   const mode = () => (MODES.includes(state.settings.mode) ? state.settings.mode : "words");
   const sentencesFor = (wordId) => sentences().filter((s) => s.wordId === wordId);
   const commit = () => Store.save(state);
@@ -157,6 +159,81 @@
   }
 
   /* ------------------------------------------------------------------
+     Reading aloud
+
+     The phone's own Spanish voice, through speak.js. Whether it reads things
+     out unasked is a per-device choice, kept out of the synced settings for
+     the same reason the theme is: the laptop at a desk and the phone on a bus
+     want different answers.
+
+     One rule for when: Spanish is read once, when it first appears. A card
+     that shows Spanish reads it as the card arrives; a card that asks for
+     Spanish reads the answer at the verdict, never before, because reading it
+     out first would be giving it away.
+     ------------------------------------------------------------------ */
+
+  const AUDIO_KEY = "idioma.audio.v1";
+  function loadAudio() {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(AUDIO_KEY) || "{}");
+      return { auto: saved.auto !== false };
+    } catch (e) {
+      return { auto: true };
+    }
+  }
+  let audio = loadAudio();
+  const saveAudio = () => {
+    try { window.localStorage.setItem(AUDIO_KEY, JSON.stringify(audio)); } catch (e) { /* private mode */ }
+  };
+
+  const say = (text, slow) => Speech.say(text, { slow: !!slow });
+  const autoSay = (text) => { if (audio.auto) say(text); };
+
+  const SPEAKER = '<svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg>';
+  const sayButton = (text, label) => (Speech.supported && text
+    ? `<button class="say-btn" type="button" data-say="${esc(text)}" aria-label="${esc(label || "Hear it")}">${SPEAKER}</button>`
+    : "");
+  // Only where tapping will do something; a pointer over a table cell that
+  // stays silent is a thing that looks broken.
+  const sayAttr = (text) => (Speech.supported && text ? ` data-say="${esc(text)}"` : "");
+
+  /* The Spanish a card is about, whichever side of it the Spanish is on. A
+     cloze card reads the whole sentence rather than the one word, because the
+     sentence is what a learner needs to hear the word inside. */
+  function spanishOf(c) {
+    if (!c) return "";
+    if (c.band.key === "cloze") return c.revealContext;
+    if (c.intro || c.band.key === "recognition") return c.word.es;
+    return c.reveal;
+  }
+
+  /* The Spanish showing on the card before it is answered, if any: the word on
+     a recognition or teaching card, the infinitive on a drill. Never the
+     prompt of a card that asks for Spanish, which would answer it. */
+  function spanishPrompt(c) {
+    if (c.listen) return "";
+    if (c.intro || c.band.key === "recognition") return c.word.es;
+    if (c.drill) return c.prompt;
+    return "";
+  }
+
+  /* Anything marked data-say reads itself when tapped: the buttons on the
+     card, the lesson tables, the pronunciation examples. One listener for all
+     of them, so a new place to hear something is one attribute. */
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-say]");
+    if (el) say(el.dataset.say, el.dataset.slow === "1");
+  });
+  /* A speaker tapped while typing must not take the focus off the box, or on a
+     phone the keyboard folds away every time. Same trick as the accent keys:
+     cancel the press, keep the click. */
+  for (const type of ["pointerdown", "mousedown"]) {
+    document.addEventListener(type, (e) => {
+      if (e.target.closest(".say-btn, #listen .btn")) e.preventDefault();
+    });
+  }
+
+  /* ------------------------------------------------------------------
      Menu, settings, backup
      ------------------------------------------------------------------ */
 
@@ -199,6 +276,13 @@
     $("set-dark").checked = loadTheme() === "dark";
     $("set-typo").checked = !!state.settings.typoTolerance;
     $("set-introduce").checked = state.settings.introduceNew !== false;
+    $("set-audio").checked = Speech.supported && audio.auto;
+    $("set-audio").disabled = !Speech.supported;
+    $("audio-blurb").textContent = !Speech.supported
+      ? "this browser cannot read Spanish aloud"
+      : Speech.voicesKnown() && !Speech.hasSpanishVoice()
+      ? "no Spanish voice is installed, so it may sound English; on an iPhone, add one under Settings, Accessibility, Spoken Content, Voices"
+      : `when Spanish appears on a card, and with each answer; this device only${Speech.voiceName() ? ` · ${Speech.voiceName()}` : ""}. No sound? Check the volume and the silent switch`;
     $("set-round").value = state.settings.roundSize;
     applyPace();
     drawSync();
@@ -207,6 +291,15 @@
       ? `Last saved ${new Date(state.savedAt).toLocaleString("en-GB")}`
       : "Nothing saved yet.";
   }
+
+  $("set-audio").addEventListener("change", (e) => {
+    audio.auto = e.target.checked;
+    saveAudio();
+    toast(audio.auto
+      ? "Spanish will be read aloud, on this device."
+      : "Reading aloud off. The speaker buttons still work.");
+    if (audio.auto) say("Hola.");
+  });
 
   $("set-dark").addEventListener("change", (e) => {
     applyTheme(e.target.checked ? "dark" : "paper");
@@ -635,6 +728,20 @@
   };
 
   function updateStartBlurb() {
+    if (mode() === "listen") {
+      const pool = listenPool();
+      const n = pool.sentences.length + pool.words.length;
+      $("start-picked").hidden = true;
+      const voice = Speech.voicesKnown() && !Speech.hasSpanishVoice()
+        ? " No Spanish voice is installed, so it may sound English: on an iPhone, add one under Settings, Accessibility, Spoken Content, Voices."
+        : "";
+      $("start-blurb").textContent = n
+        ? `${pool.sentences.length} sentences you have the words for and ${pool.words.length} words you have met, read aloud. `
+          + `Hear it, type what you heard. Practice only: nothing here moves a word's level.${voice}`
+        : `Nothing to listen to yet. Listening uses words you have met and sentences you have every word for, `
+          + `so practise some words first.${voice}`;
+      return;
+    }
     if (mode() === "sentences") {
       const pool = sentencePool();
       const met = pool.filter((x) => Store.peekPhrase(state, x.id).timesSeen > 0);
@@ -736,7 +843,7 @@
      anything. "Words" on its own is the whole truth when nothing is filtered,
      and "Words · all" would be noise. */
   function pickerSummaryText() {
-    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences" }[mode()];
+    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences", listen: "Listen" }[mode()];
     let narrowed = null;
     if (mode() === "verbs") {
       narrowed = pick && pick.kind === "drill" ? pick.name
@@ -906,6 +1013,7 @@
   function startRound() {
     let picked;
     if (mode() === "sentences") return startSentenceRound();
+    if (mode() === "listen") return startListenRound();
 
     /* A table picked from the Lessons screen is a standing choice and lives in
        `pick`. The starter drill is not: it is rebuilt from the tense pills on
@@ -987,11 +1095,68 @@
     nextCard();
   }
 
+  /* Listening. What can be listened to is what has already been learned:
+     sentences you have every word for, and words you have met. Hearing a word
+     for the very first time is not a test of anything, so nothing new is
+     ever read out here. */
+  function listenPool() {
+    const sentences = readySentences()
+      .map((r) => ({ kind: "sentence", id: r.item.id, es: String(r.item.es).replace(/[{}]/g, ""), en: r.item.en }))
+      .filter((x) => x.es && x.en && Engine.tokenise(x.es).length <= Engine.CONFIG.LISTEN_MAX_WORDS);
+    const met = words()
+      .filter((w) => prog(w.id).timesSeen > 0 && prog(w.id).enabled !== false)
+      .map((w) => ({ kind: "word", id: w.id, es: w.es, en: w.en.join(", ") }));
+    return { sentences, words: met };
+  }
+
+  /* Mostly sentences, because a sentence is what you will actually hear, with
+     single words mixed in. Whichever runs short, the other makes up the round. */
+  function startListenRound() {
+    const pool = listenPool();
+    const size = Engine.CONFIG.LISTEN_ROUND_SIZE;
+    if (!pool.sentences.length && !pool.words.length) {
+      toast("Nothing to listen to yet. Practise some words first.", true);
+      return;
+    }
+    let want = Math.min(pool.sentences.length, Math.round(size * Engine.CONFIG.LISTEN_SENTENCE_SHARE));
+    const fromWords = Math.min(pool.words.length, size - want);
+    want = Math.min(pool.sentences.length, size - fromWords);
+    const picked = Engine.shuffle(Engine.shuffle(pool.sentences).slice(0, want)
+      .concat(Engine.shuffle(pool.words).slice(0, fromWords)));
+    round = { queue: picked, index: 0, results: [], movers: [], drill: false, listen: true };
+    pickersOpen = false;
+    $("round-start").hidden = true;
+    $("round-end").hidden = true;
+    $("round-bar").hidden = false;
+    nextCard();
+  }
+
+  /* A listening card, dressed like any other so the practice screen draws it
+     without special cases: the answer is the Spanish that was read, and the
+     English waits for the verdict. */
+  function listenCard(item) {
+    const n = Engine.tokenise(item.es).length;
+    return {
+      listen: true,
+      isSentence: item.kind === "sentence",
+      word: { id: item.id, es: item.es, note: "" },
+      band: Engine.BANDS.listen,
+      levelLabel: item.kind === "sentence" ? "a sentence" : "a word",
+      fellBack: false,
+      prompt: "",
+      promptHint: `Type what you hear \u00b7 ${n} ${n === 1 ? "word" : "words"}`,
+      accepted: [item.es],
+      reveal: item.es,
+      revealContext: item.en,
+    };
+  }
+
   function nextCard() {
     if (!round || round.index >= round.queue.length) return endRound();
     const item = round.queue[round.index];
     // A drill item is already a card; a word or a sentence has to be built.
-    card = round.drill ? drillCard(item)
+    card = round.listen ? listenCard(item)
+      : round.drill ? drillCard(item)
       : round.sentences
       ? Engine.sentenceCard(item.item, Store.peekPhrase(state, item.id), {
           distractors: Store.tileDistractors(state, item.item, item.needs,
@@ -1001,18 +1166,21 @@
           introduce: state.settings.introduceNew !== false,
         });
     lastResult = null;
-    cardBefore = round.drill ? null : JSON.parse(JSON.stringify(cardProgress(card)));
+    cardBefore = round.drill || round.listen ? null : JSON.parse(JSON.stringify(cardProgress(card)));
     retypes = 0;
 
     $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
     // A word you have not met is always at L1, so saying so tells nobody
     // anything; the level appears once it starts meaning something.
-    $("card-level").textContent = round.drill ? card.levelLabel
+    $("card-level").textContent = round.drill || round.listen ? card.levelLabel
       : (card.intro && !card.relearn) ? ""
       : `L${cardProgress(card).level}`;
-    $("card-prompt").innerHTML = card.band.key === "cloze"
+    const shown = spanishPrompt(card);
+    $("card-prompt").innerHTML = (card.band.key === "cloze"
       ? esc(card.prompt).replace("_____", '<span class="blank">_____</span>')
-      : esc(card.prompt);
+      : esc(card.prompt)) + sayButton(shown);
+    $("card-prompt").hidden = !!card.listen;
+    $("listen").hidden = !card.listen;
     $("card-hint").textContent = card.band.key === "cloze"
       ? card.promptHint
       : (card.promptHint ? card.promptHint : "");
@@ -1040,6 +1208,10 @@
     (card.intro ? $("btn-got")
       : card.band.key === "build" ? $("btn-build-check")
       : $("answer")).focus();
+    // A listening card is nothing without its sound, so it always plays. Any
+    // other card reads its Spanish only if reading aloud is on.
+    if (card.listen) say(card.reveal);
+    else if (shown) autoSay(shown);
     window.__card = card;   // handy for debugging and for the UI test
   }
 
@@ -1078,6 +1250,8 @@
       $("teach-es").innerHTML = esc(c.example.es)
         .replace(esc(c.example.target), `<b>${esc(c.example.target)}</b>`);
       $("teach-en").textContent = c.example.en;
+      $("btn-say-example").dataset.say = c.example.es;
+      $("btn-say-example").hidden = !Speech.supported;
       $("teach-example").hidden = false;
     } else {
       $("teach-example").hidden = true;
@@ -1180,6 +1354,9 @@
     };
   }
 
+  $("btn-listen-play").addEventListener("click", () => { if (card && card.listen) say(card.reveal); });
+  $("btn-listen-slow").addEventListener("click", () => { if (card && card.listen) say(card.reveal, true); });
+
   /* The accent keys. Pressing one must not take focus off the box, or on a
      phone the keyboard folds away between every letter. Cancelling the press
      keeps the focus where it is; the click still arrives and does the typing.
@@ -1207,6 +1384,12 @@
   });
 
   function grade(typed) {
+    if (card.listen) {
+      applyAndShow(Engine.checkHeard(typed, card.reveal, {
+        typoTolerance: state.settings.typoTolerance,
+      }), typed);
+      return;
+    }
     applyAndShow(Engine.checkAnswer(typed, card.accepted, {
       typoTolerance: state.settings.typoTolerance,
       /* The other Spanish words that answer the same English prompt. A drill
@@ -1268,7 +1451,9 @@
        conjugations out of the mastery model is deliberate: a word's level
        means how well that word is known, and diluting it with endings drilled
        off a table would make it mean nothing. */
-    const applied = card.drill
+    /* Listening is kept out for the same reason: hearing a word and knowing it
+       are different things, and a level should only mean the second. */
+    const applied = card.drill || card.listen
       ? { result: outcome, held: false, movedUp: false, movedDown: false,
           levelBefore: null, levelAfter: null, bandChanged: false }
       : (() => {
@@ -1316,6 +1501,11 @@
       detail = res.reason === "sense" ? whySense(res) : (WHY[res.reason] || "close");
     }
     else if (outcome === "wrong" && typed.trim()) detail = `you typed "${typed.trim()}"`;
+    // How much of it came through says more about listening than a verdict does.
+    if (card.listen) {
+      detail = res.of ? `${res.heard} of ${res.of} ${res.of === 1 ? "word" : "words"}` : "";
+      if (res.near) detail += " · accepted with typo tolerance";
+    }
     if (applied.movedUp) detail += `${detail ? " · " : ""}L${applied.levelBefore} to L${applied.levelAfter}`;
     if (applied.movedDown) detail += `${detail ? " · " : ""}dropped to L${applied.levelAfter}`;
     if (applied.held) detail += `${detail ? " · " : ""}holding at L${applied.levelAfter}`;
@@ -1328,6 +1518,12 @@
     $("verdict-diff").hidden = !res.diff;
 
     $("verdict-answer").textContent = card.reveal;
+    const spoken = spanishOf(card);
+    $("btn-say-answer").dataset.say = spoken || "";
+    $("btn-say-answer").hidden = !Speech.supported || !spoken;
+    // A listening card's English was never on screen; this is where it lands.
+    $("verdict-en").textContent = card.listen ? card.revealContext : "";
+    $("verdict-en").hidden = !card.listen;
 
     /* How to say it, but only where the spelling would mislead an English
        reader. "MEH-sah" under mesa is noise; "HWEH-behs" under jueves is the
@@ -1338,8 +1534,8 @@
       : "";
     $("verdict-say").hidden = !$("verdict-say").textContent;
 
-    $("verdict-context").textContent = card.revealContext || "";
-    $("verdict-context").hidden = !card.revealContext;
+    $("verdict-context").textContent = card.listen ? "" : card.revealContext || "";
+    $("verdict-context").hidden = card.listen || !card.revealContext;
 
     const note = card.word.note;
     $("verdict-note").textContent = note || "";
@@ -1348,7 +1544,7 @@
     // The override makes sense on anything short of a clean pass, and only
     // when something was actually typed.
     // Nothing to override on a drill: there is no level for it to change.
-    $("btn-override").hidden = card.drill || outcome === "correct" || !typed.trim();
+    $("btn-override").hidden = card.drill || card.listen || outcome === "correct" || !typed.trim();
     // On an amber card the second go is the point, so it takes the primary
     // button and Next steps back.
     $("btn-retry").hidden = outcome !== "almost";
@@ -1365,6 +1561,11 @@
     $("build").hidden = true;
     $("verdict").hidden = false;
     (outcome === "almost" ? $("btn-retry") : $("btn-next")).focus();
+    /* Spanish the card has not yet read out, read now: the answer to a card
+       that asked for it, or a drill's conjugated form, which is not the
+       infinitive it showed. A listening card plays again with the words in
+       front of you, which is how the sound gets tied to the spelling. */
+    if (card.listen || spoken !== spanishPrompt(card)) autoSay(spoken);
   }
 
   /* Reopen the box for another go at the same card. Nothing is undone
@@ -1385,6 +1586,7 @@
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
     $("answer").focus();
+    if (card.listen) say(card.reveal);
   }
 
   $("btn-retry").addEventListener("click", startRetype);
@@ -1402,7 +1604,7 @@
   $("btn-override").addEventListener("click", () => {
     if (!lastResult || lastResult.outcome === "correct") return;
     const typed = lastResult.typed;
-    const learnable = !card.drill && !card.isSentence && card.word && card.word.id;
+    const learnable = !card.drill && !card.listen && !card.isSentence && card.word && card.word.id;
     const remembered = learnable
       && Store.rememberAccepted(state, card.word.id, askedFor(card), typed);
     if (remembered) commit();
@@ -1434,7 +1636,7 @@
     const right = count("correct");
     const pct = n ? Math.round((right / n) * 100) : 0;
 
-    if (!round.drill) {
+    if (!round.drill && !round.listen) {
       state.stats.rounds += 1;
       state.stats.lastRoundAt = new Date().toISOString();
       Store.saveNow(state);
@@ -1450,7 +1652,7 @@
         stat(count("almost"), "almost"),
       ] : []),
       // Levels are a word thing, so a drill does not report them.
-      ...(round.drill || !n ? [] : [
+      ...(round.drill || round.listen || !n ? [] : [
         stat(round.movers.filter((m) => m.up).length, "levelled up"),
         stat(round.movers.filter((m) => !m.up).length, "dropped"),
       ]),
@@ -1458,6 +1660,8 @@
 
     $("end-movers").innerHTML = round.drill
       ? '<p class="muted small">A drill is practice, not assessment, so no word has moved.</p>'
+      : round.listen
+      ? '<p class="muted small">Listening is practice, not assessment, so no word has moved.</p>'
       : !n
         ? '<p class="muted small">All new words this round, so nothing was tested. They will come back to be asked.</p>'
         : round.movers.length
@@ -1577,7 +1781,7 @@
           const form = Verbs.conjugate(f.example, tense.id, p.id);
           const ending = tense.endings[f.id][p.id];
           const stem = form.slice(0, form.length - ending.length);
-          return `<td><span class="stem">${esc(stem)}</span><b>${esc(ending)}</b></td>`;
+          return `<td${sayAttr(form)}><span class="stem">${esc(stem)}</span><b>${esc(ending)}</b></td>`;
         }).join("")}
       </tr>`).join("");
     return `<div class="table-wrap"><table class="conj">
@@ -1590,7 +1794,10 @@
     const rows = PERSONS.map((p) => `
       <tr>
         <th>${esc(p.label)}</th>
-        ${tenses.map((t) => `<td><b>${esc(Verbs.conjugate(verb.infinitive, t.id, p.id) || "")}</b></td>`).join("")}
+        ${tenses.map((t) => {
+          const form = Verbs.conjugate(verb.infinitive, t.id, p.id) || "";
+          return `<td${sayAttr(form)}><b>${esc(form)}</b></td>`;
+        }).join("")}
       </tr>`).join("");
     return `<div class="table-wrap"><table class="conj">
       <thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -1626,7 +1833,7 @@
         <div class="examples">
           ${r.examples.map(([es, en]) => `
             <div class="example">
-              <b>${esc(es)}</b>
+              <b${sayAttr(es)}>${esc(es)}</b>
               <span class="say-cell">${esc(Pronounce.respell(es))}</span>
               <span class="muted small">${esc(en)}</span>
             </div>`).join("")}
@@ -1991,6 +2198,10 @@
   // The head script has already set the attribute; this keeps the meta colour
   // and the stored value in step with it.
   applyTheme(loadTheme());
+  /* No voice, no Listen mode and no "tap to hear" hints. Everything else
+     works as it did before there was any sound. */
+  document.body.classList.toggle("no-speech", !Speech.supported);
+  document.querySelector('#modes [data-mode="listen"]').hidden = !Speech.supported;
   drawSync();
   /* A pairing link opened on the second device. Taken before the first sync,
      so the very next thing that happens is a pull from the box the link
