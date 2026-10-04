@@ -370,6 +370,17 @@ main { max-width: 760px; margin: 0 auto;
 td[data-say]:active, .example b[data-say]:active { background: var(--accent-soft); }
 body.no-speech .say-hint { display: none; }
 
+/* A verb drill's target: which person and which tense, as two labelled
+   chips, so the ending being asked for is never a guess. */
+.target { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 8px; }
+.tchip { display: inline-flex; align-items: baseline; gap: 7px;
+  background: var(--accent-soft); border: 2px solid var(--accent);
+  border-radius: 999px; padding: 4px 13px; }
+.tchip i { font: 800 10.5px var(--round); font-style: normal; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent-deep); }
+.tchip b { font: 800 16px var(--round); color: var(--text); }
+.tchip em { font-style: normal; font-size: 13px; color: var(--muted); }
+
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because
    it is the thing being taught. */

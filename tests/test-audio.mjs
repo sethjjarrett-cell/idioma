@@ -179,6 +179,11 @@ console.log('a verb drill');
   await p.click('#btn-start'); await p.waitForTimeout(200);
   const c = await card(p);
   ok('reads the infinitive it shows', (await lastSaid(p) || {}).text === c.prompt);
+  // Which ending is wanted is spelt out as labelled chips, not left to the hint.
+  const chips = await p.$$eval('#card-target .tchip', (els) => els.map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
+  ok('the card labels the person and the tense it wants', chips.length === 2
+    && chips[0].toLowerCase().startsWith('person ' + c.target.person.toLowerCase())
+    && chips[1].toLowerCase() === 'tense ' + c.target.tense.toLowerCase(), JSON.stringify(chips));
   await answer(p, 'zzz');
   ok('and the conjugated answer at the verdict, which is new Spanish',
     (await lastSaid(p) || {}).text === c.reveal && c.reveal !== c.prompt);
