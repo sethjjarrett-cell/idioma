@@ -118,6 +118,16 @@ const CONFIG = {
   SENTENCE_MAX_NEW: 3,
   TILE_DISTRACTORS: 3,
 
+  /* Listening: something read aloud, typed back. Ten to a round, because
+     listening hard is more tiring than reading. Sentences longer than nine
+     words are left out, which is about as much as a beginner can hold in
+     their head between hearing it and typing it. Marking is by the word,
+     and one wrong word in four still counts as almost. */
+  LISTEN_ROUND_SIZE: 10,
+  LISTEN_MAX_WORDS: 9,
+  LISTEN_WORDS_PER_SLIP: 4,
+  LISTEN_SENTENCE_SHARE: 0.7,
+
   /* Grammar no sentence can do without, and that nobody needs tested as
      vocabulary: the articles, the two contractions, and the que that joins
      two clauses. The bank has ¿qué? the question word, which is a different
@@ -199,6 +209,7 @@ const BANDS = {
   cloze: { key: "cloze", label: "Cloze", blurb: "Sentence shown, type the missing word" },
   build: { key: "build", label: "Build it", blurb: "English shown, tap the words into order" },
   translate: { key: "translate", label: "Translate", blurb: "English shown, type the Spanish" },
+  listen: { key: "listen", label: "Listening", blurb: "Spanish read aloud, type what you heard" },
 };
 
 function bandForLevel(level) {
@@ -739,6 +750,37 @@ function checkAnswer(typed, accepted, options = {}) {
   };
 }
 
+/* Marking what was heard. The answer is whatever was read aloud, typed back
+   in Spanish; accents, capitals and punctuation do not count, as everywhere
+   else in the app.
+
+   Marked by the word, because that is how listening goes wrong: a word
+   missed, a word heard as a different one, or one run into the next.
+   `heard` is how many words came through and `of` how many there were, so
+   the card can say "5 of 6" rather than just "wrong". The word diff comes
+   back on every miss, wrong ones included: which words did not come through
+   is the useful part of getting a dictation wrong. */
+function checkHeard(typed, said, options = {}) {
+  const miss = { correct: false, almost: false, matched: null, near: false,
+                 reason: null, diff: null, sibling: null, equivalent: false,
+                 heard: 0, of: 0 };
+  const g = normalise(typed);
+  const w = normalise(said);
+  const of = w ? w.split(" ").length : 0;
+  if (!g) return { ...miss, of };
+  if (g === w) return { ...miss, correct: true, matched: said, heard: of, of };
+  if (options.typoTolerance && damerau(g, w) <= CONFIG.TYPO_DISTANCE) {
+    return { ...miss, correct: true, near: true, matched: said, heard: of, of };
+  }
+  const diff = diffAnswer(typed, said);
+  const heard = diff.filter((o) => o.op === "same").length;
+  // A misspelt word is one slip, not an extra and a missing.
+  const slips = diff.filter((o) => o.op !== "same").length;
+  const close = slips <= Math.max(1, Math.floor(of / CONFIG.LISTEN_WORDS_PER_SLIP));
+  return { ...miss, almost: close, reason: close ? "heard" : null,
+           matched: said, diff, heard, of };
+}
+
 /* ---------------------------------------------------------------
    Sentences: what a sentence needs, and what to do with it
    --------------------------------------------------------------- */
@@ -938,5 +980,5 @@ window.Engine = {
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
-  sentenceRank, sentenceCard, checkSequence, shuffle, FREE_TOKEN,
+  sentenceRank, sentenceCard, checkSequence, checkHeard, shuffle, FREE_TOKEN,
 };

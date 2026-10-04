@@ -141,6 +141,13 @@
       </g>
     </g>
   </symbol>
+  <!-- A speaker, for anything that reads Spanish aloud. currentColor, so it
+       takes the colour of whatever button it sits in. -->
+  <symbol id="speaker-sym" viewBox="0 0 24 24">
+    <path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/>
+    <path d="M16.2 8.6a4.8 4.8 0 0 1 0 6.8M18.8 6a8.5 8.5 0 0 1 0 12" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  </symbol>
 </svg>
 
 <header class="top">
@@ -199,6 +206,10 @@
   <label class="toggle">
     <input type="checkbox" id="set-dark">
     <span>Dark mode <em>paper by default; this device only, and it is not synced</em></span>
+  </label>
+  <label class="toggle" id="audio-row">
+    <input type="checkbox" id="set-audio">
+    <span>Read Spanish aloud <em id="audio-blurb">when Spanish appears on a card, and with each answer; this device only</em></span>
   </label>
   <label class="toggle">
     <input type="checkbox" id="set-introduce">
@@ -286,6 +297,9 @@
       <button class="mode" data-mode="sentences">
         <b>Sentences</b><span>Tap the words into order, then type them</span>
       </button>
+      <button class="mode" data-mode="listen">
+        <b>Listen</b><span>Hear it read aloud, type what you heard</span>
+      </button>
     </div>
 
     <div class="tenses" id="filters" hidden>
@@ -311,6 +325,15 @@
       <p class="prompt" id="card-prompt"></p>
       <p class="muted small" id="card-hint"></p>
 
+      <!-- A listening card: nothing written, only something to hear. -->
+      <div class="listen" id="listen" hidden>
+        <button class="btn primary listen-play" type="button" id="btn-listen-play">
+          <svg class="speaker" aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg>
+          Play it
+        </button>
+        <button class="btn" type="button" id="btn-listen-slow">Slower</button>
+      </div>
+
       <!-- A word you have not met: shown, with nothing to type. -->
       <div class="teach" id="teach" hidden>
         <p class="teach-why small" id="teach-why" hidden></p>
@@ -319,7 +342,9 @@
         <p class="say" id="teach-say" hidden></p>
         <p class="note" id="teach-note" hidden></p>
         <div class="teach-example" id="teach-example" hidden>
-          <p class="teach-es" id="teach-es"></p>
+          <p class="teach-es"><span id="teach-es"></span><button class="say-btn" type="button"
+             id="btn-say-example" aria-label="Hear the sentence" hidden><svg aria-hidden="true"
+             focusable="false"><use href="#speaker-sym"/></svg></button></p>
           <p class="muted small" id="teach-en"></p>
         </div>
         <button class="btn primary big" id="btn-got">Got it</button>
@@ -368,7 +393,10 @@
         <p class="answer-line">
           <span class="muted small">Answer</span>
           <b id="verdict-answer"></b>
+          <button class="say-btn" type="button" id="btn-say-answer" aria-label="Hear it in Spanish"
+                  hidden><svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg></button>
         </p>
+        <p class="muted small verdict-en" id="verdict-en" hidden></p>
         <p class="say" id="verdict-say" hidden></p>
         <p class="context mono small" id="verdict-context" hidden></p>
         <p class="note" id="verdict-note" hidden></p>
@@ -423,7 +451,7 @@
       <h2>Verb endings</h2>
       <p class="muted small">Three families, six tenses, five persons. Open a tense
         to see the endings against a real verb, then practise that table as cards.
-        Latin American, so no vosotros.</p>
+        Latin American, so no vosotros.<span class="say-hint"> Tap any form to hear it.</span></p>
       <div class="lesson-list" id="verb-tenses"></div>
     </div>
 
@@ -443,7 +471,7 @@
       <h2>Saying it out loud</h2>
       <p class="muted small">Spanish spelling tells you the sound, which English
         spelling does not. Learn these and you can read any word aloud, including
-        ones you have never seen.</p>
+        ones you have never seen.<span class="say-hint"> Tap an example to hear it.</span></p>
       <div class="lesson-list" id="pron-rules"></div>
     </div>
   </section>
@@ -546,6 +574,7 @@
 <script src="phrases.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>
+<script src="speak.js"></script>
 <script src="engine.js"></script>
 <script src="store.js"></script>
 <script src="sync.js"></script>

@@ -58,6 +58,7 @@ tools/tatoeba/  importers for Tatoeba sentences and Wiktionary glosses
 tools/sync/     the forty-line server, and how to deploy it once
 verbs.js        the ending tables, and the one function that reads them
 pronounce.js    Spanish spelling to an English respelling; no data, all rules
+speak.js        reads Spanish aloud with the device's own voice
 engine.js       levels, bands, card selection, answer checking; no DOM
 store.js        localStorage, plus Export and Import
 sync.js         the merge, and the two calls that move one JSON blob
@@ -814,6 +815,15 @@ without the app looping, a forged reply being ignored, a reset reaching Drive
 even when made with the sign-in run out, the weekly nudge, and every script
 the page loads being in the offline cache.
 
+`test-audio.mjs` swaps the browser's voice for one that writes down what it was
+asked to say. It checks the voice choice, that a card showing Spanish reads it
+as it arrives and a card asking for Spanish says nothing until the verdict,
+the setting being kept per device and silencing only the automatic reading,
+a speaker tap leaving the keyboard up, a whole listening round (playing,
+slower, marking with and without accents, one word missed, a second go, and
+nothing written to saved progress), the lesson tables reading themselves,
+the Check button on screen on a phone, and a browser with no voice at all.
+
 `test-pwa.mjs` serves the folder over http, since a service worker will not
 run from a file. It installs the app, checks the manifest and every icon,
 reloads it with the server down, then changes what the server says `sw.js`
@@ -823,10 +833,46 @@ cache. It also checks the accent keys: shown on cards that want Spanish,
 hidden on cards that want English, typing at the caret, and leaving the
 focus in the box so a phone keyboard stays up.
 
-## Three modes
+## Hearing it
 
-A round is one of three things, picked at the top of the Practice screen and
+Everything Spanish can be heard, read by the voice the phone or laptop already
+has. `speak.js` uses the browser's speech synthesis: free, no network, works
+offline. It picks a Colombian voice if there is one, which there rarely is,
+then any Latin American one, then any Spanish, and Spain's last, since a
+Mexican accent is a far better model for Bogotá than a Madrid one. An iPhone
+usually has Paulina (Mexico); more can be added under Settings, Accessibility,
+Spoken Content, Voices, and the menu says so if no Spanish voice is found.
+
+The rule for when: Spanish is read once, when it first appears. A card that
+shows Spanish (a new word, a recognition card, a drill's infinitive) reads it
+as the card arrives. A card that asks for Spanish (production, cloze,
+sentences) reads nothing until the verdict, because reading it first would be
+giving it away; a cloze card then reads the whole sentence rather than the
+one word. A speaker button sits beside the Spanish wherever it appears, and on
+the Lessons screen every form in a verb table and every pronunciation example
+reads itself when tapped.
+
+Read Spanish aloud, in the menu, turns the automatic reading off; the
+buttons still work. It is kept on the device rather than synced, like dark
+mode. Nothing can tell a page that a phone is on silent, so if nothing is
+heard, the silent switch and the volume are the first things to check.
+
+## Four modes
+
+A round is one of four things, picked at the top of the Practice screen and
 remembered between sessions.
+
+**Listen** reads something aloud with nothing on screen, and you type what you
+heard. It draws only on what you already know: sentences you have every word
+for, up to nine words long, and words you have met, about seven sentences to
+three words in a round of ten. Play it and Slower replay it. Marking is by the
+word, with accents, capitals and punctuation ignored as everywhere else, and
+the verdict says how many words came through, marks the ones that did not,
+and shows the English for the first time. One wrong word in four is still
+amber. Like a verb drill, a listening round is practice rather than
+assessment: it moves no level and writes nothing to saved progress, because
+hearing a word and knowing it are different things and a level should only
+mean the second. Without a voice the mode is not offered.
 
 **Words** is the original: one word at a time, shown before it is tested,
 levels and bands as below.

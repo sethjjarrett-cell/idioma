@@ -325,6 +325,39 @@ main { max-width: 760px; margin: 0 auto;
 }
 .key:active { transform: translateY(3px); box-shadow: 0 0 0 var(--line2); }
 
+/* Anything that reads Spanish aloud. Small and round, sat in the line it
+   reads rather than on a line of its own, so it costs no height on a card
+   that has to fit one screen. */
+.say-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0; margin-left: 8px; flex: none;
+  vertical-align: middle; border-radius: 999px; cursor: pointer;
+  background: var(--accent-soft); border: 2px solid var(--accent);
+  color: var(--accent-deep); box-shadow: 0 2px 0 var(--accent);
+  transition: transform .06s, box-shadow .06s;
+}
+.say-btn:active { transform: translateY(2px); box-shadow: none; }
+.say-btn svg, .listen-play svg { width: 18px; height: 18px; display: block; }
+.answer-line .say-btn { align-self: center; margin-left: 2px; }
+/* Inside a line of text, the negative margins let the button hang over the
+   line's own height instead of pushing the line taller. */
+.prompt .say-btn, .teach-es .say-btn { width: 30px; height: 30px; margin: -8px 0 -6px 8px; }
+
+/* A listening card has nothing written on it, so the play button is the
+   prompt: big enough to find without looking. */
+.listen { display: flex; gap: 10px; align-items: stretch; margin: 4px 0 2px; }
+.listen .btn { display: inline-flex; align-items: center; gap: 8px; }
+.listen-play { flex: 1; justify-content: center; font-size: 15px; padding: 14px; }
+.listen-play svg { width: 22px; height: 22px; }
+.verdict-en { margin: 0 0 6px; }
+
+/* Lesson tables and examples you can tap to hear. Marked only by the pointer
+   and a press, because a speaker in every cell of a table is a table of
+   speakers. The hint above the table says so instead. */
+[data-say] { cursor: pointer; }
+td[data-say]:active, .example b[data-say]:active { background: var(--accent-soft); }
+body.no-speech .say-hint { display: none; }
+
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because
    it is the thing being taught. */
@@ -574,13 +607,14 @@ table.conj td b { color: var(--accent-deep); }
   color: var(--accent-deep); box-shadow: 0 2px 0 var(--accent);
 }
 
-/* The three things a round can be. Wide targets with the explanation on the
-   button, because the difference between them is not obvious from a word. */
+/* The four things a round can be. Wide targets with the explanation on the
+   button, because the difference between them is not obvious from a word.
+   Two by two on a phone, which costs less height than one column of four. */
 .modes {
   display: grid; gap: 8px; margin: 0 0 14px;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
 }
-@media (min-width: 620px) { .modes { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 620px) { .modes { grid-template-columns: repeat(4, 1fr); } }
 .mode {
   display: flex; flex-direction: column; gap: 2px; text-align: left;
   background: var(--panel); border: 2px solid var(--line); color: var(--muted);
