@@ -889,11 +889,19 @@
       const lesson = grammarLesson();
       $("start-picked").hidden = true;
       const count = lesson ? lesson.items.length : GRAMMAR.lessons.reduce((n, l) => n + l.items.length, 0);
-      $("start-blurb").textContent = lesson
+      const worst = weakestTopics(2);
+      const lean = worst.length
+        ? ` Your weakest: ${worst.map((x) => `${x.lesson.short} (${x.st.right} of ${x.st.tried})`).join(", ")}; rounds lean towards these.`
+        : "";
+      $("start-blurb").textContent = grammarName() === "weak"
+        ? (weakCount()
+          ? `Weak spots: the ${weakCount()} questions you got wrong last time, from every topic. Get one right and it leaves this list.`
+          : `No weak spots: everything you have answered was right last time.`)
+        : lesson
         ? `${lesson.title}: ${lesson.blurb} ${Math.min(count, Engine.CONFIG.GRAMMAR_ROUND_SIZE)} questions from ${count}, `
-          + `each with the reason. New to it? Read the lesson on the Lessons screen first.`
+          + `each with the reason, the ones you have got wrong more often. You: ${topicStanding(lesson).label}.`
         : `A mix of all ${GRAMMAR.lessons.length} topics, ${Engine.CONFIG.GRAMMAR_ROUND_SIZE} questions a round, `
-          + `each with the reason. Pick a topic above to drill just one. Practice only: no word's level moves.`;
+          + `each with the reason.${lean || " Pick a topic above to drill just one."}`;
       return;
     }
     if (mode() === "listen") {
@@ -1018,7 +1026,7 @@
         : tenseName() === "mixed" ? "mixed tenses"
         : (Verbs.VERBS.tenses.find((t) => t.id === tenseName()) || {}).name;
     } else if (mode() === "grammar") {
-      narrowed = grammarLesson() ? grammarLesson().title : null;
+      narrowed = grammarLesson() ? grammarLesson().title : grammarName() === "weak" ? "Weak spots" : null;
     } else if (mode() === "words") {
       narrowed = [pick && pick.kind === "topic" ? pick.name : null,
                   posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
@@ -1061,6 +1069,46 @@
   const GRAMMAR = window.GRAMMAR || { lessons: [] };
   const grammarName = () => state.settings.grammar || "mixed";
   const grammarLesson = () => GRAMMAR.lessons.find((l) => l.id === grammarName()) || null;
+
+  /* How each grammar question has gone. Keyed by topic and the sentence
+     itself, so a question that is reworded starts afresh rather than
+     inheriting another one's record. */
+  const grammarKey = (lessonId, item) => `${lessonId}|${item.es}`;
+  const grammarRec = (lessonId, item) => (state.grammar || {})[grammarKey(lessonId, item)] || null;
+  const isWeak = (rec) => !!(rec && rec.last === "w");
+
+  /* Where a topic stands: how many of its questions have been tried, how
+     many were right the last time they came up, and how many were wrong.
+     "Needs work" is two or more wrong last time, or under sixty per cent
+     right across at least four tried. */
+  function topicStanding(lesson) {
+    let tried = 0, right = 0, wrong = 0;
+    for (const item of lesson.items) {
+      const rec = grammarRec(lesson.id, item);
+      if (!rec || !rec.n) continue;
+      tried++;
+      if (rec.last === "r") right++; else wrong++;
+    }
+    const total = lesson.items.length;
+    const needsWork = wrong >= 2 || (tried >= 4 && right / tried < 0.6);
+    const label = !tried ? "not started"
+      : needsWork ? `needs work · ${right} of ${tried} right last time`
+      : `${right} of ${tried} right last time`;
+    return { tried, right, wrong, total, needsWork, label };
+  }
+
+  /* The topics most worth another go, worst first: any with a question wrong
+     last time, ordered by how much of what was tried came out right. */
+  function weakestTopics(n) {
+    return GRAMMAR.lessons
+      .map((l) => ({ lesson: l, st: topicStanding(l) }))
+      .filter((x) => x.st.wrong > 0)
+      .sort((a, b) => a.st.right / a.st.tried - b.st.right / b.st.tried || b.st.wrong - a.st.wrong)
+      .slice(0, n);
+  }
+
+  const weakCount = () => GRAMMAR.lessons.reduce((n, l) =>
+    n + l.items.filter((it) => isWeak(grammarRec(l.id, it))).length, 0);
 
   /* Parts of speech, grouped. The bank has twelve of them and twelve pills is
      not a choice, it is a menu; these are the distinctions a learner would
@@ -1122,8 +1170,10 @@
     } else if (showGrammar) {
       label = "Topic";
       attr = "grammar";
-      current = grammarLesson() ? grammarName() : "mixed";
+      current = grammarLesson() || grammarName() === "weak" ? grammarName() : "mixed";
+      const weak = weakCount();
       options = [{ id: "mixed", name: "Mixed" }]
+        .concat(weak ? [{ id: "weak", name: "Weak spots", n: weak }] : [])
         .concat(GRAMMAR.lessons.map((l) => ({ id: l.id, name: l.short })));
     } else {
       label = "About";
@@ -1320,18 +1370,13 @@
      spread across every topic so a round is not all ser and estar. */
   function startGrammarRound() {
     const size = Engine.CONFIG.GRAMMAR_ROUND_SIZE;
-    const lesson = grammarLesson();
-    let picked;
-    if (lesson) {
-      picked = Engine.shuffle(lesson.items).slice(0, size).map((item) => ({ lesson, item }));
-    } else {
-      const decks = Engine.shuffle(GRAMMAR.lessons).map((l) => Engine.shuffle(l.items).map((item) => ({ lesson: l, item })));
-      picked = [];
-      for (let i = 0; picked.length < size && decks.some((d) => d.length); i = (i + 1) % decks.length) {
-        if (decks[i].length) picked.push(decks[i].shift());
-      }
+    const picked = pickGrammarRound();
+    if (!picked.length) {
+      toast(grammarName() === "weak"
+        ? "No weak spots: everything you have answered was right last time."
+        : "No grammar questions to drill.", true);
+      return;
     }
-    if (!picked.length) { toast("No grammar questions to drill.", true); return; }
     round = { queue: picked, index: 0, results: [], movers: [], drill: true, grammar: true };
     pickersOpen = false;
     $("round-start").hidden = true;
@@ -1340,15 +1385,32 @@
     nextCard();
   }
 
+  /* Which questions a round asks. Every question is weighted by how it went
+     last time (see grammarWeight in engine.js), so the ones you get wrong come
+     back more. A topic round draws from that topic; Mixed from all of them,
+     at most three from any one; Weak spots only from those wrong last time. */
+  function pickGrammarRound() {
+    const size = Engine.CONFIG.GRAMMAR_ROUND_SIZE;
+    const lesson = grammarLesson();
+    const all = (lesson ? [lesson] : GRAMMAR.lessons)
+      .flatMap((l) => l.items.map((item) => ({ lesson: l, item })));
+    const pool = grammarName() === "weak"
+      ? all.filter((e) => isWeak(grammarRec(e.lesson.id, e.item)))
+      : all;
+    const weightOf = (e) => Engine.grammarWeight(grammarRec(e.lesson.id, e.item));
+    const cap = lesson || grammarName() === "weak" ? 0 : Engine.CONFIG.GRAMMAR_TOPIC_CAP;
+    return Engine.weightedDraw(pool, size, weightOf, (e) => e.lesson.id, cap);
+  }
+
   /* The sentence with the gap filled in. "—" means nothing goes there. */
   const fillGap = (es, option) => (option === "—"
     ? es.replace(/___\s?/, "")
     : es.replace("___", option));
   const optionLabel = (option) => (option === "—" ? "nothing" : option);
 
-  /* A grammar question as a card. It counts as a drill, so it moves no level
-     and is never written to saved progress; the reason for the answer rides in
-     the note slot the verdict already shows. */
+  /* A grammar question as a card. It counts as a drill, so it moves no word's
+     level; what it does keep is how this question went, in state.grammar. The
+     reason for the answer rides in the note slot the verdict already shows. */
   function grammarCard(entry) {
     const { lesson, item } = entry;
     const full = fillGap(item.es, item.answer);
@@ -1365,6 +1427,7 @@
       revealContext: "",
       options: Engine.shuffle(item.options),
       answer: item.answer,
+      grammarKey: grammarKey(lesson.id, item),
     };
   }
 
@@ -1382,6 +1445,10 @@
     if (!card || !card.grammar || !$("verdict").hidden) return;
     const right = option === card.answer;
     $("choices").hidden = true;
+    if (!state.grammar) state.grammar = {};
+    state.grammar[card.grammarKey] = Engine.recordGrammar(state.grammar[card.grammarKey], right,
+      new Date().toISOString());
+    commit();
     applyAndShow({ correct: right, almost: false, matched: right ? option : null, near: false,
       reason: null, diff: null, sibling: null, equivalent: false }, option);
   }
@@ -1944,7 +2011,9 @@
       ]),
     ].join("");
 
-    $("end-movers").innerHTML = round.drill
+    $("end-movers").innerHTML = round.grammar
+      ? grammarRoundSummary()
+      : round.drill
       ? '<p class="muted small">A drill is practice, not assessment, so no word has moved.</p>'
       : round.listen
       ? '<p class="muted small">Listening is practice, not assessment, so no word has moved.</p>'
@@ -1966,6 +2035,20 @@
     // just been made and nobody is mid-card.
     doSync({ quiet: true });
     driveSync({ quiet: true });
+  }
+
+  /* The end of a grammar round: each topic it touched, how it stands now, and
+     a pointer to Weak spots if there are any. */
+  function grammarRoundSummary() {
+    const seen = [...new Set(round.queue.map((q) => q.lesson))];
+    const rows = seen.map((l) => {
+      const st = topicStanding(l);
+      return `<div class="mover ${st.needsWork ? "down" : "up"}"><span>${esc(l.title)}</span>`
+        + `<span class="lv">${esc(st.label)}</span></div>`;
+    }).join("");
+    const weak = weakCount();
+    return rows + `<p class="muted small">No word levels move in grammar. Each answer is kept to find your weak spots`
+      + (weak ? `: ${weak} ${weak === 1 ? "question" : "questions"} to put right, under Weak spots.` : ".") + "</p>";
   }
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
@@ -2089,10 +2172,17 @@
       <thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
+  // A lesson's standing, as a small badge on its row in the Lessons screen.
+  function standingBadge(l) {
+    const st = topicStanding(l);
+    const tone = !st.tried ? "" : st.needsWork ? " bad" : " good";
+    return `<span class="standing${tone}">${esc(!st.tried ? "not started" : st.needsWork ? "needs work" : `${st.right}/${st.tried}`)}</span>`;
+  }
+
   function renderGrammarLessons() {
     $("grammar-lessons").innerHTML = GRAMMAR.lessons.map((l) => `
       <details class="lesson" data-grammar="${esc(l.id)}">
-        <summary>${esc(l.title)}<span class="muted small">${esc(l.blurb)}</span></summary>
+        <summary>${esc(l.title)}<span class="muted small">${esc(l.blurb)}</span>${standingBadge(l)}</summary>
         <div class="lesson-body">${l.explain.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
         <div class="examples">
           ${l.examples.map(([es, en]) => `
@@ -2581,5 +2671,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding };
 })();

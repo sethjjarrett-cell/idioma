@@ -52,7 +52,24 @@ function defaultState() {
     customSentences: [],
     editedWords: {},
     stats: { rounds: 0, lastRoundAt: null },
+    /* How each grammar question has gone, keyed by topic and sentence, so the
+       drills can lean on the ones you get wrong. Separate from progress: a
+       grammar question is not a word and has no level. A state saved before
+       this existed simply has none yet, and starts empty. */
+    grammar: {},
   };
+}
+
+/* What a grammar record must look like to be kept: an object of plain
+   objects. Anything else, from a hand-edited backup or a newer version,
+   is dropped rather than allowed to break the drills. */
+function cleanGrammar(g) {
+  if (!g || typeof g !== "object" || Array.isArray(g)) return {};
+  const out = {};
+  for (const [k, v] of Object.entries(g)) {
+    if (v && typeof v === "object" && Number.isFinite(v.n)) out[k] = v;
+  }
+  return out;
 }
 
 /* A bad or half-written value in storage must not cost the user their
@@ -71,6 +88,7 @@ function load() {
     const merged = { ...defaultState(), ...parsed };
     merged.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
     merged.stats = { ...defaultState().stats, ...(parsed.stats || {}) };
+    merged.grammar = cleanGrammar(parsed.grammar);
     return { state: merged, warning: null };
   } catch (e) {
     try { window.localStorage.setItem(STORAGE_KEY + ".broken", raw); } catch (e2) { /* nothing more to do */ }
@@ -450,6 +468,7 @@ function parseImport(text) {
   for (const [id, p] of Object.entries(merged.phrases)) {
     merged.phrases[id] = { ...Engine.freshProgress(), ...p };
   }
+  merged.grammar = cleanGrammar(parsed.grammar);
   return merged;
 }
 

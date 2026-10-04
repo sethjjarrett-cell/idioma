@@ -128,8 +128,19 @@ const CONFIG = {
   LISTEN_WORDS_PER_SLIP: 4,
   LISTEN_SENTENCE_SHARE: 0.7,
 
-  /* Grammar drills: ten questions a round, which is a few minutes. */
+  /* Grammar drills: ten questions a round, which is a few minutes.
+
+     Each question remembers how you did, and a round leans towards the ones
+     you got wrong. The weights are relative chances of being picked: a
+     question wrong last time is about eight times as likely as one you have
+     now got right three times running, and one never seen sits in between so
+     new material keeps arriving. A mixed round takes at most three from any
+     one topic, so the weakest topic leads without taking over. */
   GRAMMAR_ROUND_SIZE: 10,
+  GRAMMAR_WEIGHT_NEW: 1.5,
+  GRAMMAR_WEIGHT_WRONG: 4,
+  GRAMMAR_WEIGHT_FLOOR: 0.25,
+  GRAMMAR_TOPIC_CAP: 3,
 
   /* Grammar no sentence can do without, and that nobody needs tested as
      vocabulary: the articles, the two contractions, and the que that joins
@@ -785,6 +796,53 @@ function checkHeard(typed, said, options = {}) {
 }
 
 /* ---------------------------------------------------------------
+   Grammar: what each question remembers, and how much it is wanted
+   --------------------------------------------------------------- */
+
+/* One answer to a grammar question, folded into its record. The record is
+   small on purpose: how many times answered, how many right, how the last
+   one went, the current run of right answers and when. */
+function recordGrammar(rec, right, at) {
+  const r = rec || { n: 0, r: 0, last: null, streak: 0, at: null };
+  return {
+    n: (r.n || 0) + 1,
+    r: (r.r || 0) + (right ? 1 : 0),
+    last: right ? "r" : "w",
+    streak: right ? (r.streak || 0) + 1 : 0,
+    at,
+  };
+}
+
+/* How much a question is wanted in the next round. Wrong last time is the
+   strongest pull; each right answer in a row halves it and then some, down
+   to a floor, so nothing is ever retired completely. */
+function grammarWeight(rec) {
+  if (!rec || !rec.n) return CONFIG.GRAMMAR_WEIGHT_NEW;
+  if (rec.last === "w") return CONFIG.GRAMMAR_WEIGHT_WRONG;
+  return Math.max(CONFIG.GRAMMAR_WEIGHT_FLOOR, 1 / (1 + (rec.streak || 0)));
+}
+
+/* Draw `size` entries at random, each in proportion to its weight and none
+   twice, with at most `cap` from any one group when a cap is given. */
+function weightedDraw(entries, size, weightOf, groupOf, cap) {
+  const pool = entries.slice();
+  const out = [];
+  const per = new Map();
+  while (out.length < size && pool.length) {
+    const open = pool.filter((e) => !cap || (per.get(groupOf(e)) || 0) < cap);
+    if (!open.length) break;
+    const total = open.reduce((n, e) => n + weightOf(e), 0);
+    let roll = Math.random() * total;
+    let chosen = open[open.length - 1];
+    for (const e of open) { roll -= weightOf(e); if (roll <= 0) { chosen = e; break; } }
+    pool.splice(pool.indexOf(chosen), 1);
+    out.push(chosen);
+    per.set(groupOf(chosen), (per.get(groupOf(chosen)) || 0) + 1);
+  }
+  return out;
+}
+
+/* ---------------------------------------------------------------
    Sentences: what a sentence needs, and what to do with it
    --------------------------------------------------------------- */
 
@@ -984,4 +1042,5 @@ window.Engine = {
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
   sentenceRank, sentenceCard, checkSequence, checkHeard, shuffle, FREE_TOKEN,
+  recordGrammar, grammarWeight, weightedDraw,
 };
