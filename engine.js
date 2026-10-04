@@ -128,6 +128,9 @@ const CONFIG = {
   LISTEN_WORDS_PER_SLIP: 4,
   LISTEN_SENTENCE_SHARE: 0.7,
 
+  /* Grammar drills: ten questions a round, which is a few minutes. */
+  GRAMMAR_ROUND_SIZE: 10,
+
   /* Grammar no sentence can do without, and that nobody needs tested as
      vocabulary: the articles, the two contractions, and the que that joins
      two clauses. The bank has ¿qué? the question word, which is a different

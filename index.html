@@ -318,6 +318,9 @@
       <button class="mode" data-mode="listen">
         <b>Listen</b><span>Hear it read aloud, type what you heard</span>
       </button>
+      <button class="mode" data-mode="grammar">
+        <b>Grammar</b><span>The rules that trip people up, as quick drills</span>
+      </button>
     </div>
 
     <div class="tenses" id="filters" hidden>
@@ -380,6 +383,9 @@
           <button class="btn primary" type="button" id="btn-build-check">Check</button>
         </div>
       </div>
+
+      <!-- A grammar card: pick the word that fills the gap. -->
+      <div class="choices" id="choices" hidden></div>
 
       <form id="answer-form" autocomplete="off">
         <!-- The letters a phone keyboard hides behind a long press. Only on a
@@ -465,6 +471,14 @@
 
   <!-- ============================ LESSONS ============================= -->
   <section class="screen" id="screen-lessons">
+    <div class="pane">
+      <h2>Grammar</h2>
+      <p class="muted small">The points English speakers most often get wrong in
+        Spanish, roughly in the order a course meets them. Open one to read it,
+        then practise it as a quick drill. Tap any Spanish word for its meaning.</p>
+      <div class="lesson-list" id="grammar-lessons"></div>
+    </div>
+
     <div class="pane">
       <h2>Verb endings</h2>
       <p class="muted small">Three families, six tenses, five persons. Open a tense
@@ -590,6 +604,7 @@
 <script src="senses.js"></script>
 <script src="equivalents.js"></script>
 <script src="phrases.js"></script>
+<script src="grammar.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>
 <script src="speak.js"></script>
