@@ -1728,7 +1728,10 @@
        English where it can: hablar, and under it "I talk". Where it cannot,
        for the preterite and the subjunctive, it at least spells out who yo
        is rather than leaving the pronoun to speak for itself. */
-    const english = item.english;
+    // The tables translate the él form as he; it is just as much she.
+    const english = item.english && item.personLabel.startsWith("él")
+      ? item.english.replace(/^he /, "he / she ")
+      : item.english;
     return {
       drill: true,
       word: { id: null, es: item.answer, note: item.note || "" },
@@ -1742,7 +1745,8 @@
       promptHint: english ? `${item.gloss} \u00b7 say "${english}"` : item.gloss,
       accepted: [item.answer],
       reveal: item.answer,
-      revealContext: english ? `${item.personLabel}: ${english}` : "",
+      revealContext: "",
+      english: english || "",
     };
   }
 
@@ -1948,6 +1952,15 @@
     if (card.band.key === "cloze") $("verdict-context").innerHTML = tappable(card.revealContext);
     else $("verdict-context").textContent = card.listen ? "" : card.revealContext || "";
     $("verdict-context").hidden = card.listen || !card.revealContext;
+    /* A drill's answer, spelt out as the same labelled rows the word pop-up
+       uses: which person, which tense, and what it means in English. */
+    const t = card.target;
+    $("verdict-rows").innerHTML = t
+      ? [["Person", `${t.person} (${t.personEn})`], ["Tense", t.tense.toLowerCase()]]
+          .concat(card.english ? [["In English", card.english]] : [])
+          .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")
+      : "";
+    $("verdict-rows").hidden = !t;
 
     const note = card.word.note;
     $("verdict-note").textContent = note || "";

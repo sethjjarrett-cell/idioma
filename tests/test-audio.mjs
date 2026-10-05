@@ -185,6 +185,11 @@ console.log('a verb drill');
     && chips[0].toLowerCase().startsWith('person ' + c.target.person.toLowerCase())
     && chips[1].toLowerCase() === 'tense ' + c.target.tense.toLowerCase(), JSON.stringify(chips));
   await answer(p, 'zzz');
+  const rows = Object.fromEntries(await p.$$eval('#verdict-rows dt', (els) => els.map((e) => [e.textContent, e.nextElementSibling.textContent])));
+  ok('the verdict spells out person, tense and English as labelled rows',
+    rows.Person && rows.Person.startsWith(c.target.person) && rows.Tense === c.target.tense.toLowerCase()
+    && await p.isHidden('#verdict-context'), JSON.stringify(rows));
+  ok('the old run-together line is gone', !/: (I|you|he|we|they) /.test(await p.innerText('#verdict')));
   ok('and the conjugated answer at the verdict, which is new Spanish',
     (await lastSaid(p) || {}).text === c.reveal && c.reveal !== c.prompt);
   await ctx.close();
