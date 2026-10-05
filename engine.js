@@ -21,6 +21,10 @@ const CONFIG = {
      lucky guess cannot promote a word into a harder format. */
   BOUNDARY_STREAK: 2,
 
+  /* "I know this", answered right, sends a word to the start of the next
+     band; already in the last band, this many levels on. */
+  JUMP_IN_LAST_BAND: 2,
+
   ROUND_SIZE: 15,
 
   /* A word you have never met cannot be tested, only guessed at, so the
@@ -255,6 +259,16 @@ function freshProgress() {
 /* A word the learner keeps missing, as against one they simply have not met
    yet. The count is the current run of trouble, not a lifetime tally, so this
    goes false again as soon as the word comes good. */
+/* Where a word lands when it is answered right after "I know this": the
+   start of the next band, so a word you already know skips the drilling of
+   the stage it was in. In the last band there is no next one, so it moves on
+   JUMP_IN_LAST_BAND levels instead. */
+function jumpAhead(level) {
+  if (level <= CONFIG.BAND_RECOGNITION_TOP) return CONFIG.BAND_RECOGNITION_TOP + 1;
+  if (level <= CONFIG.BAND_PRODUCTION_TOP) return CONFIG.BAND_PRODUCTION_TOP + 1;
+  return Math.min(CONFIG.LEVEL_CEILING, level + CONFIG.JUMP_IN_LAST_BAND);
+}
+
 function isSticking(progress) {
   return (progress.lapses || 0) >= CONFIG.STICKY_LAPSES;
 }
@@ -1037,7 +1051,7 @@ function checkSequence(picked, want) {
 /* Exported for the browser through the global scope; there is no build
    step and no module loader, which is the point. */
 window.Engine = {
-  CONFIG, BANDS, PACES, applyPace, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking,
+  CONFIG, BANDS, PACES, applyPace, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking, jumpAhead,
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
