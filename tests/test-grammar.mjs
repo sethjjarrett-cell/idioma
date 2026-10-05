@@ -70,8 +70,18 @@ const card = (p) => p.evaluate(() => window.__card);
     window.Idioma.state.phrases, window.Idioma.state.stats]));
   const before = await book();
   await p.click('#btn-start'); await p.waitForTimeout(200);
-  const lessons = await p.evaluate(() => new Set(window.Idioma.round.queue.map((q) => q.lesson.id)).size);
-  ok(`a mixed round spreads across topics (${lessons} in ten questions)`, lessons >= 8);
+  const spread = await p.evaluate(() => {
+    let most = 0, least = 99;
+    for (let i = 0; i < 30; i++) {
+      const per = {};
+      for (const e of window.Idioma.pickGrammarRound()) per[e.lesson.id] = (per[e.lesson.id] || 0) + 1;
+      most = Math.max(most, ...Object.values(per));
+      least = Math.min(least, Object.keys(per).length);
+    }
+    return { most, least };
+  });
+  ok(`a mixed round spreads across topics, never more than three from one (${JSON.stringify(spread)})`,
+    spread.most <= 3 && spread.least >= 4);
 
   let k = await card(p);
   ok('the card is a gap to fill', k.grammar && /___/.test(k.prompt));
@@ -107,8 +117,8 @@ const card = (p) => p.evaluate(() => window.__card);
     await p.click('#btn-next'); await p.waitForTimeout(80);
     if (await p.isVisible('#choices')) await p.click('#choices .choice >> nth=0');
   }
-  ok('the round ends as a drill', await p.isVisible('#round-end')
-    && /practice, not assessment/.test(await p.textContent('#end-movers')));
+  ok('the round ends saying no word moved, but the answers were kept', await p.isVisible('#round-end')
+    && /No word levels move in grammar/.test(await p.textContent('#end-movers')));
   ok('and no level, sentence or round count moved', await book() === before);
   await c.close();
 }
@@ -147,6 +157,105 @@ console.log('a state saved before there was any grammar');
   ok('loads on Mixed', /A mix of all/.test(await p.textContent('#start-blurb')));
   await p.click('#btn-start'); await p.waitForTimeout(150);
   ok('and drills', await p.isVisible('#choices'));
+  await c.close();
+}
+
+console.log('remembering what goes wrong');
+{
+  const { c, p } = await page();
+  const e = await p.evaluate(() => {
+    const E = window.Idioma.Engine;
+    let r = E.recordGrammar(null, false, 't1');
+    const afterWrong = { ...r, w: E.grammarWeight(r) };
+    r = E.recordGrammar(r, true, 't2');
+    const one = E.grammarWeight(r);
+    r = E.recordGrammar(r, true, 't3'); r = E.recordGrammar(r, true, 't4');
+    return { afterWrong, after3: r, w3: E.grammarWeight(r), one, fresh: E.grammarWeight(null) };
+  });
+  ok('a wrong answer is recorded as such', e.afterWrong.n === 1 && e.afterWrong.r === 0 && e.afterWrong.last === 'w' && e.afterWrong.streak === 0);
+  ok('right answers build a run', e.after3.n === 4 && e.after3.r === 3 && e.after3.streak === 3 && e.after3.last === 'r');
+  ok('wrong last time pulls hardest, then unseen, then right, then right in a row',
+    e.afterWrong.w > e.fresh && e.fresh > e.one && e.one > e.w3, JSON.stringify(e));
+  ok('wrong last time is about eight times a question right three in a row', e.afterWrong.w / e.w3 >= 8);
+
+  await p.click('#modes [data-mode="grammar"]');
+  await p.click('#btn-start'); await p.waitForTimeout(150);
+  const k = await card(p);
+  await p.click(`#choices [data-choice="${k.options.find((o) => o !== k.answer)}"]`);
+  await p.waitForTimeout(300);   // saves are batched for a moment
+  const rec = await p.evaluate((key) => JSON.parse(localStorage.getItem('idioma.state.v1')).grammar[key], k.grammarKey);
+  ok('answering saves how the question went', rec && rec.n === 1 && rec.last === 'w', JSON.stringify(rec));
+
+  // Every por and para question wrong last time, everything else right three times running.
+  await p.evaluate(() => {
+    const st = window.Idioma.state, E = window.Idioma.Engine;
+    st.grammar = {};
+    for (const l of window.GRAMMAR.lessons) for (const it of l.items) {
+      let r = null;
+      if (l.id === 'por-para') r = E.recordGrammar(r, false, '2026-01-01');
+      else for (let i = 0; i < 3; i++) r = E.recordGrammar(r, true, '2026-01-01');
+      st.grammar[`${l.id}|${it.es}`] = r;
+    }
+    window.Idioma.Store.saveNow(st);
+  });
+  const share = await p.evaluate(() => {
+    let n = 0; const rounds = 40;
+    for (let i = 0; i < rounds; i++) n += window.Idioma.pickGrammarRound().filter((e) => e.lesson.id === 'por-para').length;
+    return n / rounds;
+  });
+  ok(`a mixed round leans on the weak topic, up to its cap of three (${share.toFixed(1)} a round)`, share >= 2.5 && share <= 3);
+  await p.reload(); await p.waitForTimeout(300);
+  ok('the start screen names the weakest topic', /Your weakest: por \/ para/.test(await p.textContent('#start-blurb')));
+  ok('and Weak spots appears with its count', /Weak spots\s*12/.test(await p.textContent('#filter-pills')));
+  await p.click('#filter-pills [data-value="weak"]');
+  await p.click('#btn-start'); await p.waitForTimeout(150);
+  ok('Weak spots only asks what was wrong last time', await p.evaluate(() =>
+    window.Idioma.round.queue.every((q) => q.lesson.id === 'por-para')));
+  const w = await card(p);
+  await p.click(`#choices [data-choice="${w.answer}"]`);
+  ok('putting one right takes it off the list', await p.evaluate((key) =>
+    window.Idioma.state.grammar[key].last === 'r', w.grammarKey));
+  for (let i = 0; i < 12 && await p.isVisible('#btn-next'); i++) {
+    await p.click('#btn-next'); await p.waitForTimeout(60);
+    if (await p.isVisible('#choices')) await p.click('#choices .choice >> nth=0');
+  }
+  ok('the end of the round says how the topic stands and why', /needs work|right last time/.test(await p.textContent('#end-movers'))
+    && /weak spots/i.test(await p.textContent('#end-movers')));
+  await p.click('[data-screen="lessons"]');
+  ok('the Lessons screen marks the topic', /needs work/.test(await p.textContent('#grammar-lessons [data-grammar="por-para"] .standing')));
+  ok('and the others with their score', /^\d+\/\d+$/.test(await p.textContent('#grammar-lessons [data-grammar="ser-estar"] .standing')));
+
+  console.log('older saves, backups and a second device');
+  const old = await p.evaluate(() => {
+    const st = JSON.parse(localStorage.getItem('idioma.state.v1'));
+    st.progress = { ser: { ...window.Idioma.Engine.freshProgress(), level: 5, timesSeen: 9 } };
+    delete st.grammar;
+    localStorage.setItem('idioma.state.v1', JSON.stringify(st));
+    return st;
+  });
+  // Closed without the save the app makes on the way out, which would put the
+  // in-memory state back over the old one being simulated.
+  await p.close();
+  const p2 = await c.newPage();
+  p2.on('pageerror', (e) => { pe++; console.log('  !! PAGEERROR:', e.message); });
+  await p2.goto('file:///home/user/idioma/index.html'); await p2.waitForTimeout(300);
+  ok('a save from before grammar was remembered loads with its progress and an empty record',
+    await p2.evaluate(() => window.Idioma.state.progress.ser.level === 5
+      && JSON.stringify(window.Idioma.state.grammar) === '{}'));
+  ok('and an old backup imports the same way', await p2.evaluate((st) => {
+    const back = window.Idioma.Store.parseImport(JSON.stringify(st));
+    return back.progress.ser.level === 5 && JSON.stringify(back.grammar) === '{}';
+  }, old));
+  ok('junk in the record is dropped rather than trusted', await p2.evaluate(() => {
+    const back = window.Idioma.Store.parseImport(JSON.stringify({ progress: {}, grammar: { a: 'x', b: { n: 2, r: 1, last: 'w' } } }));
+    return Object.keys(back.grammar).join() === 'b';
+  }));
+  ok('two devices merge question by question, the later answer winning', await p2.evaluate(() => {
+    const a = { progress: {}, grammar: { q1: { n: 3, r: 1, last: 'w', at: '2026-01-02' }, q2: { n: 1, r: 1, last: 'r', at: '2026-01-01' } } };
+    const b = { progress: {}, grammar: { q1: { n: 4, r: 2, last: 'r', at: '2026-01-03' }, q3: { n: 1, r: 0, last: 'w', at: '2026-01-01' } } };
+    const m = window.Sync.merge(a, b).grammar;
+    return m.q1.last === 'r' && m.q1.n === 4 && m.q2 && m.q3;
+  }));
   await c.close();
 }
 

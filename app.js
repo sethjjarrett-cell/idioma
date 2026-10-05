@@ -885,15 +885,26 @@
   };
 
   function updateStartBlurb() {
+    const sticking = mode() === "words" ? stickingWords().length : 0;
+    $("btn-sticking-start").hidden = !sticking;
+    $("btn-sticking-start").textContent = `Words you keep missing (${sticking})`;
     if (mode() === "grammar") {
       const lesson = grammarLesson();
       $("start-picked").hidden = true;
       const count = lesson ? lesson.items.length : GRAMMAR.lessons.reduce((n, l) => n + l.items.length, 0);
-      $("start-blurb").textContent = lesson
+      const worst = weakestTopics(2);
+      const lean = worst.length
+        ? ` Your weakest: ${worst.map((x) => `${x.lesson.short} (${x.st.right} of ${x.st.tried})`).join(", ")}; rounds lean towards these.`
+        : "";
+      $("start-blurb").textContent = grammarName() === "weak"
+        ? (weakCount()
+          ? `Weak spots: the ${weakCount()} questions you got wrong last time, from every topic. Get one right and it leaves this list.`
+          : `No weak spots: everything you have answered was right last time.`)
+        : lesson
         ? `${lesson.title}: ${lesson.blurb} ${Math.min(count, Engine.CONFIG.GRAMMAR_ROUND_SIZE)} questions from ${count}, `
-          + `each with the reason. New to it? Read the lesson on the Lessons screen first.`
+          + `each with the reason, the ones you have got wrong more often. You: ${topicStanding(lesson).label}.`
         : `A mix of all ${GRAMMAR.lessons.length} topics, ${Engine.CONFIG.GRAMMAR_ROUND_SIZE} questions a round, `
-          + `each with the reason. Pick a topic above to drill just one. Practice only: no word's level moves.`;
+          + `each with the reason.${lean || " Pick a topic above to drill just one."}`;
       return;
     }
     if (mode() === "listen") {
@@ -1018,7 +1029,7 @@
         : tenseName() === "mixed" ? "mixed tenses"
         : (Verbs.VERBS.tenses.find((t) => t.id === tenseName()) || {}).name;
     } else if (mode() === "grammar") {
-      narrowed = grammarLesson() ? grammarLesson().title : null;
+      narrowed = grammarLesson() ? grammarLesson().title : grammarName() === "weak" ? "Weak spots" : null;
     } else if (mode() === "words") {
       narrowed = [pick && pick.kind === "topic" ? pick.name : null,
                   posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
@@ -1061,6 +1072,46 @@
   const GRAMMAR = window.GRAMMAR || { lessons: [] };
   const grammarName = () => state.settings.grammar || "mixed";
   const grammarLesson = () => GRAMMAR.lessons.find((l) => l.id === grammarName()) || null;
+
+  /* How each grammar question has gone. Keyed by topic and the sentence
+     itself, so a question that is reworded starts afresh rather than
+     inheriting another one's record. */
+  const grammarKey = (lessonId, item) => `${lessonId}|${item.es}`;
+  const grammarRec = (lessonId, item) => (state.grammar || {})[grammarKey(lessonId, item)] || null;
+  const isWeak = (rec) => !!(rec && rec.last === "w");
+
+  /* Where a topic stands: how many of its questions have been tried, how
+     many were right the last time they came up, and how many were wrong.
+     "Needs work" is two or more wrong last time, or under sixty per cent
+     right across at least four tried. */
+  function topicStanding(lesson) {
+    let tried = 0, right = 0, wrong = 0;
+    for (const item of lesson.items) {
+      const rec = grammarRec(lesson.id, item);
+      if (!rec || !rec.n) continue;
+      tried++;
+      if (rec.last === "r") right++; else wrong++;
+    }
+    const total = lesson.items.length;
+    const needsWork = wrong >= 2 || (tried >= 4 && right / tried < 0.6);
+    const label = !tried ? "not started"
+      : needsWork ? `needs work · ${right} of ${tried} right last time`
+      : `${right} of ${tried} right last time`;
+    return { tried, right, wrong, total, needsWork, label };
+  }
+
+  /* The topics most worth another go, worst first: any with a question wrong
+     last time, ordered by how much of what was tried came out right. */
+  function weakestTopics(n) {
+    return GRAMMAR.lessons
+      .map((l) => ({ lesson: l, st: topicStanding(l) }))
+      .filter((x) => x.st.wrong > 0)
+      .sort((a, b) => a.st.right / a.st.tried - b.st.right / b.st.tried || b.st.wrong - a.st.wrong)
+      .slice(0, n);
+  }
+
+  const weakCount = () => GRAMMAR.lessons.reduce((n, l) =>
+    n + l.items.filter((it) => isWeak(grammarRec(l.id, it))).length, 0);
 
   /* Parts of speech, grouped. The bank has twelve of them and twelve pills is
      not a choice, it is a menu; these are the distinctions a learner would
@@ -1122,8 +1173,10 @@
     } else if (showGrammar) {
       label = "Topic";
       attr = "grammar";
-      current = grammarLesson() ? grammarName() : "mixed";
+      current = grammarLesson() || grammarName() === "weak" ? grammarName() : "mixed";
+      const weak = weakCount();
       options = [{ id: "mixed", name: "Mixed" }]
+        .concat(weak ? [{ id: "weak", name: "Weak spots", n: weak }] : [])
         .concat(GRAMMAR.lessons.map((l) => ({ id: l.id, name: l.short })));
     } else {
       label = "About";
@@ -1320,18 +1373,13 @@
      spread across every topic so a round is not all ser and estar. */
   function startGrammarRound() {
     const size = Engine.CONFIG.GRAMMAR_ROUND_SIZE;
-    const lesson = grammarLesson();
-    let picked;
-    if (lesson) {
-      picked = Engine.shuffle(lesson.items).slice(0, size).map((item) => ({ lesson, item }));
-    } else {
-      const decks = Engine.shuffle(GRAMMAR.lessons).map((l) => Engine.shuffle(l.items).map((item) => ({ lesson: l, item })));
-      picked = [];
-      for (let i = 0; picked.length < size && decks.some((d) => d.length); i = (i + 1) % decks.length) {
-        if (decks[i].length) picked.push(decks[i].shift());
-      }
+    const picked = pickGrammarRound();
+    if (!picked.length) {
+      toast(grammarName() === "weak"
+        ? "No weak spots: everything you have answered was right last time."
+        : "No grammar questions to drill.", true);
+      return;
     }
-    if (!picked.length) { toast("No grammar questions to drill.", true); return; }
     round = { queue: picked, index: 0, results: [], movers: [], drill: true, grammar: true };
     pickersOpen = false;
     $("round-start").hidden = true;
@@ -1340,15 +1388,32 @@
     nextCard();
   }
 
+  /* Which questions a round asks. Every question is weighted by how it went
+     last time (see grammarWeight in engine.js), so the ones you get wrong come
+     back more. A topic round draws from that topic; Mixed from all of them,
+     at most three from any one; Weak spots only from those wrong last time. */
+  function pickGrammarRound() {
+    const size = Engine.CONFIG.GRAMMAR_ROUND_SIZE;
+    const lesson = grammarLesson();
+    const all = (lesson ? [lesson] : GRAMMAR.lessons)
+      .flatMap((l) => l.items.map((item) => ({ lesson: l, item })));
+    const pool = grammarName() === "weak"
+      ? all.filter((e) => isWeak(grammarRec(e.lesson.id, e.item)))
+      : all;
+    const weightOf = (e) => Engine.grammarWeight(grammarRec(e.lesson.id, e.item));
+    const cap = lesson || grammarName() === "weak" ? 0 : Engine.CONFIG.GRAMMAR_TOPIC_CAP;
+    return Engine.weightedDraw(pool, size, weightOf, (e) => e.lesson.id, cap);
+  }
+
   /* The sentence with the gap filled in. "—" means nothing goes there. */
   const fillGap = (es, option) => (option === "—"
     ? es.replace(/___\s?/, "")
     : es.replace("___", option));
   const optionLabel = (option) => (option === "—" ? "nothing" : option);
 
-  /* A grammar question as a card. It counts as a drill, so it moves no level
-     and is never written to saved progress; the reason for the answer rides in
-     the note slot the verdict already shows. */
+  /* A grammar question as a card. It counts as a drill, so it moves no word's
+     level; what it does keep is how this question went, in state.grammar. The
+     reason for the answer rides in the note slot the verdict already shows. */
   function grammarCard(entry) {
     const { lesson, item } = entry;
     const full = fillGap(item.es, item.answer);
@@ -1365,6 +1430,7 @@
       revealContext: "",
       options: Engine.shuffle(item.options),
       answer: item.answer,
+      grammarKey: grammarKey(lesson.id, item),
     };
   }
 
@@ -1382,6 +1448,13 @@
     if (!card || !card.grammar || !$("verdict").hidden) return;
     const right = option === card.answer;
     $("choices").hidden = true;
+    // A second look does not count: the answer was shown a minute ago.
+    if (!round.review) {
+      if (!state.grammar) state.grammar = {};
+      state.grammar[card.grammarKey] = Engine.recordGrammar(state.grammar[card.grammarKey], right,
+        new Date().toISOString());
+      commit();
+    }
     applyAndShow({ correct: right, almost: false, matched: right ? option : null, near: false,
       reason: null, diff: null, sibling: null, equivalent: false }, option);
   }
@@ -1418,6 +1491,32 @@
     };
   }
 
+  /* Whether answers in this round move anything. Drills and listening never
+     do, and neither does a second look at what was just missed: the answer
+     was on screen a minute ago, so getting it right now proves little. */
+  const practiceOnly = (c = card) => !!(round && round.review) || !!(c && (c.drill || c.listen));
+
+  /* "I know this". Only on a word card that is a real question: not the
+     teaching card, not a drill, a sentence or a second look. Pressed, it
+     says what it will do; answer right and the word jumps ahead a stage. */
+  const canBeSure = (c) => !!(c && !round.review && !c.intro && !c.drill && !c.listen && !c.isSentence
+    && c.word && c.word.id && ["recognition", "production", "cloze"].includes(c.band.key));
+  function drawSure() {
+    const btn = $("btn-sure");
+    btn.hidden = !canBeSure(card);
+    btn.setAttribute("aria-pressed", card && card.sure ? "true" : "false");
+    btn.textContent = card && card.sure ? "Right = jump ahead" : "I know this";
+  }
+  $("btn-sure").addEventListener("click", () => {
+    if (!canBeSure(card) || !$("verdict").hidden) return;
+    card.sure = !card.sure;
+    drawSure();
+  });
+  // Pressing it while typing should not fold the phone keyboard away.
+  for (const type of ["pointerdown", "mousedown"]) {
+    $("btn-sure").addEventListener(type, (e) => e.preventDefault());
+  }
+
   function nextCard() {
     if (!round || round.index >= round.queue.length) return endRound();
     const item = round.queue[round.index];
@@ -1431,13 +1530,18 @@
             (id) => prog(id), Engine.CONFIG.TILE_DISTRACTORS),
         })
       : Engine.buildCard(item, prog(item.id), sentencesFor, {
-          introduce: state.settings.introduceNew !== false,
+          // A second look asks; it does not teach the word all over again.
+          introduce: !round.review && state.settings.introduceNew !== false,
         });
     lastResult = null;
-    cardBefore = round.drill || round.listen ? null : JSON.parse(JSON.stringify(cardProgress(card)));
+    cardBefore = practiceOnly() ? null : JSON.parse(JSON.stringify(cardProgress(card)));
+    // "I know this" pressed on the teaching card carries over to the question.
+    card.sure = !!(round.sureIds && card.word && round.sureIds.delete(card.word.id));
+    drawSure();
     retypes = 0;
 
-    $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
+    $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "")
+      + (round.review ? " · second look" : "");
     // A word you have not met is always at L1, so saying so tells nobody
     // anything; the level appears once it starts meaning something.
     $("card-level").textContent = round.drill || round.listen ? card.levelLabel
@@ -1595,6 +1699,15 @@
      shown it and asked immediately is the pair that makes it stick. The word
      is not removed from anywhere else, so it still comes round again later on
      its own weight, which is where the actual remembering happens. */
+  /* The teaching card's other button: skip the lesson, be asked straight away,
+     and if the answer is right, jump the word ahead as "I know this" would. */
+  $("btn-know").addEventListener("click", () => {
+    if (!card || !card.intro) return;
+    if (!round.sureIds) round.sureIds = new Set();
+    round.sureIds.add(card.word.id);
+    $("btn-got").click();
+  });
+
   $("btn-got").addEventListener("click", () => {
     if (!card || !card.intro) return;
     const id = card.word.id;
@@ -1736,7 +1849,7 @@
        off a table would make it mean nothing. */
     /* Listening is kept out for the same reason: hearing a word and knowing it
        are different things, and a level should only mean the second. */
-    const applied = card.drill || card.listen
+    const applied = practiceOnly()
       ? { result: outcome, held: false, movedUp: false, movedDown: false,
           levelBefore: null, levelAfter: null, bandChanged: false }
       : (() => {
@@ -1744,6 +1857,17 @@
           Object.keys(row).forEach((k) => { delete row[k]; });
           Object.assign(row, cardBefore);
           const a = Engine.applyResult(row, outcome, new Date().toISOString());
+          /* Sure, and right: on to the start of the next stage rather than
+             one level up. Wrong costs no more than it would have anyway. */
+          if (card.sure && outcome === "correct") {
+            const to = Math.max(a.progress.level, Engine.jumpAhead(cardBefore.level));
+            a.jumped = to > a.progress.level;
+            a.progress.level = to;
+            a.levelAfter = to;
+            a.movedUp = to > a.levelBefore;
+            a.held = false;
+            a.bandChanged = Engine.bandForLevel(a.levelBefore).key !== Engine.bandForLevel(to).key;
+          }
           Object.assign(row, a.progress);
           commit();
           return a;
@@ -1791,6 +1915,8 @@
       detail = res.of ? `${res.heard} of ${res.of} ${res.of === 1 ? "word" : "words"}` : "";
       if (res.near) detail += " · accepted with typo tolerance";
     }
+    if (applied.jumped) detail += `${detail ? " · " : ""}jumped ahead`;
+    else if (card.sure && outcome !== "correct") detail += `${detail ? " · " : ""}not this time, so no jump`;
     if (applied.movedUp) detail += `${detail ? " · " : ""}L${applied.levelBefore} to L${applied.levelAfter}`;
     if (applied.movedDown) detail += `${detail ? " · " : ""}dropped to L${applied.levelAfter}`;
     if (applied.held) detail += `${detail ? " · " : ""}holding at L${applied.levelAfter}`;
@@ -1859,6 +1985,7 @@
     $("answer-form").hidden = true;
     $("build").hidden = true;
     $("verdict").hidden = false;
+    $("btn-sure").hidden = true;   // answered: the choice has been made
     (outcome === "almost" ? $("btn-retry") : $("btn-next")).focus();
     /* Spanish the card has not yet read out, read now: the answer to a card
        that asked for it, or a drill's conjugated form, which is not the
@@ -1885,6 +2012,7 @@
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
     $("answer").focus();
+    drawSure();
     if (card.listen) say(card.reveal);
   }
 
@@ -1935,7 +2063,7 @@
     const right = count("correct");
     const pct = n ? Math.round((right / n) * 100) : 0;
 
-    if (!round.drill && !round.listen) {
+    if (!round.drill && !round.listen && !round.review) {
       state.stats.rounds += 1;
       state.stats.lastRoundAt = new Date().toISOString();
       Store.saveNow(state);
@@ -1951,13 +2079,17 @@
         stat(count("almost"), "almost"),
       ] : []),
       // Levels are a word thing, so a drill does not report them.
-      ...(round.drill || round.listen || !n ? [] : [
+      ...(round.drill || round.listen || round.review || !n ? [] : [
         stat(round.movers.filter((m) => m.up).length, "levelled up"),
         stat(round.movers.filter((m) => !m.up).length, "dropped"),
       ]),
     ].join("");
 
-    $("end-movers").innerHTML = round.drill
+    $("end-movers").innerHTML = round.review
+      ? '<p class="muted small">A second look is practice, so nothing has moved. These come back in your normal rounds anyway.</p>'
+      : round.grammar
+      ? grammarRoundSummary()
+      : round.drill
       ? '<p class="muted small">A drill is practice, not assessment, so no word has moved.</p>'
       : round.listen
       ? '<p class="muted small">Listening is practice, not assessment, so no word has moved.</p>'
@@ -1973,6 +2105,7 @@
             </div>`).join("")
         : '<p class="muted small">No level changes this round.</p>';
 
+    drawEndActions();
     $("round-end").hidden = false;
     updateStartBlurb();
     // The end of a round is the moment worth pushing: the most progress has
@@ -1980,6 +2113,81 @@
     doSync({ quiet: true });
     driveSync({ quiet: true });
   }
+
+  /* The end of a grammar round: each topic it touched, how it stands now, and
+     a pointer to Weak spots if there are any. */
+  function grammarRoundSummary() {
+    const seen = [...new Set(round.queue.map((q) => q.lesson))];
+    const rows = seen.map((l) => {
+      const st = topicStanding(l);
+      return `<div class="mover ${st.needsWork ? "down" : "up"}"><span>${esc(l.title)}</span>`
+        + `<span class="lv">${esc(st.label)}</span></div>`;
+    }).join("");
+    const weak = weakCount();
+    return rows + `<p class="muted small">No word levels move in grammar. Each answer is kept to find your weak spots`
+      + (weak ? `: ${weak} ${weak === 1 ? "question" : "questions"} to put right, under Weak spots.` : ".") + "</p>";
+  }
+
+  /* Going over what went wrong. The round's misses, wrong or nearly, are kept
+     when it ends, once each, and can be asked again straight away in the same
+     kind of round. A second look can itself be gone over, until none are left. */
+  let lastMissed = null;
+  const itemKey = (q) => (q && (q.item && q.lesson ? `${q.lesson.id}|${q.item.es}`
+    : q.id || `${q.infinitive}|${q.tenseName}|${q.personLabel}`));
+
+  function missedThisRound() {
+    const seen = new Set();
+    return round.queue.filter((q, i) => {
+      const r = round.results[i];
+      if (!r || (r.outcome !== "wrong" && r.outcome !== "almost")) return false;
+      const k = itemKey(q);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  /* Words that keep going wrong: missed STICKY_LAPSES times without three
+     right in a row since. The engine already counts these and shows them
+     again first; this is the button to work through them on purpose. */
+  const stickingWords = () => words().filter((w) => prog(w.id).enabled !== false && Engine.isSticking(prog(w.id)));
+
+  function drawEndActions() {
+    const missed = missedThisRound();
+    lastMissed = missed.length ? {
+      items: missed,
+      flags: { drill: !!round.drill, grammar: !!round.grammar, listen: !!round.listen, sentences: !!round.sentences },
+    } : null;
+    $("btn-review").hidden = !missed.length;
+    $("btn-review").textContent = `Go over the ${missed.length} you missed`;
+    const plainWords = !round.drill && !round.listen && !round.sentences && !round.grammar;
+    const sticking = plainWords ? stickingWords().length : 0;
+    $("btn-sticking").hidden = !sticking;
+    $("btn-sticking").textContent = `Words you keep missing (${sticking})`;
+  }
+
+  function beginRound(next) {
+    round = { index: 0, results: [], movers: [], ...next };
+    pickersOpen = false;
+    $("round-start").hidden = true;
+    $("round-end").hidden = true;
+    $("round-bar").hidden = false;
+    nextCard();
+  }
+
+  $("btn-review").addEventListener("click", () => {
+    if (!lastMissed) return;
+    beginRound({ queue: Engine.shuffle(lastMissed.items), review: true, ...lastMissed.flags });
+  });
+
+  // A real round, so levels move: these are words to get right, not to see again.
+  function startStickingRound() {
+    const list = Engine.shuffle(stickingWords()).slice(0, state.settings.roundSize);
+    if (!list.length) { toast("No words you keep missing right now.", true); return; }
+    beginRound({ queue: list, drill: false, sticking: true });
+  }
+  $("btn-sticking").addEventListener("click", startStickingRound);
+  $("btn-sticking-start").addEventListener("click", startStickingRound);
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
 
@@ -2102,10 +2310,17 @@
       <thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
+  // A lesson's standing, as a small badge on its row in the Lessons screen.
+  function standingBadge(l) {
+    const st = topicStanding(l);
+    const tone = !st.tried ? "" : st.needsWork ? " bad" : " good";
+    return `<span class="standing${tone}">${esc(!st.tried ? "not started" : st.needsWork ? "needs work" : `${st.right}/${st.tried}`)}</span>`;
+  }
+
   function renderGrammarLessons() {
     $("grammar-lessons").innerHTML = GRAMMAR.lessons.map((l) => `
       <details class="lesson" data-grammar="${esc(l.id)}">
-        <summary>${esc(l.title)}<span class="muted small">${esc(l.blurb)}</span></summary>
+        <summary>${esc(l.title)}<span class="muted small">${esc(l.blurb)}</span>${standingBadge(l)}</summary>
         <div class="lesson-body">${l.explain.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
         <div class="examples">
           ${l.examples.map(([es, en]) => `
@@ -2594,5 +2809,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding };
 })();

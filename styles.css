@@ -395,6 +395,16 @@ body.no-speech .say-hint { display: none; }
 .mistake .muted { flex-basis: 100%; }
 .lesson-body p { margin: 0 0 8px; }
 
+/* How a grammar topic stands, on its row in the Lessons screen. */
+/* Grammar rows: title and badge on the first line, the description under
+   them at full width, rather than squeezed into a column between the two. */
+#grammar-lessons details.lesson > summary .standing { order: 1; margin-left: auto; }
+#grammar-lessons details.lesson > summary .small { order: 2; flex: 1 1 100%; padding-left: 20px; }
+.standing { flex: none; font: 800 11px var(--round); letter-spacing: 0.04em;
+  border-radius: 999px; padding: 3px 9px; background: var(--line); color: var(--muted); }
+.standing.good { background: var(--good-soft); color: var(--good-deep); }
+.standing.bad { background: var(--bad-soft); color: var(--bad-deep); }
+
 /* Tappable words. A dotted underline says "there is more here" without
    turning a sentence into a row of buttons. */
 .tap { cursor: pointer; border-radius: 4px;
@@ -421,6 +431,22 @@ body.no-speech .say-hint { display: none; }
 .gloss-rows dd { margin: 0; font-weight: 700; }
 /* The same rows under a drill's answer, without the rule above them. */
 .verdict-rows { border-top: none; padding-top: 0; margin: 6px 0 10px; }
+
+/* "I know this": a small switch in the card's corner. Off, an outline; on,
+   filled, and it says what it will do. */
+.sure { margin-left: 8px; flex: none; cursor: pointer; border-radius: 999px;
+  font: 800 11px var(--round); letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 5px 11px; background: var(--panel); color: var(--accent-deep);
+  border: 2px dashed var(--accent); }
+.sure[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-style: solid; }
+.card-head .mono + .sure { margin-left: 8px; }
+.teach-acts { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.teach-acts .btn.big { width: 100%; }
+/* One line, whatever the width: a second line here is height a phone cannot spare. */
+.teach-acts #btn-know { white-space: nowrap; font-size: 13px; padding-left: 6px; padding-right: 6px; }
+.end-acts { display: grid; gap: 10px; margin: 0 0 10px; }
+.end-acts:has(> :not([hidden])) { margin-top: 4px; }
+#btn-sticking-start { margin-top: 10px; }
 
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because

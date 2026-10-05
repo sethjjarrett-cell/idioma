@@ -342,6 +342,8 @@
       <div class="card-head">
         <span class="band" id="card-band"></span>
         <span class="muted small mono" id="card-level"></span>
+        <!-- Sure of this one? Answer it right and it skips ahead a stage. -->
+        <button class="sure" type="button" id="btn-sure" aria-pressed="false" hidden>I know this</button>
       </div>
       <p class="prompt" id="card-prompt"></p>
       <!-- On a verb drill: which person and which tense, labelled. -->
@@ -370,7 +372,10 @@
              focusable="false"><use href="#speaker-sym"/></svg></button></p>
           <p class="muted small" id="teach-en"></p>
         </div>
-        <button class="btn primary big" id="btn-got">Got it</button>
+        <div class="teach-acts">
+          <button class="btn primary big" id="btn-got">Got it</button>
+          <button class="btn big" id="btn-know" title="Skip the lesson; answer it right and it jumps ahead a stage">I know this</button>
+        </div>
         <p class="muted small" id="teach-then" hidden>You will be asked this one next.</p>
       </div>
 
@@ -444,6 +449,7 @@
         </div>
       </div>
       <button class="btn primary big" id="btn-start">Start a round</button>
+      <button class="btn big" id="btn-sticking-start" hidden></button>
     </div>
 
     <div class="pane hero" id="round-end" hidden>
@@ -455,6 +461,12 @@
         </div>
       </div>
       <div class="stats" id="end-stats"></div>
+      <!-- Up here rather than under the list of what moved, which can be long.
+           A second look at what went wrong, and the words that keep doing so. -->
+      <div class="end-acts">
+        <button class="btn big" id="btn-review" hidden></button>
+        <button class="btn big" id="btn-sticking" hidden></button>
+      </div>
       <div class="movers" id="end-movers"></div>
       <button class="btn primary big" id="btn-again">Another round</button>
     </div>

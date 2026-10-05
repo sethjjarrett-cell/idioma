@@ -21,6 +21,10 @@ const CONFIG = {
      lucky guess cannot promote a word into a harder format. */
   BOUNDARY_STREAK: 2,
 
+  /* "I know this", answered right, sends a word to the start of the next
+     band; already in the last band, this many levels on. */
+  JUMP_IN_LAST_BAND: 2,
+
   ROUND_SIZE: 15,
 
   /* A word you have never met cannot be tested, only guessed at, so the
@@ -128,8 +132,19 @@ const CONFIG = {
   LISTEN_WORDS_PER_SLIP: 4,
   LISTEN_SENTENCE_SHARE: 0.7,
 
-  /* Grammar drills: ten questions a round, which is a few minutes. */
+  /* Grammar drills: ten questions a round, which is a few minutes.
+
+     Each question remembers how you did, and a round leans towards the ones
+     you got wrong. The weights are relative chances of being picked: a
+     question wrong last time is about eight times as likely as one you have
+     now got right three times running, and one never seen sits in between so
+     new material keeps arriving. A mixed round takes at most three from any
+     one topic, so the weakest topic leads without taking over. */
   GRAMMAR_ROUND_SIZE: 10,
+  GRAMMAR_WEIGHT_NEW: 1.5,
+  GRAMMAR_WEIGHT_WRONG: 4,
+  GRAMMAR_WEIGHT_FLOOR: 0.25,
+  GRAMMAR_TOPIC_CAP: 3,
 
   /* Grammar no sentence can do without, and that nobody needs tested as
      vocabulary: the articles, the two contractions, and the que that joins
@@ -244,6 +259,16 @@ function freshProgress() {
 /* A word the learner keeps missing, as against one they simply have not met
    yet. The count is the current run of trouble, not a lifetime tally, so this
    goes false again as soon as the word comes good. */
+/* Where a word lands when it is answered right after "I know this": the
+   start of the next band, so a word you already know skips the drilling of
+   the stage it was in. In the last band there is no next one, so it moves on
+   JUMP_IN_LAST_BAND levels instead. */
+function jumpAhead(level) {
+  if (level <= CONFIG.BAND_RECOGNITION_TOP) return CONFIG.BAND_RECOGNITION_TOP + 1;
+  if (level <= CONFIG.BAND_PRODUCTION_TOP) return CONFIG.BAND_PRODUCTION_TOP + 1;
+  return Math.min(CONFIG.LEVEL_CEILING, level + CONFIG.JUMP_IN_LAST_BAND);
+}
+
 function isSticking(progress) {
   return (progress.lapses || 0) >= CONFIG.STICKY_LAPSES;
 }
@@ -785,6 +810,53 @@ function checkHeard(typed, said, options = {}) {
 }
 
 /* ---------------------------------------------------------------
+   Grammar: what each question remembers, and how much it is wanted
+   --------------------------------------------------------------- */
+
+/* One answer to a grammar question, folded into its record. The record is
+   small on purpose: how many times answered, how many right, how the last
+   one went, the current run of right answers and when. */
+function recordGrammar(rec, right, at) {
+  const r = rec || { n: 0, r: 0, last: null, streak: 0, at: null };
+  return {
+    n: (r.n || 0) + 1,
+    r: (r.r || 0) + (right ? 1 : 0),
+    last: right ? "r" : "w",
+    streak: right ? (r.streak || 0) + 1 : 0,
+    at,
+  };
+}
+
+/* How much a question is wanted in the next round. Wrong last time is the
+   strongest pull; each right answer in a row halves it and then some, down
+   to a floor, so nothing is ever retired completely. */
+function grammarWeight(rec) {
+  if (!rec || !rec.n) return CONFIG.GRAMMAR_WEIGHT_NEW;
+  if (rec.last === "w") return CONFIG.GRAMMAR_WEIGHT_WRONG;
+  return Math.max(CONFIG.GRAMMAR_WEIGHT_FLOOR, 1 / (1 + (rec.streak || 0)));
+}
+
+/* Draw `size` entries at random, each in proportion to its weight and none
+   twice, with at most `cap` from any one group when a cap is given. */
+function weightedDraw(entries, size, weightOf, groupOf, cap) {
+  const pool = entries.slice();
+  const out = [];
+  const per = new Map();
+  while (out.length < size && pool.length) {
+    const open = pool.filter((e) => !cap || (per.get(groupOf(e)) || 0) < cap);
+    if (!open.length) break;
+    const total = open.reduce((n, e) => n + weightOf(e), 0);
+    let roll = Math.random() * total;
+    let chosen = open[open.length - 1];
+    for (const e of open) { roll -= weightOf(e); if (roll <= 0) { chosen = e; break; } }
+    pool.splice(pool.indexOf(chosen), 1);
+    out.push(chosen);
+    per.set(groupOf(chosen), (per.get(groupOf(chosen)) || 0) + 1);
+  }
+  return out;
+}
+
+/* ---------------------------------------------------------------
    Sentences: what a sentence needs, and what to do with it
    --------------------------------------------------------------- */
 
@@ -979,9 +1051,10 @@ function checkSequence(picked, want) {
 /* Exported for the browser through the global scope; there is no build
    step and no module loader, which is the point. */
 window.Engine = {
-  CONFIG, BANDS, PACES, applyPace, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking,
+  CONFIG, BANDS, PACES, applyPace, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking, jumpAhead,
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
   sentenceRank, sentenceCard, checkSequence, checkHeard, shuffle, FREE_TOKEN,
+  recordGrammar, grammarWeight, weightedDraw,
 };
