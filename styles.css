@@ -430,6 +430,22 @@ body.no-speech .say-hint { display: none; }
   text-transform: uppercase; color: var(--muted); }
 .gloss-rows dd { margin: 0; font-weight: 700; }
 
+/* "I know this": a small switch in the card's corner. Off, an outline; on,
+   filled, and it says what it will do. */
+.sure { margin-left: 8px; flex: none; cursor: pointer; border-radius: 999px;
+  font: 800 11px var(--round); letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 5px 11px; background: var(--panel); color: var(--accent-deep);
+  border: 2px dashed var(--accent); }
+.sure[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-style: solid; }
+.card-head .mono + .sure { margin-left: 8px; }
+.teach-acts { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.teach-acts .btn.big { width: 100%; }
+/* One line, whatever the width: a second line here is height a phone cannot spare. */
+.teach-acts #btn-know { white-space: nowrap; font-size: 13px; padding-left: 6px; padding-right: 6px; }
+.end-acts { display: grid; gap: 10px; margin: 0 0 10px; }
+.end-acts:has(> :not([hidden])) { margin-top: 4px; }
+#btn-sticking-start { margin-top: 10px; }
+
 /* The teaching card. Quieter than a verdict: nothing has happened yet, so
    nothing is coloured right or wrong. The meaning is the loud part, because
    it is the thing being taught. */

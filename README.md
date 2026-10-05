@@ -917,6 +917,37 @@ round, a right and a wrong choice, keyboard choice, the lesson's Practise this,
 an old state with no topic saved, and the choices and Next on screen on a
 phone.
 
+## Going over mistakes, and skipping what you know
+
+**A second look.** Every round ends with Go over the N you missed, when there
+were any: the items answered wrong or nearly, once each, asked again in the
+same kind of round, words, sentences, verbs, listening or grammar. A second
+look is practice and changes nothing: no level, no round count and no grammar
+record, because the answer was on screen a minute before and getting it right
+now proves little. It ends offering a second look at whatever is still wrong,
+so it can be repeated until nothing is.
+
+**Words you keep missing.** The engine already counts a word's run of
+trouble: three misses without three right in a row since makes it a sticking
+point, which is taught again and comes up twice as often. A button on the
+Words start screen and at the end of a words round runs a round of just
+those. It is a real round, so levels move.
+
+**I know this.** A switch in the corner of a recognition, production or cloze
+card. Pressed and answered right, the word jumps to the start of the next band
+rather than up one level: recognition to production (L4), production to cloze
+(L8), and in cloze two levels on (`jumpAhead` in `engine.js`). Answered wrong,
+it costs exactly what a wrong answer always costs and nothing more. A new
+word's teaching card has I know this beside Got it, which skips the lesson and
+asks it at once with the switch already on. It is not offered on drills,
+sentences, listening or a second look.
+
+`tests/test-review.mjs` checks where a word jumps from each band, the switch
+on a card (pressed, right, wrong, reset on the next card, the keyboard left
+up), I know this on a new word, a second look that asks exactly the misses and
+moves nothing, grammar's second look not clearing a weak spot, and the words
+you keep missing as a real round.
+
 ## Tap a word
 
 Any word in a Spanish sentence on a card can be tapped for what it means: the

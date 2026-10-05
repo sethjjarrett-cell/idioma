@@ -885,6 +885,9 @@
   };
 
   function updateStartBlurb() {
+    const sticking = mode() === "words" ? stickingWords().length : 0;
+    $("btn-sticking-start").hidden = !sticking;
+    $("btn-sticking-start").textContent = `Words you keep missing (${sticking})`;
     if (mode() === "grammar") {
       const lesson = grammarLesson();
       $("start-picked").hidden = true;
@@ -1445,10 +1448,13 @@
     if (!card || !card.grammar || !$("verdict").hidden) return;
     const right = option === card.answer;
     $("choices").hidden = true;
-    if (!state.grammar) state.grammar = {};
-    state.grammar[card.grammarKey] = Engine.recordGrammar(state.grammar[card.grammarKey], right,
-      new Date().toISOString());
-    commit();
+    // A second look does not count: the answer was shown a minute ago.
+    if (!round.review) {
+      if (!state.grammar) state.grammar = {};
+      state.grammar[card.grammarKey] = Engine.recordGrammar(state.grammar[card.grammarKey], right,
+        new Date().toISOString());
+      commit();
+    }
     applyAndShow({ correct: right, almost: false, matched: right ? option : null, near: false,
       reason: null, diff: null, sibling: null, equivalent: false }, option);
   }
@@ -1485,6 +1491,32 @@
     };
   }
 
+  /* Whether answers in this round move anything. Drills and listening never
+     do, and neither does a second look at what was just missed: the answer
+     was on screen a minute ago, so getting it right now proves little. */
+  const practiceOnly = (c = card) => !!(round && round.review) || !!(c && (c.drill || c.listen));
+
+  /* "I know this". Only on a word card that is a real question: not the
+     teaching card, not a drill, a sentence or a second look. Pressed, it
+     says what it will do; answer right and the word jumps ahead a stage. */
+  const canBeSure = (c) => !!(c && !round.review && !c.intro && !c.drill && !c.listen && !c.isSentence
+    && c.word && c.word.id && ["recognition", "production", "cloze"].includes(c.band.key));
+  function drawSure() {
+    const btn = $("btn-sure");
+    btn.hidden = !canBeSure(card);
+    btn.setAttribute("aria-pressed", card && card.sure ? "true" : "false");
+    btn.textContent = card && card.sure ? "Right = jump ahead" : "I know this";
+  }
+  $("btn-sure").addEventListener("click", () => {
+    if (!canBeSure(card) || !$("verdict").hidden) return;
+    card.sure = !card.sure;
+    drawSure();
+  });
+  // Pressing it while typing should not fold the phone keyboard away.
+  for (const type of ["pointerdown", "mousedown"]) {
+    $("btn-sure").addEventListener(type, (e) => e.preventDefault());
+  }
+
   function nextCard() {
     if (!round || round.index >= round.queue.length) return endRound();
     const item = round.queue[round.index];
@@ -1498,13 +1530,18 @@
             (id) => prog(id), Engine.CONFIG.TILE_DISTRACTORS),
         })
       : Engine.buildCard(item, prog(item.id), sentencesFor, {
-          introduce: state.settings.introduceNew !== false,
+          // A second look asks; it does not teach the word all over again.
+          introduce: !round.review && state.settings.introduceNew !== false,
         });
     lastResult = null;
-    cardBefore = round.drill || round.listen ? null : JSON.parse(JSON.stringify(cardProgress(card)));
+    cardBefore = practiceOnly() ? null : JSON.parse(JSON.stringify(cardProgress(card)));
+    // "I know this" pressed on the teaching card carries over to the question.
+    card.sure = !!(round.sureIds && card.word && round.sureIds.delete(card.word.id));
+    drawSure();
     retypes = 0;
 
-    $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "");
+    $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "")
+      + (round.review ? " · second look" : "");
     // A word you have not met is always at L1, so saying so tells nobody
     // anything; the level appears once it starts meaning something.
     $("card-level").textContent = round.drill || round.listen ? card.levelLabel
@@ -1662,6 +1699,15 @@
      shown it and asked immediately is the pair that makes it stick. The word
      is not removed from anywhere else, so it still comes round again later on
      its own weight, which is where the actual remembering happens. */
+  /* The teaching card's other button: skip the lesson, be asked straight away,
+     and if the answer is right, jump the word ahead as "I know this" would. */
+  $("btn-know").addEventListener("click", () => {
+    if (!card || !card.intro) return;
+    if (!round.sureIds) round.sureIds = new Set();
+    round.sureIds.add(card.word.id);
+    $("btn-got").click();
+  });
+
   $("btn-got").addEventListener("click", () => {
     if (!card || !card.intro) return;
     const id = card.word.id;
@@ -1799,7 +1845,7 @@
        off a table would make it mean nothing. */
     /* Listening is kept out for the same reason: hearing a word and knowing it
        are different things, and a level should only mean the second. */
-    const applied = card.drill || card.listen
+    const applied = practiceOnly()
       ? { result: outcome, held: false, movedUp: false, movedDown: false,
           levelBefore: null, levelAfter: null, bandChanged: false }
       : (() => {
@@ -1807,6 +1853,17 @@
           Object.keys(row).forEach((k) => { delete row[k]; });
           Object.assign(row, cardBefore);
           const a = Engine.applyResult(row, outcome, new Date().toISOString());
+          /* Sure, and right: on to the start of the next stage rather than
+             one level up. Wrong costs no more than it would have anyway. */
+          if (card.sure && outcome === "correct") {
+            const to = Math.max(a.progress.level, Engine.jumpAhead(cardBefore.level));
+            a.jumped = to > a.progress.level;
+            a.progress.level = to;
+            a.levelAfter = to;
+            a.movedUp = to > a.levelBefore;
+            a.held = false;
+            a.bandChanged = Engine.bandForLevel(a.levelBefore).key !== Engine.bandForLevel(to).key;
+          }
           Object.assign(row, a.progress);
           commit();
           return a;
@@ -1854,6 +1911,8 @@
       detail = res.of ? `${res.heard} of ${res.of} ${res.of === 1 ? "word" : "words"}` : "";
       if (res.near) detail += " · accepted with typo tolerance";
     }
+    if (applied.jumped) detail += `${detail ? " · " : ""}jumped ahead`;
+    else if (card.sure && outcome !== "correct") detail += `${detail ? " · " : ""}not this time, so no jump`;
     if (applied.movedUp) detail += `${detail ? " · " : ""}L${applied.levelBefore} to L${applied.levelAfter}`;
     if (applied.movedDown) detail += `${detail ? " · " : ""}dropped to L${applied.levelAfter}`;
     if (applied.held) detail += `${detail ? " · " : ""}holding at L${applied.levelAfter}`;
@@ -1913,6 +1972,7 @@
     $("answer-form").hidden = true;
     $("build").hidden = true;
     $("verdict").hidden = false;
+    $("btn-sure").hidden = true;   // answered: the choice has been made
     (outcome === "almost" ? $("btn-retry") : $("btn-next")).focus();
     /* Spanish the card has not yet read out, read now: the answer to a card
        that asked for it, or a drill's conjugated form, which is not the
@@ -1939,6 +1999,7 @@
     $("answer").disabled = false;
     $("btn-submit").disabled = false;
     $("answer").focus();
+    drawSure();
     if (card.listen) say(card.reveal);
   }
 
@@ -1989,7 +2050,7 @@
     const right = count("correct");
     const pct = n ? Math.round((right / n) * 100) : 0;
 
-    if (!round.drill && !round.listen) {
+    if (!round.drill && !round.listen && !round.review) {
       state.stats.rounds += 1;
       state.stats.lastRoundAt = new Date().toISOString();
       Store.saveNow(state);
@@ -2005,13 +2066,15 @@
         stat(count("almost"), "almost"),
       ] : []),
       // Levels are a word thing, so a drill does not report them.
-      ...(round.drill || round.listen || !n ? [] : [
+      ...(round.drill || round.listen || round.review || !n ? [] : [
         stat(round.movers.filter((m) => m.up).length, "levelled up"),
         stat(round.movers.filter((m) => !m.up).length, "dropped"),
       ]),
     ].join("");
 
-    $("end-movers").innerHTML = round.grammar
+    $("end-movers").innerHTML = round.review
+      ? '<p class="muted small">A second look is practice, so nothing has moved. These come back in your normal rounds anyway.</p>'
+      : round.grammar
       ? grammarRoundSummary()
       : round.drill
       ? '<p class="muted small">A drill is practice, not assessment, so no word has moved.</p>'
@@ -2029,6 +2092,7 @@
             </div>`).join("")
         : '<p class="muted small">No level changes this round.</p>';
 
+    drawEndActions();
     $("round-end").hidden = false;
     updateStartBlurb();
     // The end of a round is the moment worth pushing: the most progress has
@@ -2050,6 +2114,67 @@
     return rows + `<p class="muted small">No word levels move in grammar. Each answer is kept to find your weak spots`
       + (weak ? `: ${weak} ${weak === 1 ? "question" : "questions"} to put right, under Weak spots.` : ".") + "</p>";
   }
+
+  /* Going over what went wrong. The round's misses, wrong or nearly, are kept
+     when it ends, once each, and can be asked again straight away in the same
+     kind of round. A second look can itself be gone over, until none are left. */
+  let lastMissed = null;
+  const itemKey = (q) => (q && (q.item && q.lesson ? `${q.lesson.id}|${q.item.es}`
+    : q.id || `${q.infinitive}|${q.tenseName}|${q.personLabel}`));
+
+  function missedThisRound() {
+    const seen = new Set();
+    return round.queue.filter((q, i) => {
+      const r = round.results[i];
+      if (!r || (r.outcome !== "wrong" && r.outcome !== "almost")) return false;
+      const k = itemKey(q);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  /* Words that keep going wrong: missed STICKY_LAPSES times without three
+     right in a row since. The engine already counts these and shows them
+     again first; this is the button to work through them on purpose. */
+  const stickingWords = () => words().filter((w) => prog(w.id).enabled !== false && Engine.isSticking(prog(w.id)));
+
+  function drawEndActions() {
+    const missed = missedThisRound();
+    lastMissed = missed.length ? {
+      items: missed,
+      flags: { drill: !!round.drill, grammar: !!round.grammar, listen: !!round.listen, sentences: !!round.sentences },
+    } : null;
+    $("btn-review").hidden = !missed.length;
+    $("btn-review").textContent = `Go over the ${missed.length} you missed`;
+    const plainWords = !round.drill && !round.listen && !round.sentences && !round.grammar;
+    const sticking = plainWords ? stickingWords().length : 0;
+    $("btn-sticking").hidden = !sticking;
+    $("btn-sticking").textContent = `Words you keep missing (${sticking})`;
+  }
+
+  function beginRound(next) {
+    round = { index: 0, results: [], movers: [], ...next };
+    pickersOpen = false;
+    $("round-start").hidden = true;
+    $("round-end").hidden = true;
+    $("round-bar").hidden = false;
+    nextCard();
+  }
+
+  $("btn-review").addEventListener("click", () => {
+    if (!lastMissed) return;
+    beginRound({ queue: Engine.shuffle(lastMissed.items), review: true, ...lastMissed.flags });
+  });
+
+  // A real round, so levels move: these are words to get right, not to see again.
+  function startStickingRound() {
+    const list = Engine.shuffle(stickingWords()).slice(0, state.settings.roundSize);
+    if (!list.length) { toast("No words you keep missing right now.", true); return; }
+    beginRound({ queue: list, drill: false, sticking: true });
+  }
+  $("btn-sticking").addEventListener("click", startStickingRound);
+  $("btn-sticking-start").addEventListener("click", startStickingRound);
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
 
