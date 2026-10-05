@@ -883,9 +883,33 @@ question is a sentence with a gap and two to four choices, with the English as
 the hint and the reason shown at the verdict, wrong or right. Choices are
 tapped rather than typed, because the question is which word, not how to spell
 it. Mixed spreads a round of ten across every topic; a pill or the lesson's
-Practise this narrows it to one. Like the verb drills, grammar is practice:
-it moves no level and writes nothing but the chosen topic, and a state saved
-before grammar existed loads on Mixed.
+Practise this narrows it to one. Grammar moves no word's level.
+
+### Weak spots
+
+What it does keep is how each question went. `state.grammar` holds one small
+record per question, keyed by topic and sentence: times answered, times right,
+whether the last answer was right, the current run of right answers, and when.
+Nothing else, and nothing about words.
+
+A round draws its questions at random, each in proportion to a weight set by
+that record (`grammarWeight` in `engine.js`): wrong last time weighs 4, never
+answered 1.5, right last time 1 divided by one more than the run of right
+answers, down to a floor of 0.25. So a question you got wrong is about eight
+times as likely to come back as one you have now got right three times
+running, and nothing is ever retired completely. Mixed takes at most three
+questions from any one topic, so the weakest topic leads without taking over.
+
+The same record drives what is shown. Each topic on the Lessons screen says
+not started, its score (right last time out of tried) or needs work, which is
+two or more questions wrong last time, or under sixty per cent across four or
+more. The Grammar start screen names the two weakest topics, the end of a
+round says how each topic it touched now stands, and a Weak spots pill drills
+only the questions wrong last time; getting one right takes it off the list.
+
+It syncs question by question, the later answer winning, as the word books
+do, and a save or backup from before it existed loads with an empty record
+and everything else intact.
 
 `tests/test-grammar.mjs` checks every question has exactly one gap, its
 answer among its options, a reason and English, and no vosotros; then a mixed

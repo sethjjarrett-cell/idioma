@@ -184,6 +184,19 @@ function merge(local, remote) {
   };
   const phrases = mergeBook("phrases");
 
+  /* Grammar answers, question by question: whichever device answered it
+     last has the truth about it, the same rule the books use. */
+  const mergeGrammar = (a, b) => {
+    const out = {};
+    for (const k of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+      const x = (a || {})[k], y = (b || {})[k];
+      if (!x || !y) { out[k] = x || y; continue; }
+      const tx = new Date(x.at || 0), ty = new Date(y.at || 0);
+      out[k] = tx > ty ? x : ty > tx ? y : ((x.n || 0) >= (y.n || 0) ? x : y);
+    }
+    return out;
+  };
+
   // Additions from either device survive; on the same id the younger save
   // wins, which is the best guess available without per-word edit times.
   const words = new Map([...byId(staler.customWords), ...byId(fresher.customWords)]);
@@ -202,6 +215,9 @@ function merge(local, remote) {
        whole object: two devices each teaching the app a different synonym for
        the same word should end up with both, not with whichever saved last. */
     accepted: mergeAccepted(local.accepted, remote.accepted),
+    // Only when either side has any: a state from before grammar was kept
+    // merges with itself to exactly itself, not to itself plus an empty record.
+    ...(local.grammar || remote.grammar ? { grammar: mergeGrammar(local.grammar, remote.grammar) } : {}),
     stats: {
       // Summed would double-count every time the same pair merged again.
       rounds: Math.max((local.stats || {}).rounds || 0, (remote.stats || {}).rounds || 0),
