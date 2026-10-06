@@ -31,6 +31,7 @@ const SHELL = [
   "senses.js",
   "phrases.js",
   "chunks.js",
+  "units.js",
   "grammar.js",
   "verbs.js",
   "pronounce.js",

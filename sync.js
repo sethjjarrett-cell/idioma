@@ -209,6 +209,23 @@ function merge(local, remote) {
     return out;
   };
 
+  /* The course, unit by unit: the later of each date, and each written
+     answer by its own time, so answers written on two devices both survive. */
+  const mergeUnits = (a, b) => {
+    const out = {};
+    for (const id of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+      const x = (a || {})[id], y = (b || {})[id];
+      if (!x || !y) { out[id] = x || y; continue; }
+      const write = {};
+      for (const t of new Set([...Object.keys(x.write || {}), ...Object.keys(y.write || {})])) {
+        const p = (x.write || {})[t], q = (y.write || {})[t];
+        write[t] = !p || !q ? p || q : new Date(q.at || 0) > new Date(p.at || 0) ? q : p;
+      }
+      out[id] = { read: later(x.read, y.read), retold: later(x.retold, y.retold), write };
+    }
+    return out;
+  };
+
   /* The daily session: the later day finished wins, with its streak; on the
      same day the longer streak, since both devices counted the same days. */
   const ls = local.stats || {}, rs = remote.stats || {};
@@ -246,6 +263,7 @@ function merge(local, remote) {
     },
     // As with grammar: only when either side has any.
     ...(local.hooks || remote.hooks ? { hooks: mergeHooks(local.hooks, remote.hooks) } : {}),
+    ...(local.units || remote.units ? { units: mergeUnits(local.units, remote.units) } : {}),
   };
 }
 

@@ -982,3 +982,96 @@ button, .btn, .pill, .tab, .tile, .key, label { -webkit-tap-highlight-color: tra
 }
 .tstep.done { border-color: var(--good); background: var(--good-soft); color: var(--good-deep); }
 .tdone { flex-basis: 100%; font: 800 15px var(--round); color: var(--good-deep); margin-top: 4px; }
+
+/* The course. A unit card is a whole button, laid out like a pane. */
+#units { display: grid; gap: 12px; }
+.unit-card {
+  display: grid; gap: 6px; text-align: left; width: 100%; cursor: pointer;
+  font: inherit; color: var(--text); margin: 0;
+}
+.unit-card.next { border-color: var(--accent); }
+.unit-num {
+  font: 800 11px var(--round); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-deep);
+}
+.unit-title b { font: 800 18px var(--round); }
+.unit-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.unit-head h2 { margin: 2px 0 6px; font: 800 21px var(--round); }
+.unit-head .back { display: block; padding: 4px 0; margin: -4px 0 6px; font-size: 13px; letter-spacing: 0.02em; }
+.unit-head p { margin: 0 0 10px; }
+
+.ustep { margin-bottom: 12px; }
+.ustep > summary {
+  display: flex; align-items: baseline; gap: 10px; cursor: pointer; list-style: none;
+  font: 800 17px var(--round);
+}
+.ustep > summary::-webkit-details-marker { display: none; }
+.ustep[open] > summary { margin-bottom: 10px; }
+.snum {
+  display: inline-grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font-size: 13px;
+}
+.sdetail { margin-left: auto; font-weight: 600; }
+.ustep h3 { font: 800 15px var(--round); margin: 16px 0 4px; }
+.ustep-acts { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+
+.frame {
+  background: var(--panel2); border: 2px solid var(--line); border-radius: 14px;
+  padding: 10px 14px; margin: 0 0 10px;
+}
+.frame p { margin: 0; }
+.fes { font: 800 17px/1.45 var(--round); color: var(--accent-deep); }
+.gap {
+  display: inline-block; min-width: 2.6em; border-bottom: 3px solid var(--accent);
+  margin: 0 2px; vertical-align: baseline;
+}
+.frame ul, .models { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.frame li, .models li { font: 600 15px/1.5 var(--round); }
+.frame li .muted { display: block; font-weight: 400; }
+.frame .say-btn, .models .say-btn, .des .say-btn { width: 28px; height: 28px; margin: -6px 0 -6px 6px; }
+.say-btn.slow { font: 800 12px var(--round); }
+
+.uwords-label { font-weight: 800; margin: 12px 0 4px; }
+.uwords { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.uword {
+  font-size: 13px; padding: 3px 9px; border-radius: 999px;
+  border: 2px solid var(--line2); color: var(--muted);
+}
+.uword b { color: var(--text); }
+.uword.met { border-color: var(--good); background: var(--good-soft); }
+
+.dialogue { display: grid; gap: 8px; margin: 10px 0 12px; }
+.dline { border-left: 3px solid var(--line2); padding: 2px 0 2px 10px; }
+.dline.playing { border-left-color: var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+.dline .who {
+  font: 800 11px var(--round); letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent-deep);
+  cursor: pointer;
+}
+.des { font: 600 16px/1.5 var(--round); margin: 0; }
+.den { margin: 2px 0 0; }
+.shadow .des { font-size: 15px; }
+
+.task { border-top: 2px solid var(--line); padding: 12px 0 4px; }
+.task:first-of-type { border-top: 0; }
+.task p { margin: 0 0 4px; }
+.task-prompt { font-weight: 700; }
+.task textarea {
+  width: 100%; box-sizing: border-box; font-family: inherit; font-size: 16px; line-height: 1.4;
+  color: var(--text); background: var(--panel); border: 2px solid var(--line2); border-radius: 12px;
+  padding: 8px 10px; margin: 6px 0 8px; resize: vertical;
+}
+.task-result { margin-top: 10px; }
+.task-ok { color: var(--good-deep); font-weight: 700; }
+.task-try { color: var(--warn-deep); font-weight: 700; }
+
+.points { display: flex; flex-wrap: wrap; gap: 6px; }
+.point {
+  font: 700 14px var(--round); padding: 4px 10px; border-radius: 10px;
+  background: var(--panel2); border: 2px solid var(--line);
+}
+.retell { display: flex; align-items: center; gap: 16px; margin: 10px 0; }
+.clock { font: 800 34px var(--round); min-width: 2.2em; color: var(--accent-deep); font-variant-numeric: tabular-nums; }
+.retell-msg { font-weight: 700; color: var(--good-deep); }
+.model summary { cursor: pointer; font-weight: 700; margin: 8px 0; }
+.model p { font: 600 15px/1.55 var(--round); }
+.btn.recording { border-color: var(--bad, #b33); color: var(--bad, #b33); }
+#unit-audio { width: 100%; margin-top: 4px; }

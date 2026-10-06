@@ -97,6 +97,8 @@ console.log("today's session");
   ok('finishing marks today done, streak of one', st.todayLast === day && st.todayStreak === 1, JSON.stringify(st));
   ok('and says so', /Today's session done/.test(await p.textContent('#today-steps')) && await p.isHidden('#btn-today-next')
     && await p.isVisible('#btn-again'));
+  ok('and points on to the course', await p.isVisible('#btn-today-course')
+    && /^Carry on: Unit 1, /.test(await p.textContent('#btn-today-course')));
   await p.click('#btn-again'); await p.waitForTimeout(80);
   ok('Another round is free practice again', await p.evaluate(() => window.Idioma.today) === null);
   await p.reload(); await p.waitForTimeout(300);
