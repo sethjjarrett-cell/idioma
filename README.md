@@ -317,6 +317,17 @@ of `verbs.js`. A drill can only ask what the lesson already teaches, so a form
 cannot be right in one place and wrong in the other, and a wrong form is wrong
 in exactly one editable spot.
 
+Every other verb in the bank is conjugated by rule, and the rules know the
+patterns that make a verb look irregular without being so: stem changes
+(pienso, vuelvo, juego, and sintió, durmamos in -ir verbs), an odd yo form
+and the subjunctive built on it (conozco, conozca; sigo, siga), the spelling
+that keeps a sound (busqué, llegué, empecé, cojo), the y between vowels
+(leyó, cayeron), the stressed í of confío, and a handful of forms listed
+outright (vi, oyes, río). Reflexive verbs conjugate without their se. These
+forms feed tap a word and decide when a sentence is within reach; the drills
+still only ask the verbs written out in full. `tests/test-verbs.mjs` checks a
+table of forms by hand and sweeps every verb in the bank.
+
 **A drill does not move any word's level.** A word's level means how well that
 word is known; diluting it with endings drilled off a table would make it mean
 nothing, so drills report a score and touch no progress at all.

@@ -271,6 +271,59 @@ const VERBS = {
     tener: "tendr", poner: "pondr", venir: "vendr", salir: "saldr",
     valer: "valdr", poder: "podr", querer: "querr", saber: "sabr",
     haber: "habr", caber: "cabr", hacer: "har", decir: "dir",
+    suponer: "supondr",
+  },
+
+  /* Stem-changing verbs. Not irregular so much as patterned: the last e or o
+     of the stem changes whenever it carries the stress, which is every
+     person of the present and the subjunctive except nosotros. An -ir verb
+     also changes in the preterite's él and ellos, and in the subjunctive's
+     nosotros, to i or u (sintió, durmamos). Without this table the rule
+     builds "cerran" and "dole", which nobody has ever said. */
+  stemChanges: {
+    "e>ie": ["pensar", "empezar", "entender", "sentir", "cerrar", "perder", "extender", "despertar",
+      "sentar", "preferir", "mentir", "querer"],
+    "o>ue": ["volver", "devolver", "recordar", "doler", "mostrar", "acostar", "contar", "mover", "probar",
+      "llover", "volar", "almorzar", "morir", "dormir", "encontrar", "poder"],
+    "u>ue": ["jugar"],
+    "e>i": ["seguir", "conseguir", "servir", "vestir", "elegir", "pedir"],
+  },
+
+  /* A yo form the rule cannot build. The subjunctive is built on it as well:
+     conozco gives conozca, sigo gives siga. */
+  yoForms: {
+    conocer: "conozco", parecer: "parezco", nacer: "nazco", crecer: "crezco", agradecer: "agradezco",
+    caer: "caigo", oír: "oigo", coger: "cojo", elegir: "elijo", seguir: "sigo", conseguir: "consigo",
+    ver: "veo",
+    // The g verbs: listed in full for the present, but the subjunctive
+    // still needs to know: tenga, ponga, salga.
+    tener: "tengo", poner: "pongo", venir: "vengo", salir: "salgo", hacer: "hago",
+    decir: "digo", traer: "traigo",
+  },
+
+  /* Verbs that stress the i, so it takes an accent wherever the stem is
+     stressed: confío, confíe, but confiamos. */
+  stressedI: ["confiar"],
+
+  /* A verb built on a listed irregular, which it follows form for form. */
+  prefixed: { suponer: "poner" },
+
+  /* The few forms no pattern produces, listed here rather than in
+     `irregulars` because they are not worth a lesson of their own. A listed
+     form wins over every rule. */
+  special: {
+    ver: {
+      preterite: { yo: "vi", tu: "viste", el: "vio", nosotros: "vimos", ellos: "vieron" },
+      imperfect: { yo: "veía", tu: "veías", el: "veía", nosotros: "veíamos", ellos: "veían" },
+    },
+    oír: {
+      present: { yo: "oigo", tu: "oyes", el: "oye", nosotros: "oímos", ellos: "oyen" },
+    },
+    reír: {
+      present: { yo: "río", tu: "ríes", el: "ríe", nosotros: "reímos", ellos: "ríen" },
+      preterite: { yo: "reí", tu: "reíste", el: "rio", nosotros: "reímos", ellos: "rieron" },
+      subjunctive: { yo: "ría", tu: "rías", el: "ría", nosotros: "riamos", ellos: "rían" },
+    },
   },
 
   /* Short pieces that are not tables. */
@@ -308,27 +361,108 @@ const VERBS = {
 
 /* Build one form. Regular verbs are stem plus ending; an irregular that
    lists the form wins over the rule, and one that does not falls back to
-   its family's regular table. Returns null when the tense has no entry,
-   which is how the drill knows not to ask. */
+   its family's table with the patterns below applied: stem changes, an odd
+   yo form, the spelling that keeps a sound (busqué, llegué, empecé, cojo)
+   and the y between vowels (leyó). Returns null when the tense has no
+   entry, which is how the drill knows not to ask.
+
+   A reflexive infinitive is conjugated without its se: levantarse gives
+   levanto, and the pronoun is the learner's to add. */
 function conjugate(infinitive, tenseId, personId) {
+  if (/se$/.test(infinitive) && infinitive.length > 4 && /[aeií]r$/.test(infinitive.slice(0, -2))) {
+    return conjugate(infinitive.slice(0, -2), tenseId, personId);
+  }
   const tense = VERBS.tenses.find((t) => t.id === tenseId);
   if (!tense) return null;
 
   const irregular = VERBS.irregulars.find((v) => v.infinitive === infinitive);
   const listed = irregular && irregular.forms[tenseId] && irregular.forms[tenseId][personId];
   if (listed) return listed;
+  const special = VERBS.special[infinitive];
+  if (special && special[tenseId] && special[tenseId][personId]) return special[tenseId][personId];
 
-  const family = infinitive.slice(-2);
+  const root = VERBS.prefixed[infinitive];
+  if (root) {
+    const prefix = infinitive.slice(0, -root.length);
+    const form = conjugate(root, tenseId, personId);
+    // supondré, but supón would need its accent moved; no tense here has one.
+    return form ? prefix + form : null;
+  }
+
+  const family = infinitive.slice(-2).replace("í", "i");
   const endings = tense.endings[family];
   if (!endings || !endings[personId]) return null;
+  const ending = endings[personId];
 
-  /* A tense built on the infinitive is the future or the conditional, and
-     those are where the shortened stems apply. */
-  let base = tense.base === "infinitive" ? infinitive : infinitive.slice(0, -2);
-  if (tense.base === "infinitive" && VERBS.futureStems[infinitive]) {
-    base = VERBS.futureStems[infinitive];
+  /* The future and the conditional build on the infinitive, or on one of
+     the shortened stems. An accented infinitive loses the accent: oiré. */
+  if (tense.base === "infinitive") {
+    const base = VERBS.futureStems[infinitive] || infinitive.replace("í", "i");
+    return base + ending;
   }
-  return base + endings[personId];
+
+  let stem = infinitive.slice(0, -2);
+  const change = Object.keys(VERBS.stemChanges).find((k) => VERBS.stemChanges[k].includes(infinitive));
+  const stressed = personId !== "nosotros";
+  const yo = VERBS.yoForms[infinitive];
+
+  if (tenseId === "present") {
+    if (personId === "yo" && yo) return yo;
+    if (change && stressed) stem = changeStem(stem, change);
+    if (stressed && VERBS.stressedI.includes(infinitive)) stem = stem.replace(/i$/, "í");
+    return stem + ending;
+  }
+
+  if (tenseId === "subjunctive") {
+    // Built on the yo form, which is already spelt right: siga, conozca.
+    if (yo) return yo.slice(0, -1) + ending;
+    if (change && stressed) {
+      stem = changeStem(stem, change);
+    } else if (change && family === "ir") {
+      stem = changeStem(stem, change === "o>ue" ? "o>u" : "e>i");
+    }
+    if (stressed && VERBS.stressedI.includes(infinitive)) stem = stem.replace(/i$/, "í");
+    return spell(stem, ending, family);
+  }
+
+  if (tenseId === "preterite") {
+    // -ir stem changers, in the third person: sintió, durmieron, siguió.
+    if (change && family === "ir" && (personId === "el" || personId === "ellos")) {
+      stem = changeStem(stem, change === "o>ue" ? "o>u" : "e>i");
+    }
+    // A stem ending in a vowel: leyó, cayeron, creíste.
+    if (family !== "ar" && /[aeo]$/.test(stem)) {
+      const y = { yo: "í", tu: "íste", el: "yó", nosotros: "ímos", ellos: "yeron" };
+      return stem + y[personId];
+    }
+    return personId === "yo" && family === "ar" ? spell(stem, ending, family) : stem + ending;
+  }
+
+  return stem + ending;
+}
+
+/* Change the last e, o or u of a stem: piens, vuelv, jueg, sigu. */
+function changeStem(stem, change) {
+  const [from, to] = change.split(">");
+  const at = stem.lastIndexOf(from);
+  return at < 0 ? stem : stem.slice(0, at) + to + stem.slice(at + 1);
+}
+
+/* Keep the consonant's sound when the ending changes the vowel after it:
+   c before e is qu (busque), g before e is gu (llegue), z before e is c
+   (empiece), g before a or o is j (coja), and gu before a or o is g (siga). */
+function spell(stem, ending, family) {
+  const front = /^[eé]/.test(ending);
+  if (front && family === "ar") {
+    if (/c$/.test(stem)) return stem.slice(0, -1) + "qu" + ending;
+    if (/g$/.test(stem)) return stem + "u" + ending;
+    if (/z$/.test(stem)) return stem.slice(0, -1) + "c" + ending;
+  }
+  if (!front && family !== "ar") {
+    if (/gu$/.test(stem)) return stem.slice(0, -1) + ending;
+    if (/[^u]g$/.test(stem)) return stem.slice(0, -1) + "j" + ending;
+  }
+  return stem + ending;
 }
 
 /* The English the form actually means, for the drill card.
