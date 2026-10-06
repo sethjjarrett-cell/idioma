@@ -14,7 +14,8 @@
        editedWords: { [wordId]: { ...fields overridden by hand } },
        stats: { rounds, lastRoundAt, todayLast, todayStreak },
        grammar: { [lessonId|question]: { n, r, last, streak, at } },
-       hooks: { [wordId]: { text, at } }
+       hooks: { [wordId]: { text, at } },
+       units: { [unitId]: { read, retold, write: { [taskId]: { text, at } } } }
      }
 
    Words added or edited in the app are kept separately from the bank
@@ -66,8 +67,37 @@ function defaultState() {
        deletion syncs like an edit instead of coming back from the other
        device. A state saved before hooks existed has none, and starts empty. */
     hooks: {},
+    /* The course, per unit: when the conversation was read, when the timed
+       retelling was finished, and each written answer with its time.
+       { [unitId]: { read, retold, write: { [taskId]: { text, at } } } }.
+       A state from before the course has none, and starts empty. */
+    units: {},
   };
 }
+
+/* Keeps what has the right shape and drops the rest, as for hooks. */
+function cleanUnits(u) {
+  if (!u || typeof u !== "object" || Array.isArray(u)) return {};
+  const out = {};
+  const iso = (v) => (typeof v === "string" ? v : null);
+  for (const [id, v] of Object.entries(u)) {
+    if (!v || typeof v !== "object") continue;
+    const write = {};
+    for (const [t, w] of Object.entries(v.write && typeof v.write === "object" ? v.write : {})) {
+      if (w && typeof w.text === "string") write[t] = { text: w.text.slice(0, 2000), at: iso(w.at) };
+    }
+    out[id] = { read: iso(v.read), retold: iso(v.retold), write };
+  }
+  return out;
+}
+
+/* One unit's record, made on first use. */
+function unitRecord(state, id) {
+  if (!state.units) state.units = {};
+  if (!state.units[id]) state.units[id] = { read: null, retold: null, write: {} };
+  return state.units[id];
+}
+const peekUnit = (state, id) => (state.units || {})[id] || { read: null, retold: null, write: {} };
 
 /* Same caution as the grammar record: only rows with a text string and a
    time survive, so a hand-edited backup cannot break the card. */
@@ -123,6 +153,7 @@ function load() {
     merged.stats = { ...defaultState().stats, ...(parsed.stats || {}) };
     merged.grammar = cleanGrammar(parsed.grammar);
     merged.hooks = cleanHooks(parsed.hooks);
+    merged.units = cleanUnits(parsed.units);
     return { state: merged, warning: null };
   } catch (e) {
     try { window.localStorage.setItem(STORAGE_KEY + ".broken", raw); } catch (e2) { /* nothing more to do */ }
@@ -512,11 +543,12 @@ function parseImport(text) {
   }
   merged.grammar = cleanGrammar(parsed.grammar);
   merged.hooks = cleanHooks(parsed.hooks);
+  merged.units = cleanUnits(parsed.units);
   return merged;
 }
 
 window.Store = {
-  STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow, hookFor, setHook,
+  STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow, hookFor, setHook, unitRecord, peekUnit,
   allWords, allSentences, siblingsOf, peekProgress, progressFor, alternatives, rememberAccepted,
   allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,
   peekPhrase, phraseProgressFor, downloadExport, parseImport,

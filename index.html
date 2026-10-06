@@ -157,6 +157,7 @@
   </div>
   <nav class="tabs" id="tabs">
     <button class="tab on" data-screen="practice">Practice</button>
+    <button class="tab" data-screen="course">Course</button>
     <button class="tab" data-screen="topics">Topics</button>
     <button class="tab" data-screen="lessons">Lessons</button>
     <button class="tab" data-screen="manage">Manage</button>
@@ -496,14 +497,32 @@
       <div class="end-acts">
         <button class="btn big" id="btn-review" hidden></button>
         <button class="btn big" id="btn-sticking" hidden></button>
+        <button class="btn primary big" id="btn-unit-back" hidden></button>
       </div>
       <div class="today-end" id="today-end" hidden>
         <p class="today-steps" id="today-steps"></p>
         <button class="btn primary big" id="btn-today-next" hidden></button>
+        <button class="btn big" id="btn-today-course" hidden></button>
       </div>
       <div class="movers" id="end-movers"></div>
       <button class="btn primary big" id="btn-again">Another round</button>
     </div>
+  </section>
+
+  <!-- ============================= COURSE ============================= -->
+  <section class="screen" id="screen-course">
+    <!-- The list of units, and one unit open at a time in place of it. Both
+         drawn by app.js from units.js. -->
+    <div id="course-list">
+      <div class="pane">
+        <h2>The course</h2>
+        <p class="muted small">Units built round real situations. Each one: learn the words and the
+          sentence frames, read and listen to a conversation, write a few true sentences of your own,
+          then say it out loud against the clock. About fifteen to twenty minutes a unit.</p>
+      </div>
+      <div id="units"></div>
+    </div>
+    <div id="unit-view" hidden></div>
   </section>
 
   <!-- ============================= TOPICS ============================= -->
@@ -654,6 +673,7 @@
 <script src="equivalents.js"></script>
 <script src="phrases.js"></script>
 <script src="chunks.js"></script>
+<script src="units.js"></script>
 <script src="grammar.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>
