@@ -92,6 +92,30 @@
     }
   }
 
+  /* Several lines one after another, as a conversation: the voice's own
+     queue does the waiting. `onLine(i)` fires as line i starts and `onDone`
+     after the last, so the page can follow along. Stops whatever was playing
+     first, like say. */
+  function sayAll(texts, options = {}) {
+    if (!supported || !texts.length) return false;
+    try {
+      if (synth.speaking || synth.pending) synth.cancel();
+      const voice = pickVoice();
+      texts.forEach((text, i) => {
+        const u = new Utterance(String(text).replace(/[{}]/g, "").replace(/_+/g, " ").trim());
+        if (voice) u.voice = voice;
+        u.lang = voice ? voice.lang : "es-CO";
+        u.rate = options.slow ? RATE_SLOW : RATE;
+        u.onstart = () => { if (options.onLine) options.onLine(i); };
+        if (i === texts.length - 1) u.onend = u.onerror = () => { if (options.onDone) options.onDone(); };
+        synth.speak(u);
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function stop() {
     if (!supported) return;
     try { synth.cancel(); } catch (e) { /* nothing to stop */ }
@@ -110,6 +134,6 @@
   const voicesKnown = () => voices.length > 0;
   const hasSpanishVoice = () => spanish().length > 0;
 
-  window.Speech = { supported, say, stop, voiceName, voicesKnown, hasSpanishVoice,
+  window.Speech = { supported, say, sayAll, stop, voiceName, voicesKnown, hasSpanishVoice,
     RATE, RATE_SLOW, pickVoice, reload: load };
 })();

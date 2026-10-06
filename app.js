@@ -17,6 +17,11 @@
   let round = null;
   let card = null;
   let lastResult = null;
+  // The course screen: which unit is open, and the retelling clock and the
+  // recorder, which have to be stopped whenever the screen changes.
+  let openUnit = null;
+  let retell = null;
+  let recorder = null;
 
   /* The word's progress as it stood when the card was drawn. Every grade
      is applied to this rather than to whatever the last grade left, so
@@ -117,6 +122,7 @@
     if (name === "progress") renderProgress();
     if (name === "topics") renderTopics();
     if (name === "lessons") renderLessons();
+    if (name === "course") renderCourse(); else stopRetell();
   }
 
   $("tabs").addEventListener("click", (e) => {
@@ -2203,6 +2209,11 @@
     if (round.today && todayRun) todayRun.step += 1;
     drawEndActions();
     drawTodayEnd();
+    // A round started from a unit leads back to it.
+    lastUnit = round.unit || null;
+    const fromUnit = UNITS.find((u) => u.id === lastUnit);
+    $("btn-unit-back").hidden = !fromUnit;
+    if (fromUnit) $("btn-unit-back").textContent = `Back to Unit ${UNITS.indexOf(fromUnit) + 1}: ${fromUnit.title}`;
     $("round-end").hidden = false;
     updateStartBlurb();
     // The end of a round is the moment worth pushing: the most progress has
@@ -2400,14 +2411,22 @@
     if (on && todayRun.step >= TODAY_STEPS.length) finishToday();
     $("today-end").hidden = !on;
     $("btn-again").hidden = on && !todayRun.finished;
-    if (!on) { $("btn-today-next").hidden = true; return; }
+    if (!on) { $("btn-today-next").hidden = true; $("btn-today-course").hidden = true; return; }
     $("today-steps").innerHTML = TODAY_STEPS.map((step, i) => {
       const name = todayRun.ran[i] || step.name;
       const state_ = i < todayRun.step ? "done" : "todo";
       return `<span class="tstep ${state_}">${i < todayRun.step ? "&#10003; " : ""}${esc(name)}</span>`;
     }).join("");
+    $("btn-today-course").hidden = true;
     if (todayRun.step >= TODAY_STEPS.length) {
       $("btn-today-next").hidden = true;
+      // Then the course, which is the part a daily session cannot do for you.
+      const next = currentUnit();
+      if (next) {
+        const step = unitSteps(next).find((x) => !x.done);
+        $("btn-today-course").hidden = false;
+        $("btn-today-course").textContent = `Carry on: Unit ${UNITS.indexOf(next) + 1}, ${step.name.toLowerCase()}`;
+      }
       const streak = streakText();
       $("today-steps").innerHTML += `<span class="tdone">Today's session done.${streak ? " " + esc(streak) : ""}</span>`;
       return;
@@ -2419,6 +2438,368 @@
 
   $("btn-today").addEventListener("click", startToday);
   $("btn-today-next").addEventListener("click", () => { if (todayRun) runTodayStep(); });
+
+
+  /* ------------------------------------------------------------------
+     The course
+
+     Units from units.js, each run as four steps: learn the words and the
+     frames, read and listen to a conversation, write true sentences of your
+     own, then say it out loud against the clock. The words step is ordinary
+     rounds, so it moves levels like any other; the rest is kept per unit in
+     state.units, so a unit remembers what you wrote in it.
+     ------------------------------------------------------------------ */
+  const UNITS = window.UNITS || [];
+  const UNIT_MAX_NEW = 6;
+  const RETELL_SECONDS = [60, 45, 30];
+
+  /* A written answer against a task: which of its required groups it uses,
+     compared without accents, capitals or punctuation, and whether it is a
+     sentence at all. A nudge rather than a mark. */
+  const normText = (t) => ` ${Engine.fold(t).replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim()} `;
+  function checkTask(task, text) {
+    const t = normText(text);
+    const words = t.trim() ? t.trim().split(" ").length : 0;
+    const used = [], missing = [];
+    for (const group of task.need) {
+      const hit = group.find((alt) => t.includes(normText(alt)));
+      if (hit) used.push(hit); else missing.push(group);
+    }
+    return { ok: words >= 2 && !missing.length, words, used, missing };
+  }
+
+  function unitSteps(u) {
+    const rec = Store.peekUnit(state, u.id);
+    const met = u.words.filter((id) => prog(id).timesSeen > 0).length;
+    const written = u.tasks.filter((t) => rec.write[t.id] && rec.write[t.id].text.trim()).length;
+    return [
+      { key: "learn", name: "Learn", done: met === u.words.length, detail: `${met} of ${u.words.length} words met` },
+      { key: "read", name: "Read", done: !!rec.read, detail: rec.read ? "done" : "not yet" },
+      { key: "write", name: "Make it yours", done: written === u.tasks.length, detail: `${written} of ${u.tasks.length} written` },
+      { key: "say", name: "Say it", done: !!rec.retold, detail: rec.retold ? "done" : "not yet" },
+    ];
+  }
+  const unitDone = (u) => unitSteps(u).every((x) => x.done);
+  // Nothing is locked; this is only which one to suggest.
+  const currentUnit = () => UNITS.find((u) => !unitDone(u)) || null;
+  const stepPills = (u) => unitSteps(u).map((x) =>
+    `<span class="tstep ${x.done ? "done" : "todo"}">${x.done ? "&#10003; " : ""}${esc(x.name)}</span>`).join("");
+  const slowButton = (text) => (Speech.supported
+    ? `<button class="say-btn slow" type="button" data-say="${esc(text)}" data-slow="1" aria-label="Hear it slowly">&frac12;</button>`
+    : "");
+  // A frame's gap drawn as a gap.
+  const frameHtml = (es) => esc(es).replace(/_{3,}/g, '<span class="gap">&nbsp;</span>');
+
+  function renderCourse() {
+    stopRetell();
+    const u = UNITS.find((x) => x.id === openUnit) || null;
+    if (!u) openUnit = null;
+    $("course-list").hidden = !!u;
+    $("unit-view").hidden = !u;
+    if (u) { renderUnit(u); return; }
+    const next = currentUnit();
+    $("units").innerHTML = UNITS.map((x, i) => `
+      <button class="pane unit-card${x === next ? " next" : ""}" type="button" data-unit="${esc(x.id)}">
+        <span class="unit-num">Unit ${i + 1}${x === next ? " · up next" : unitDone(x) ? " · done" : ""}</span>
+        <span class="unit-title"><b>${esc(x.title)}</b> <span class="muted small">${esc(x.es)}</span></span>
+        <span class="small">${esc(x.goal)}</span>
+        <span class="unit-steps">${stepPills(x)}</span>
+      </button>`).join("");
+  }
+
+  $("units").addEventListener("click", (e) => {
+    const card_ = e.target.closest("[data-unit]");
+    if (!card_) return;
+    openUnit = card_.dataset.unit;
+    renderCourse();
+    window.scrollTo(0, 0);
+  });
+
+  function lineHtml(l, n, english) {
+    return `<div class="dline" data-line="${n}">
+      <span class="who">${esc(l.who)}</span>
+      <p class="des">${tappable(l.es)}${sayButton(l.es, "Hear this line")}${slowButton(l.es)}</p>
+      ${english ? `<p class="den muted small" hidden>${esc(l.en)}</p>` : ""}</div>`;
+  }
+
+  function taskResultHtml(task, text) {
+    const r = checkTask(task, text);
+    const head = r.ok ? `<p class="task-ok">Uses the frame. Here is how others might say it:</p>`
+      : r.words < 2 ? `<p class="task-try">Write a whole sentence, even a short one.</p>`
+      : `<p class="task-try">Try working in ${r.missing.map((g) => g.map((a) => `<b>${esc(a)}</b>`).join(" or ")).join(", and ")}. Some ways to say it:</p>`;
+    return head + `<ul class="models">${task.models.map((m) => `<li>${tappable(m)}${sayButton(m, "Hear it")}</li>`).join("")}</ul>`;
+  }
+
+  function renderUnit(u) {
+    const i = UNITS.indexOf(u);
+    const steps = unitSteps(u);
+    const rec = Store.peekUnit(state, u.id);
+    const lesson = GRAMMAR.lessons.find((l) => l.id === u.grammar);
+    const first = steps.findIndex((x) => !x.done);
+    const open = (k) => ((first === -1 ? 0 : first) === k ? " open" : "");
+    const summary = (k, title) => `<summary><span class="snum">${k + 1}</span><span class="sname">${esc(title)}</span>`
+      + `<span class="sdetail muted small" data-detail="${k}">${esc(steps[k].detail)}</span></summary>`;
+    const met = u.words.filter((id) => prog(id).timesSeen > 0).length;
+    const byId = new Map(words().map((w) => [w.id, w]));
+    const canRecord = !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+    $("unit-view").innerHTML = `
+      <div class="pane unit-head">
+        <button class="btn ghost back" type="button" data-act="units">&larr; All units</button>
+        <span class="unit-num">Unit ${i + 1}</span>
+        <h2>${esc(u.title)} <span class="muted small">${esc(u.es)}</span></h2>
+        <p class="small">${esc(u.goal)}</p>
+        <div class="unit-steps">${stepPills(u)}</div>
+      </div>
+
+      <details class="pane ustep" data-step="learn"${open(0)}>
+        ${summary(0, "Learn")}
+        <p class="muted small">Frames first: the part of a sentence you would otherwise build on the spot.
+          Learn the frame, then swap what goes in the gap.</p>
+        ${u.frames.map((f) => `<div class="frame">
+          <p class="fes">${frameHtml(f.es)}</p><p class="muted small">${esc(f.en)}</p>
+          <ul>${f.examples.map(([es, en]) => `<li>${tappable(es)}${sayButton(es, "Hear it")}<span class="muted small">${esc(en)}</span></li>`).join("")}</ul>
+        </div>`).join("")}
+        <p class="uwords-label small">The words</p>
+        <p class="uwords">${u.words.map((id) => byId.get(id)).filter(Boolean).map((w) =>
+          `<span class="uword${prog(w.id).timesSeen > 0 ? " met" : ""}"><b>${esc(w.es)}</b> ${esc(w.en[0])}</span>`).join("")}</p>
+        <div class="ustep-acts">
+          <button class="btn primary" type="button" data-act="unit-words">Practise the words (${met} of ${u.words.length} met)</button>
+          ${lesson ? `<button class="btn" type="button" data-act="unit-grammar">Grammar: ${esc(lesson.title)}</button>` : ""}
+        </div>
+      </details>
+
+      <details class="pane ustep" data-step="read"${open(1)}>
+        ${summary(1, "Read and listen")}
+        <p class="muted small">${esc(u.dialogue.setting)} Listen once without the English. Tap a word you do
+          not know; tap a line's name for its English.</p>
+        <div class="ustep-acts">
+          ${Speech.supported ? '<button class="btn" type="button" data-act="play-all">Play it all</button>' : ""}
+          <button class="btn" type="button" data-act="toggle-en">Show the English</button>
+        </div>
+        <div class="dialogue" id="dialogue">${u.dialogue.lines.map((l, n) => lineHtml(l, n, true)).join("")}</div>
+        <button class="btn ${rec.read ? "" : "primary"}" type="button" data-act="read-done">${rec.read ? "Read &#10003;" : "Done: I followed it"}</button>
+      </details>
+
+      <details class="pane ustep" data-step="write"${open(2)}>
+        ${summary(2, "Make it yours")}
+        <p class="muted small">True sentences about your own life, using the frames. Making it about you is
+          what makes it stick. On a phone you can tap the keyboard's microphone and say it instead of typing.</p>
+        ${u.tasks.map((t) => {
+          const saved = rec.write[t.id];
+          return `<div class="task" data-task="${esc(t.id)}">
+            <p class="task-prompt">${esc(t.prompt)}</p>
+            <p class="fes small">${frameHtml(t.frame)}</p>
+            <textarea rows="2" maxlength="2000" autocapitalize="sentences" spellcheck="false"
+              aria-label="${esc(t.prompt)}">${esc(saved ? saved.text : "")}</textarea>
+            <button class="btn" type="button" data-act="check-task">${saved ? "Check again" : "Check"}</button>
+            <div class="task-result"${saved ? "" : " hidden"}>${saved ? taskResultHtml(t, saved.text) : ""}</div>
+          </div>`;
+        }).join("")}
+      </details>
+
+      <details class="pane ustep" data-step="say"${open(3)}>
+        ${summary(3, "Say it")}
+        <h3>Shadow it</h3>
+        <p class="muted small">Play a line and say it along with the voice, at the same time, copying the
+          rhythm rather than the words. &frac12; slows it down. Then try the whole thing without stopping.</p>
+        <div class="dialogue shadow">${u.dialogue.lines.map((l, n) => lineHtml(l, n, false)).join("")}</div>
+        ${canRecord ? `<h3>Hear yourself</h3>
+        <p class="muted small">Record a go at it and play it back. Nothing leaves the phone.</p>
+        <div class="ustep-acts"><button class="btn" type="button" data-act="record">Record</button></div>
+        <audio id="unit-audio" controls hidden></audio>` : ""}
+        <h3>Tell it three times</h3>
+        <p class="small">${esc(u.retell.prompt)}</p>
+        <p class="points">${u.retell.points.map((x) => `<span class="point">${esc(x)}</span>`).join("")}</p>
+        <p class="muted small">Out loud, for a minute. Then the same again in 45 seconds, then in 30. The
+          third is always faster and smoother: that is fluency being built.</p>
+        <div class="retell">
+          <span class="clock" id="retell-clock">${RETELL_SECONDS[0]}</span>
+          <button class="btn primary" type="button" data-act="retell">Start: ${RETELL_SECONDS[0]} seconds</button>
+        </div>
+        <p class="retell-msg small" id="retell-msg"${rec.retold ? "" : " hidden"}>${rec.retold ? "Done before. Going again is always worth it." : ""}</p>
+        <details class="model"><summary class="small">A model answer</summary>
+          <p>${tappable(u.retell.model)}${sayButton(u.retell.model, "Hear it")}</p></details>
+      </details>`;
+  }
+
+  /* Ticks and step pills, redrawn in place, so nothing typed elsewhere in
+     the unit is lost by answering one part of it. */
+  function refreshUnitHead(u) {
+    const view = $("unit-view");
+    const steps = unitSteps(u);
+    const pills = view.querySelector(".unit-head .unit-steps");
+    if (pills) pills.innerHTML = stepPills(u);
+    steps.forEach((x, k) => {
+      const d = view.querySelector(`[data-detail="${k}"]`);
+      if (d) d.textContent = x.detail;
+    });
+  }
+
+  function startUnitWords(u) {
+    const pool = words().filter((w) => u.words.includes(w.id) && prog(w.id).enabled !== false);
+    let queue = Engine.pickRound(pool, (id) => prog(id), new Date().toISOString(), state.settings.roundSize,
+      { rankOf: TeachingOrder.rankOf, maxNew: UNIT_MAX_NEW });
+    /* Everything met and nothing due: practise them anyway. Asked for by
+       name, so it is a real round, not a forced wait. */
+    if (!queue.length) queue = Engine.shuffle(pool).slice(0, state.settings.roundSize);
+    if (!queue.length) { toast("No words in this unit are enabled.", true); return; }
+    todayRun = null;
+    showScreen("practice");
+    beginRound({ queue, drill: false, unit: u.id });
+  }
+
+  function stopRetell() {
+    if (retell && retell.timer) clearInterval(retell.timer);
+    retell = null;
+    if (recorder && recorder.state === "recording") recorder.stop();
+    try { Speech.stop(); } catch (e) { /* nothing playing */ }
+  }
+
+  /* Three goes at the same talk, each shorter. A go stopped early does not
+     count; letting the clock run out does, because talking until it does is
+     the exercise. */
+  function retellTick(u) {
+    const btn = $("unit-view").querySelector('[data-act="retell"]');
+    if (!retell) return;
+    retell.left -= 1;
+    $("retell-clock").textContent = Math.max(0, retell.left);
+    if (retell.left > 0) return;
+    clearInterval(retell.timer);
+    retell.timer = null;
+    retell.stage += 1;
+    if (retell.stage < RETELL_SECONDS.length) {
+      $("retell-clock").textContent = RETELL_SECONDS[retell.stage];
+      btn.textContent = `Next: ${RETELL_SECONDS[retell.stage]} seconds`;
+      $("retell-msg").hidden = false;
+      $("retell-msg").textContent = retell.stage === 1
+        ? "One done. Same again, the same points, in less time."
+        : "Two done. Last one, quickest yet.";
+      return;
+    }
+    Store.unitRecord(state, u.id).retold = new Date().toISOString();
+    commit();
+    retell = null;
+    btn.textContent = `Again: ${RETELL_SECONDS[0]} seconds`;
+    $("retell-clock").textContent = RETELL_SECONDS[0];
+    $("retell-msg").hidden = false;
+    $("retell-msg").textContent = "All three done. If the last one came out easier than the first, that is the point.";
+    refreshUnitHead(u);
+  }
+
+  $("unit-view").addEventListener("click", async (e) => {
+    const u = UNITS.find((x) => x.id === openUnit);
+    if (!u) return;
+    const who = e.target.closest(".dline .who");
+    if (who) {
+      const en = who.parentElement.querySelector(".den");
+      if (en) en.hidden = !en.hidden;
+      return;
+    }
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === "units") { openUnit = null; renderCourse(); window.scrollTo(0, 0); return; }
+    if (act === "unit-words") { startUnitWords(u); return; }
+    if (act === "unit-grammar") { practiseGrammar(u.grammar); return; }
+    if (act === "toggle-en") {
+      const ens = [...$("dialogue").querySelectorAll(".den")];
+      const show = ens.some((x) => x.hidden);
+      ens.forEach((x) => { x.hidden = !show; });
+      btn.textContent = show ? "Hide the English" : "Show the English";
+      return;
+    }
+    if (act === "play-all") {
+      const lines = [...$("dialogue").querySelectorAll(".dline")];
+      const mark = (n) => lines.forEach((l, k) => l.classList.toggle("playing", k === n));
+      Speech.sayAll(u.dialogue.lines.map((l) => l.es), { onLine: mark, onDone: () => mark(-1) });
+      return;
+    }
+    if (act === "read-done") {
+      Store.unitRecord(state, u.id).read = new Date().toISOString();
+      commit();
+      btn.classList.remove("primary");
+      btn.innerHTML = "Read &#10003;";
+      refreshUnitHead(u);
+      return;
+    }
+    if (act === "check-task") {
+      const box = btn.closest(".task");
+      const task = u.tasks.find((t) => t.id === box.dataset.task);
+      const text = box.querySelector("textarea").value.trim();
+      if (!text) { box.querySelector("textarea").focus(); return; }
+      Store.unitRecord(state, u.id).write[task.id] = { text, at: new Date().toISOString() };
+      commit();
+      const out = box.querySelector(".task-result");
+      out.innerHTML = taskResultHtml(task, text);
+      out.hidden = false;
+      btn.textContent = "Check again";
+      refreshUnitHead(u);
+      return;
+    }
+    if (act === "retell") {
+      if (retell && retell.timer) {          // stopped early: this go does not count
+        clearInterval(retell.timer);
+        retell.timer = null;
+        retell.left = RETELL_SECONDS[retell.stage];
+        $("retell-clock").textContent = retell.left;
+        btn.textContent = `Start: ${retell.left} seconds`;
+        return;
+      }
+      if (!retell) retell = { stage: 0, left: RETELL_SECONDS[0], timer: null };
+      retell.left = RETELL_SECONDS[retell.stage];
+      $("retell-clock").textContent = retell.left;
+      btn.textContent = "Stop";
+      retell.timer = setInterval(() => retellTick(u), 1000);
+      return;
+    }
+    if (act === "record") {
+      if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const chunks = [];
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = (ev) => { if (ev.data.size) chunks.push(ev.data); };
+        recorder.onstop = () => {
+          stream.getTracks().forEach((t) => t.stop());
+          const audioEl = $("unit-audio");
+          if (audioEl) {
+            audioEl.src = URL.createObjectURL(new Blob(chunks, { type: recorder.mimeType || "audio/mp4" }));
+            audioEl.hidden = false;
+          }
+          btn.textContent = "Record again";
+          btn.classList.remove("recording");
+        };
+        recorder.start();
+        btn.textContent = "Stop recording";
+        btn.classList.add("recording");
+      } catch (err) {
+        toast("The microphone is not available here. Saying it out loud still counts.", true);
+      }
+    }
+  });
+
+  // For the tests: one second of the retelling clock, without the wait.
+  window.__retellTick = () => {
+    const u = UNITS.find((x) => x.id === openUnit);
+    if (u && retell && retell.timer) retellTick(u);
+  };
+
+  $("btn-unit-back").addEventListener("click", () => {
+    if (!lastUnit) return;
+    openUnit = lastUnit;
+    showScreen("course");
+    window.scrollTo(0, 0);
+  });
+  let lastUnit = null;
+
+  $("btn-today-course").addEventListener("click", () => {
+    const u = currentUnit();
+    if (!u) return;
+    openUnit = u.id;
+    showScreen("course");
+    window.scrollTo(0, 0);
+  });
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
 
@@ -2571,8 +2952,14 @@
   $("grammar-lessons").addEventListener("click", (e) => {
     const btn = e.target.closest('[data-act="grammar"]');
     if (!btn) return;
+    practiseGrammar(btn.closest("[data-grammar]").dataset.grammar);
+  });
+
+  /* A round of one grammar lesson, from wherever it was asked for. */
+  function practiseGrammar(lessonId) {
     state.settings.mode = "grammar";
-    state.settings.grammar = btn.closest("[data-grammar]").dataset.grammar;
+    state.settings.grammar = lessonId;
+    todayRun = null;
     commit();
     round = null; card = null;
     drawModes();
@@ -2580,7 +2967,7 @@
     updateStartBlurb();
     resetPracticeView();
     startRound();
-  });
+  }
 
   function renderLessons() {
     renderGrammarLessons();
@@ -3044,5 +3431,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, get today() { return todayRun; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, get today() { return todayRun; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding, checkTask };
 })();

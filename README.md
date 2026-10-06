@@ -52,6 +52,7 @@ senses.js       one line per word that shares an English meaning with another
 equivalents.js  the other ways of saying the same thing, accepted but not shown
 phrases.js      the sentence ladder: short things to say, earliest words first
 chunks.js       the everyday phrase each common word lives in: tengo hambre
+units.js        the course: units with frames, a conversation, tasks, a retelling
 vocab.js        the generated bank: 985 more words, 1383 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
@@ -457,6 +458,34 @@ look at your mistakes between steps keeps your place. Finishing the last step
 marks the day done and counts towards a streak of days running; going again
 the same day is extra practice and does not count twice. Start a round is
 still there underneath for anything else.
+
+## The course
+
+The Course tab holds units built round real situations: meeting people,
+food and drink, getting around, shopping and paying, your day and plans.
+Each runs the four kinds of practice the research on language learning keeps
+coming back to:
+
+1. **Learn.** The unit's words, five sentence frames (*¿Me regala ___?*,
+   *¿Dónde queda ___?*) with examples, and one grammar lesson. Practise the
+   words runs ordinary rounds of just that unit's words, so levels move as
+   they always do, and the round ends with a button back to the unit.
+2. **Read and listen.** A short conversation, at least 95% words the bank
+   knows, with every line playable at normal or half speed, Play it all, and
+   the English hidden until asked for.
+3. **Make it yours.** Four prompts to write true sentences about your own
+   life with the frames. Check says whether the frame was used, and shows
+   model answers either way. What you write is kept.
+4. **Say it.** Shadow the conversation, record yourself if the browser
+   allows it, then talk about the topic three times against a clock of 60,
+   45 and 30 seconds. Stopping early does not count; letting the clock run
+   out does.
+
+Nothing is locked. The list suggests the first unit not finished, and so
+does the end of Today's session. Per unit, the saved state keeps when the
+conversation was read, when the retelling was done, and each written answer
+with its time, under `units`; the merge keeps the later of each date and each
+answer by its own time.
 
 ## How the mastery engine works
 
@@ -1002,6 +1031,11 @@ session (each step the round it claims to be, a second look keeping your
 place, done counted once a day, a missed day restarting the streak), writes,
 reloads and clears a memory hook, loads a save from before either existed
 with its progress intact, and merges hooks and streaks between two devices.
+`tests/test-units.mjs` checks every unit against the bank (word ids,
+grammar lessons, 95% known words, every model answer passing its own check),
+the answer checker, the whole screen from reading to the retelling clock, a
+words round from a unit and the way back, an old save loading with an empty
+course, and the merge.
 
 ## Tap a word
 
