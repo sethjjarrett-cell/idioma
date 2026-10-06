@@ -898,15 +898,24 @@ function formsOfWord(word, sentencesForWord, conjugate) {
 
 /* An index from surface form to word id, built once over the whole bank.
    A form two words share goes to whichever is taught first, so "es" counts as
-   ser rather than as some later homograph. */
+   ser rather than as some later homograph.
+
+   A noun's plural joins the contest like any other form, so casas is houses,
+   not you marry, when casa is taught before casarse. Without it the verb
+   would win by default, being the only word that spells it outright. */
 function buildFormIndex(words, sentencesForWord, options = {}) {
   const conjugate = options.conjugate || null;
   const rankOf = options.rankOf || (() => 0);
   const index = new Map();
+  const put = (form, id) => {
+    const held = index.get(form);
+    if (held === undefined || rankOf(id) < rankOf(held)) index.set(form, id);
+  };
   for (const w of words) {
-    for (const form of formsOfWord(w, sentencesForWord, conjugate)) {
-      const held = index.get(form);
-      if (held === undefined || rankOf(w.id) < rankOf(held)) index.set(form, w.id);
+    for (const form of formsOfWord(w, sentencesForWord, conjugate)) put(form, w.id);
+    if (w.pos === "noun" && !/\s/.test(w.es)) {
+      const t = wordToken(w.es);
+      if (t) put(/[aeiouáéó]$/.test(t) ? t + "s" : /z$/.test(t) ? t.slice(0, -1) + "ces" : t + "es", w.id);
     }
   }
   return index;
