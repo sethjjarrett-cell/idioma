@@ -135,7 +135,7 @@ const htmlHits = americanisms(proseOf(html));
 ok('index.html says it in British English', htmlHits.length === 0, htmlHits.join(', '));
 
 console.log('--- the messages the app builds ---');
-for (const f of ['app.js', 'engine.js', 'store.js', 'sync.js', 'pronounce.js']) {
+for (const f of ['app.js', 'engine.js', 'store.js', 'sync.js', 'pronounce.js', 'chunks.js']) {
   const hits = [];
   const text = wholeOf(read(f));
   for (const hit of americanisms(text)) {

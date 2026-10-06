@@ -51,6 +51,7 @@ order.js        the order words are taught in
 senses.js       one line per word that shares an English meaning with another
 equivalents.js  the other ways of saying the same thing, accepted but not shown
 phrases.js      the sentence ladder: short things to say, earliest words first
+chunks.js       the everyday phrase each common word lives in: tengo hambre
 vocab.js        the generated bank: 985 more words, 1383 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
@@ -409,6 +410,42 @@ nothing was tested.
 How many new words a round may take on is the progression rule above; whether
 they are shown first or tested straight away is this toggle in the menu.
 Turning it off does not change the pacing, only what the card looks like.
+
+### Chunks
+
+Nobody says *hambre* on its own; they say *tengo hambre*. A word learnt alone
+has to be assembled into speech on the spot, which is slow and is where it
+goes missing, so the commonest words (every one of the first three hundred
+taught, set phrases aside) carry the short phrase they usually live in, in
+`chunks.js`. The teaching card leads with it, under the meaning, and every
+verdict on that word shows it again with its sound. Each chunk braces the
+form of its word, and `tests/test-chunks.mjs` checks the braced form really
+is one and that every other word in the phrase is in the bank, so all of it
+can be tapped.
+
+### Memory hooks
+
+When a word is missed, the verdict offers to write a memory hook: a
+sound-alike in English and a daft picture joining it to the meaning
+(*cobija*, blanket: a cob of corn wrapped in a blanket). The keyword method
+is one of the better-evidenced tricks there is for stubborn vocabulary, and
+your own picture works better than a supplied one. Once written, the hook
+shows on every verdict and teaching card for that word until you clear it.
+Hooks are kept in the saved state under `hooks`, sync like everything else,
+and an emptied hook keeps its row so the deletion reaches the other device.
+
+## Today's session
+
+The first button on the start screen runs the day's work in one go: a
+words round (what is due and a few new words), six grammar questions
+leaning on your weak spots, then a sentences round, or listening if no
+sentences are in reach yet. Each step is an ordinary round of its kind and
+moves exactly what that round would; the session only chooses and orders
+them, ignoring whatever topic or filter is picked for free practice. A second
+look at your mistakes between steps keeps your place. Finishing the last step
+marks the day done and counts towards a streak of days running; going again
+the same day is extra practice and does not count twice. Start a round is
+still there underneath for anything else.
 
 ## How the mastery engine works
 
@@ -947,6 +984,13 @@ on a card (pressed, right, wrong, reset on the next card, the keyboard left
 up), I know this on a new word, a second look that asks exactly the misses and
 moves nothing, grammar's second look not clearing a weak spot, and the words
 you keep missing as a real round.
+
+`tests/test-chunks.mjs` checks every chunk against the bank and that the
+teaching card and the verdict show it. `tests/test-today.mjs` runs a whole
+session (each step the round it claims to be, a second look keeping your
+place, done counted once a day, a missed day restarting the streak), writes,
+reloads and clears a memory hook, loads a save from before either existed
+with its progress intact, and merges hooks and streaks between two devices.
 
 ## Tap a word
 
