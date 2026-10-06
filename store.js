@@ -12,7 +12,9 @@
        customWords: [ ...same shape as a seed word ],
        customSentences: [ ...same shape as a seed sentence ],
        editedWords: { [wordId]: { ...fields overridden by hand } },
-       stats: { rounds, lastRoundAt }
+       stats: { rounds, lastRoundAt, todayLast, todayStreak },
+       grammar: { [lessonId|question]: { n, r, last, streak, at } },
+       hooks: { [wordId]: { text, at } }
      }
 
    Words added or edited in the app are kept separately from the bank
@@ -51,13 +53,44 @@ function defaultState() {
     customWords: [],
     customSentences: [],
     editedWords: {},
-    stats: { rounds: 0, lastRoundAt: null },
+    /* todayLast is the local date (YYYY-MM-DD) the daily session was last
+       finished, and todayStreak how many days running that has happened. */
+    stats: { rounds: 0, lastRoundAt: null, todayLast: null, todayStreak: 0 },
     /* How each grammar question has gone, keyed by topic and sentence, so the
        drills can lean on the ones you get wrong. Separate from progress: a
        grammar question is not a word and has no level. A state saved before
        this existed simply has none yet, and starts empty. */
     grammar: {},
+    /* Memory hooks the learner wrote for words that would not stick, keyed by
+       word id: { text, at }. An emptied hook keeps its row with no text, so a
+       deletion syncs like an edit instead of coming back from the other
+       device. A state saved before hooks existed has none, and starts empty. */
+    hooks: {},
   };
+}
+
+/* Same caution as the grammar record: only rows with a text string and a
+   time survive, so a hand-edited backup cannot break the card. */
+function cleanHooks(h) {
+  if (!h || typeof h !== "object" || Array.isArray(h)) return {};
+  const out = {};
+  for (const [k, v] of Object.entries(h)) {
+    if (v && typeof v === "object" && typeof v.text === "string") {
+      out[k] = { text: v.text.slice(0, 500), at: typeof v.at === "string" ? v.at : null };
+    }
+  }
+  return out;
+}
+
+/* A word's hook, or "" when it has none. */
+function hookFor(state, id) {
+  const h = (state.hooks || {})[id];
+  return h && h.text ? h.text : "";
+}
+
+function setHook(state, id, text) {
+  if (!state.hooks) state.hooks = {};
+  state.hooks[id] = { text: String(text || "").trim().slice(0, 500), at: new Date().toISOString() };
 }
 
 /* What a grammar record must look like to be kept: an object of plain
@@ -89,6 +122,7 @@ function load() {
     merged.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
     merged.stats = { ...defaultState().stats, ...(parsed.stats || {}) };
     merged.grammar = cleanGrammar(parsed.grammar);
+    merged.hooks = cleanHooks(parsed.hooks);
     return { state: merged, warning: null };
   } catch (e) {
     try { window.localStorage.setItem(STORAGE_KEY + ".broken", raw); } catch (e2) { /* nothing more to do */ }
@@ -302,6 +336,14 @@ function sentenceIndex(state) {
     if (!forWord.has(s.wordId)) forWord.set(s.wordId, []);
     forWord.get(s.wordId).push(s);
   }
+  /* A chunk is bank Spanish like a sentence, so the form it braces counts
+     too: "me duele" teaches duele, which the verb tables cannot build. */
+  for (const [id, chunk] of Object.entries(window.CHUNKS || {})) {
+    const m = /\{([^}]+)\}/.exec(chunk[0]);
+    if (!m) continue;
+    if (!forWord.has(id)) forWord.set(id, []);
+    forWord.get(id).push({ answer: m[1] });
+  }
   const rankOf = window.TeachingOrder ? window.TeachingOrder.rankOf : () => 0;
   const forms = Engine.buildFormIndex(words, (id) => forWord.get(id) || [],
     { conjugate: verbForms, rankOf });
@@ -469,11 +511,12 @@ function parseImport(text) {
     merged.phrases[id] = { ...Engine.freshProgress(), ...p };
   }
   merged.grammar = cleanGrammar(parsed.grammar);
+  merged.hooks = cleanHooks(parsed.hooks);
   return merged;
 }
 
 window.Store = {
-  STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow,
+  STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow, hookFor, setHook,
   allWords, allSentences, siblingsOf, peekProgress, progressFor, alternatives, rememberAccepted,
   allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,
   peekPhrase, phraseProgressFor, downloadExport, parseImport,

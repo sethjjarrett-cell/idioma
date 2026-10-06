@@ -1054,7 +1054,7 @@ window.Engine = {
   CONFIG, BANDS, PACES, applyPace, bandForLevel, isBoundaryLevel, freshProgress, applyResult, isSticking, jumpAhead,
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
-  wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
+  wordToken, tokenise, formsOfWord, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
   sentenceRank, sentenceCard, checkSequence, checkHeard, shuffle, FREE_TOKEN,
   recordGrammar, grammarWeight, weightedDraw,
 };

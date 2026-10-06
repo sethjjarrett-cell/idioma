@@ -363,6 +363,13 @@
       <div class="teach" id="teach" hidden>
         <p class="teach-why small" id="teach-why" hidden></p>
         <p class="teach-meaning" id="teach-meaning"></p>
+        <!-- The word as it is usually said, which is what to remember. -->
+        <div class="chunk" id="teach-chunk" hidden>
+          <span class="chunk-label">Say it as</span>
+          <p class="chunk-es"><span id="teach-chunk-es"></span><button class="say-btn" type="button" id="btn-say-chunk" aria-label="Hear the phrase" hidden><svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg></button></p>
+          <p class="muted small" id="teach-chunk-en"></p>
+        </div>
+        <p class="hook-line" id="teach-hook" hidden></p>
         <p class="teach-sense small muted" id="teach-sense" hidden></p>
         <p class="say" id="teach-say" hidden></p>
         <p class="note" id="teach-note" hidden></p>
@@ -427,11 +434,29 @@
           <button class="say-btn" type="button" id="btn-say-answer" aria-label="Hear it in Spanish"
                   hidden><svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg></button>
         </p>
+        <p class="chunk-line" id="verdict-chunk" hidden><span class="chunk-label">In use</span>
+          <span id="verdict-chunk-es"></span><button class="say-btn" type="button" id="btn-say-verdict-chunk" aria-label="Hear the phrase" hidden><svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg></button>
+          <span class="muted small" id="verdict-chunk-en"></span></p>
         <p class="muted small verdict-en" id="verdict-en" hidden></p>
         <p class="say" id="verdict-say" hidden></p>
         <p class="context mono small" id="verdict-context" hidden></p>
         <dl class="gloss-rows verdict-rows" id="verdict-rows" hidden></dl>
         <p class="note" id="verdict-note" hidden></p>
+        <!-- A memory hook: offered on a miss, kept once written, shown on
+             every verdict for that word after. -->
+        <div class="hook" id="hook" hidden>
+          <p class="hook-line" id="hook-text" hidden></p>
+          <button class="btn small" type="button" id="btn-hook"></button>
+          <div class="hook-edit" id="hook-edit" hidden>
+            <label class="small" for="hook-input">Link how it sounds to what it means, with a picture you will not forget.
+              <span class="muted">cobija, blanket: a cob of corn wrapped in a blanket.</span></label>
+            <textarea id="hook-input" rows="2" maxlength="500" autocomplete="off" autocapitalize="sentences"></textarea>
+            <div class="hook-acts">
+              <button class="btn" type="button" id="btn-hook-cancel">Cancel</button>
+              <button class="btn primary" type="button" id="btn-hook-save">Save hook</button>
+            </div>
+          </div>
+        </div>
         <div class="verdict-actions">
           <button class="btn" id="btn-override" hidden>I was right</button>
           <button class="btn primary" id="btn-retry" hidden>Type it again</button>
@@ -448,7 +473,12 @@
           <p class="muted" id="start-blurb"></p>
         </div>
       </div>
-      <button class="btn primary big" id="btn-start">Start a round</button>
+      <!-- The daily session: words, then grammar, then sentences, in one go. -->
+      <div class="today" id="today">
+        <button class="btn primary big" id="btn-today">Today's session</button>
+        <p class="muted small" id="today-blurb"></p>
+      </div>
+      <button class="btn big" id="btn-start">Start a round</button>
       <button class="btn big" id="btn-sticking-start" hidden></button>
     </div>
 
@@ -466,6 +496,10 @@
       <div class="end-acts">
         <button class="btn big" id="btn-review" hidden></button>
         <button class="btn big" id="btn-sticking" hidden></button>
+      </div>
+      <div class="today-end" id="today-end" hidden>
+        <p class="today-steps" id="today-steps"></p>
+        <button class="btn primary big" id="btn-today-next" hidden></button>
       </div>
       <div class="movers" id="end-movers"></div>
       <button class="btn primary big" id="btn-again">Another round</button>
@@ -619,6 +653,7 @@
 <script src="senses.js"></script>
 <script src="equivalents.js"></script>
 <script src="phrases.js"></script>
+<script src="chunks.js"></script>
 <script src="grammar.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>

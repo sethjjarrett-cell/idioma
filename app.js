@@ -885,6 +885,7 @@
   };
 
   function updateStartBlurb() {
+    drawToday();
     const sticking = mode() === "words" ? stickingWords().length : 0;
     $("btn-sticking-start").hidden = !sticking;
     $("btn-sticking-start").textContent = `Words you keep missing (${sticking})`;
@@ -981,6 +982,7 @@
     const btn = e.target.closest(".mode");
     if (!btn) return;
     state.settings.mode = btn.dataset.mode;
+    todayRun = null;
     /* A table picked from the Lessons screen is a verb pick; it has no meaning
        in the other two modes, and leaving it set would silently drill verbs
        when the learner asked for sentences. */
@@ -1494,6 +1496,20 @@
   /* Whether answers in this round move anything. Drills and listening never
      do, and neither does a second look at what was just missed: the answer
      was on screen a minute ago, so getting it right now proves little. */
+  /* A card about one word from the bank, as against a drill, a grammar
+     question, a sentence or something read aloud. Only these have a chunk or
+     a memory hook. */
+  const isWordCard = (c) => !!(c && c.word && c.word.id && !c.drill && !c.listen && !c.grammar && !c.isSentence);
+
+  /* The everyday phrase a word lives in, from chunks.js: the Spanish with the
+     braces off, the form to pick out, and the English. */
+  function chunkFor(word) {
+    const c = word && (window.CHUNKS || {})[word.id];
+    if (!c) return null;
+    const m = /\{([^}]+)\}/.exec(c[0]);
+    return { es: c[0].replace(/[{}]/g, ""), target: m ? m[1] : "", en: c[1] };
+  }
+
   const practiceOnly = (c = card) => !!(round && round.review) || !!(c && (c.drill || c.listen));
 
   /* "I know this". Only on a word card that is a real question: not the
@@ -1541,7 +1557,8 @@
     retypes = 0;
 
     $("card-band").textContent = card.band.label + (card.fellBack ? " (no sentence yet)" : "")
-      + (round.review ? " · second look" : "");
+      + (round.review ? " · second look" : "")
+      + (round.today && todayRun ? ` · today ${todayRun.step + 1} of ${TODAY_STEPS.length}` : "");
     // A word you have not met is always at L1, so saying so tells nobody
     // anything; the level appears once it starts meaning something.
     $("card-level").textContent = round.drill || round.listen ? card.levelLabel
@@ -1616,6 +1633,19 @@
 
     $("teach-meaning").textContent = c.reveal;
 
+    // The phrase comes before the notes: it is the thing to take away.
+    const chunk = chunkFor(c.word);
+    $("teach-chunk").hidden = !chunk;
+    if (chunk) {
+      $("teach-chunk-es").innerHTML = tappable(chunk.es, chunk.target);
+      $("teach-chunk-en").textContent = chunk.en;
+      $("btn-say-chunk").dataset.say = chunk.es;
+      $("btn-say-chunk").hidden = !Speech.supported;
+    }
+    const hook = Store.hookFor(state, c.word.id);
+    $("teach-hook").textContent = hook ? `Your hook: ${hook}` : "";
+    $("teach-hook").hidden = !hook;
+
     // Which sense, where the English alone would fit another word too.
     $("teach-sense").textContent = c.word.sense ? `The ${c.word.sense} one.` : "";
     $("teach-sense").hidden = !c.word.sense;
@@ -1628,7 +1658,14 @@
     $("teach-note").textContent = c.word.note || "";
     $("teach-note").hidden = !c.word.note;
 
-    if (c.example) {
+    /* An example that only repeats the chunk ("Yo tengo hambre." under
+       "tengo hambre") is the same thing twice, so it gives way. */
+    const echo = (() => {
+      if (!chunk || !c.example) return false;
+      const ex = Engine.tokenise(c.example.es), ch = Engine.tokenise(chunk.es);
+      return ex.length <= ch.length + 1 && ch.every((t) => ex.includes(t));
+    })();
+    if (c.example && !echo) {
       // The word is picked out of the sentence so the eye lands on it.
       $("teach-es").innerHTML = tappable(c.example.es, c.example.target);
       $("teach-en").textContent = c.example.en;
@@ -1966,6 +2003,19 @@
     $("verdict-note").textContent = note || "";
     $("verdict-note").hidden = !note;
 
+    /* The word in its phrase, once it has been answered: seeing tengo hambre
+       after typing hambre is the second meeting that makes it stick. A set
+       phrase is its own chunk, so it has none. */
+    const chunk = isWordCard(card) ? chunkFor(card.word) : null;
+    $("verdict-chunk").hidden = !chunk;
+    if (chunk) {
+      $("verdict-chunk-es").innerHTML = tappable(chunk.es, chunk.target);
+      $("verdict-chunk-en").textContent = chunk.en;
+      $("btn-say-verdict-chunk").dataset.say = chunk.es;
+      $("btn-say-verdict-chunk").hidden = !Speech.supported;
+    }
+    drawHook(outcome);
+
     // The override makes sense on anything short of a clean pass, and only
     // when something was actually typed.
     // Nothing to override on a drill: there is no level for it to change.
@@ -1993,6 +2043,51 @@
        front of you, which is how the sound gets tied to the spelling. */
     if (card.listen || spoken !== spanishPrompt(card)) autoSay(spoken);
   }
+
+  /* Memory hooks. A word that will not stick needs something to hang on, and
+     the one that works best is your own: a sound-alike in English and a daft
+     picture joining it to the meaning. Offered when a word is missed, never
+     forced; once written it shows on every verdict and teaching card for that
+     word, right or wrong, until it is cleared. */
+  function drawHook(outcome) {
+    const show = isWordCard(card);
+    const text = show ? Store.hookFor(state, card.word.id) : "";
+    const missed = outcome === "wrong" || outcome === "almost";
+    $("hook").hidden = !show || (!text && !missed);
+    $("hook-edit").hidden = true;
+    $("btn-hook").hidden = false;
+    $("hook-text").textContent = text ? `Your hook: ${text}` : "";
+    $("hook-text").hidden = !text;
+    if (!show) return;
+    const lapses = prog(card.word.id).lapses || 0;
+    $("btn-hook").textContent = text ? "Change hook"
+      : lapses >= 2 ? `Missed ${lapses} times: make a memory hook`
+      : "Make a memory hook";
+  }
+
+  $("btn-hook").addEventListener("click", () => {
+    if (!isWordCard(card)) return;
+    $("hook-input").value = Store.hookFor(state, card.word.id);
+    $("hook-edit").hidden = false;
+    $("btn-hook").hidden = true;
+    $("hook-input").focus();
+  });
+  $("btn-hook-cancel").addEventListener("click", () => {
+    $("hook-edit").hidden = true;
+    $("btn-hook").hidden = false;
+    $("btn-next").focus();
+  });
+  $("btn-hook-save").addEventListener("click", () => {
+    if (!isWordCard(card)) return;
+    const text = $("hook-input").value.trim();
+    const had = Store.hookFor(state, card.word.id);
+    if (!text && !had) { $("btn-hook-cancel").click(); return; }
+    Store.setHook(state, card.word.id, text);
+    commit();
+    drawHook(lastResult ? lastResult.outcome : "wrong");
+    toast(text ? `Hook saved for ${card.word.es}.` : `Hook cleared for ${card.word.es}.`);
+    $("btn-next").focus();
+  });
 
   /* Reopen the box for another go at the same card. Nothing is undone
      here: the snapshot means the next grade is applied from scratch. */
@@ -2105,7 +2200,9 @@
             </div>`).join("")
         : '<p class="muted small">No level changes this round.</p>';
 
+    if (round.today && todayRun) todayRun.step += 1;
     drawEndActions();
+    drawTodayEnd();
     $("round-end").hidden = false;
     updateStartBlurb();
     // The end of a round is the moment worth pushing: the most progress has
@@ -2187,12 +2284,148 @@
     beginRound({ queue: list, drill: false, sticking: true });
   }
   $("btn-sticking").addEventListener("click", startStickingRound);
-  $("btn-sticking-start").addEventListener("click", startStickingRound);
+  $("btn-sticking-start").addEventListener("click", () => { todayRun = null; startStickingRound(); });
+
+  /* ------------------------------------------------------------------
+     Today's session
+
+     One button for the day's work, so nobody has to decide what to do: the
+     words that are due and a few new ones, then a handful of grammar
+     questions leaning on your weak spots, then sentences that use the words
+     you have. Each step is an ordinary round of its kind, so it moves exactly
+     what that round would; the session only chooses them and runs them in
+     order, ignoring whatever topic or filter is picked for free practice.
+     ------------------------------------------------------------------ */
+  const TODAY_STEPS = [
+    { key: "words", name: "Words" },
+    { key: "grammar", name: "Grammar" },
+    { key: "sentences", name: "Sentences" },
+  ];
+  const TODAY_GRAMMAR = 6;
+  let todayRun = null;   // { step, ran: [names], finished }
+
+  const localDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-`
+    + String(d.getDate()).padStart(2, "0");
+  const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return localDay(d); };
+
+  /* What one step would ask, or null when there is nothing for it yet. */
+  function todayRound(key) {
+    const now = new Date().toISOString();
+    if (key === "words") {
+      const queue = Engine.pickRound(words(), (id) => prog(id), now, state.settings.roundSize, {
+        rankOf: TeachingOrder.rankOf,
+        maxNew: Engine.newWordAllowance(words(), (id) => prog(id)),
+      });
+      return { queue, flags: { drill: false } };
+    }
+    if (key === "grammar") {
+      const all = GRAMMAR.lessons.flatMap((l) => l.items.map((item) => ({ lesson: l, item })));
+      const queue = Engine.weightedDraw(all, TODAY_GRAMMAR,
+        (e) => Engine.grammarWeight(grammarRec(e.lesson.id, e.item)), (e) => e.lesson.id,
+        Engine.CONFIG.GRAMMAR_TOPIC_CAP);
+      return { queue, flags: { drill: true, grammar: true } };
+    }
+    // Sentences once there are a few within reach; before that, listening to
+    // the words you have just met is the nearest thing.
+    const ready = readySentences().map((r) => ({ id: r.item.id, item: r.item, needs: r.needs, rank: r.rank }));
+    if (ready.length >= 3) {
+      const rankById = new Map(ready.map((x) => [x.id, x.rank]));
+      const queue = Engine.pickRound(ready, (id) => Store.peekPhrase(state, id), now,
+        Engine.CONFIG.SENTENCE_ROUND_SIZE, {
+          maxNew: Engine.CONFIG.SENTENCE_MAX_NEW,
+          rankOf: (id) => (rankById.has(id) ? rankById.get(id) : Number.MAX_SAFE_INTEGER),
+        });
+      return { queue, flags: { drill: false, sentences: true }, name: "Sentences" };
+    }
+    const pool = listenPool();
+    const queue = Engine.shuffle(pool.sentences.concat(pool.words)).slice(0, Engine.CONFIG.LISTEN_ROUND_SIZE);
+    return { queue, flags: { drill: false, listen: true }, name: "Listening" };
+  }
+
+  function runTodayStep() {
+    while (todayRun.step < TODAY_STEPS.length) {
+      const step = TODAY_STEPS[todayRun.step];
+      const got = todayRound(step.key);
+      if (got && got.queue.length) {
+        todayRun.ran[todayRun.step] = got.name || step.name;
+        beginRound({ queue: got.queue, today: true, ...got.flags });
+        return;
+      }
+      todayRun.step += 1;   // nothing to do here yet, so on to the next
+    }
+    finishToday();
+    resetPracticeView();
+    toast("Nothing to do today: no words are enabled.", true);
+  }
+
+  /* Finishing counts once a day. Missing a day starts the streak again. */
+  function finishToday() {
+    if (!todayRun || todayRun.finished) return;
+    todayRun.finished = true;
+    const st = state.stats, day = localDay();
+    if (st.todayLast === day) return;
+    st.todayStreak = st.todayLast === yesterday() ? (st.todayStreak || 0) + 1 : 1;
+    st.todayLast = day;
+    Store.saveNow(state);
+  }
+
+  function startToday() {
+    todayRun = { step: 0, ran: [], finished: false };
+    runTodayStep();
+  }
+
+  const streakText = () => {
+    const st = state.stats, n = st.todayStreak || 0;
+    const live = st.todayLast === localDay() || st.todayLast === yesterday();
+    return live && n ? `${n} ${n === 1 ? "day" : "days"} running.` : "";
+  };
+
+  function drawToday() {
+    const done = state.stats.todayLast === localDay();
+    $("btn-today").textContent = done ? "Today's session again" : "Today's session";
+    $("btn-today").classList.toggle("primary", !done);
+    $("btn-start").classList.toggle("primary", done);
+    const streak = streakText();
+    $("today-blurb").textContent = done
+      ? `Done for today. ${streak} Going again is extra practice and counts the same.`
+      : `Words that are due and a few new ones, then ${TODAY_GRAMMAR} grammar questions leaning on your weak spots, `
+        + `then sentences with the words you have. About fifteen minutes.${streak ? ` ${streak} Keep it going.` : ""}`;
+  }
+
+  /* At the end of each round of the session: where you are, and the button
+     for the next step. Shown after a second look too, so going over your
+     mistakes does not lose your place. */
+  function drawTodayEnd() {
+    const on = !!todayRun;
+    if (on && todayRun.step >= TODAY_STEPS.length) finishToday();
+    $("today-end").hidden = !on;
+    $("btn-again").hidden = on && !todayRun.finished;
+    if (!on) { $("btn-today-next").hidden = true; return; }
+    $("today-steps").innerHTML = TODAY_STEPS.map((step, i) => {
+      const name = todayRun.ran[i] || step.name;
+      const state_ = i < todayRun.step ? "done" : "todo";
+      return `<span class="tstep ${state_}">${i < todayRun.step ? "&#10003; " : ""}${esc(name)}</span>`;
+    }).join("");
+    if (todayRun.step >= TODAY_STEPS.length) {
+      $("btn-today-next").hidden = true;
+      const streak = streakText();
+      $("today-steps").innerHTML += `<span class="tdone">Today's session done.${streak ? " " + esc(streak) : ""}</span>`;
+      return;
+    }
+    $("btn-today-next").hidden = false;
+    $("btn-today-next").textContent = `Next: ${TODAY_STEPS[todayRun.step].key === "sentences"
+      ? "sentences" : TODAY_STEPS[todayRun.step].name.toLowerCase()} (${todayRun.step + 1} of ${TODAY_STEPS.length})`;
+  }
+
+  $("btn-today").addEventListener("click", startToday);
+  $("btn-today-next").addEventListener("click", () => { if (todayRun) runTodayStep(); });
 
   const stat = (value, label) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
 
-  $("btn-start").addEventListener("click", startRound);
-  $("btn-again").addEventListener("click", startRound);
+  // Free practice: whatever the session was doing, it is not doing it now.
+  const freeRound = () => { todayRun = null; startRound(); };
+  $("btn-start").addEventListener("click", freeRound);
+  $("btn-again").addEventListener("click", freeRound);
 
   /* ------------------------------------------------------------------
      Topics
@@ -2791,6 +3024,8 @@
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     if ($("card").hidden) return;
+    // Writing a hook: Enter is a new line there, not Next.
+    if (e.target && e.target.id === "hook-input") return;
     // On an introduction the only action is Got it.
     if (card && card.intro) { e.preventDefault(); $("btn-got").click(); return; }
     // On a tile card Enter checks what has been placed so far.
@@ -2809,5 +3044,5 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, get today() { return todayRun; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding };
 })();

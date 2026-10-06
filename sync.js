@@ -197,6 +197,26 @@ function merge(local, remote) {
     return out;
   };
 
+  /* Memory hooks, word by word, the latest edit winning. An emptied hook is
+     an edit too, so deleting one on the phone deletes it everywhere. */
+  const mergeHooks = (a, b) => {
+    const out = {};
+    for (const k of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+      const x = (a || {})[k], y = (b || {})[k];
+      if (!x || !y) { out[k] = x || y; continue; }
+      out[k] = new Date(y.at || 0) > new Date(x.at || 0) ? y : x;
+    }
+    return out;
+  };
+
+  /* The daily session: the later day finished wins, with its streak; on the
+     same day the longer streak, since both devices counted the same days. */
+  const ls = local.stats || {}, rs = remote.stats || {};
+  const today = !("todayLast" in ls || "todayLast" in rs) ? {}
+    : (ls.todayLast || "") > (rs.todayLast || "") ? { todayLast: ls.todayLast, todayStreak: ls.todayStreak || 0 }
+    : (rs.todayLast || "") > (ls.todayLast || "") ? { todayLast: rs.todayLast, todayStreak: rs.todayStreak || 0 }
+    : { todayLast: ls.todayLast || rs.todayLast || null, todayStreak: Math.max(ls.todayStreak || 0, rs.todayStreak || 0) };
+
   // Additions from either device survive; on the same id the younger save
   // wins, which is the best guess available without per-word edit times.
   const words = new Map([...byId(staler.customWords), ...byId(fresher.customWords)]);
@@ -222,7 +242,10 @@ function merge(local, remote) {
       // Summed would double-count every time the same pair merged again.
       rounds: Math.max((local.stats || {}).rounds || 0, (remote.stats || {}).rounds || 0),
       lastRoundAt: later((local.stats || {}).lastRoundAt, (remote.stats || {}).lastRoundAt),
+      ...today,
     },
+    // As with grammar: only when either side has any.
+    ...(local.hooks || remote.hooks ? { hooks: mergeHooks(local.hooks, remote.hooks) } : {}),
   };
 }
 

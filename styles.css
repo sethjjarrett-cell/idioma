@@ -931,3 +931,54 @@ button, .btn, .pill, .tab, .tile, .key, label { -webkit-tap-highlight-color: tra
 :root[data-theme="dark"] .toast.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--text); }
 :root[data-theme="dark"] .btn.primary { color: var(--on-accent); }
 
+
+/* Chunks: the word as it is said. On the teaching card it sits straight under
+   the meaning, in the accent, because it is the part to take away. */
+.chunk {
+  border: 2px solid var(--accent); background: var(--accent-soft);
+  border-radius: 14px; padding: 10px 14px; margin: 4px 0 12px;
+}
+.chunk-label {
+  display: block; font: 800 11px var(--round); letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--accent-deep); margin-bottom: 2px;
+}
+.chunk-es { font: 700 19px/1.45 var(--round); margin: 0 0 2px; color: var(--text); }
+.chunk-es b, .chunk-line b { color: var(--accent-deep); }
+.chunk-es .say-btn { width: 30px; height: 30px; margin: -8px 0 -6px 8px; }
+.chunk p:last-child { margin: 0; }
+.chunk-line { margin: 8px 0 0; font: 600 15px/1.5 var(--round); }
+.chunk-line .chunk-label { display: inline; margin: 0 6px 0 0; }
+.chunk-line .say-btn { width: 28px; height: 28px; margin: -6px 0 -6px 6px; }
+.chunk-line .muted { display: block; font-weight: 400; }
+
+/* Memory hooks: the learner's own words, so set apart from the app's notes. */
+.hook { margin: 12px 0 0; }
+.hook-line {
+  margin: 0 0 8px; padding: 9px 12px; border-radius: 12px;
+  border: 2px dashed var(--line2); background: var(--panel);
+  font-size: 14px; line-height: 1.5; font-style: italic;
+}
+.teach .hook-line { margin: 0 0 12px; }
+.btn.small { font-size: 13px; padding: 6px 12px; }
+.hook-edit { display: grid; gap: 8px; }
+.hook-edit label { line-height: 1.45; }
+.hook-edit label .muted { display: block; }
+.hook-edit textarea {
+  width: 100%; box-sizing: border-box; font-family: inherit; font-size: 16px; line-height: 1.4; color: var(--text);
+  background: var(--panel); border: 2px solid var(--line2); border-radius: 12px; padding: 8px 10px;
+  resize: vertical;
+}
+.hook-acts { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Today's session: the main button on the start screen, with a free round
+   underneath for anything else. */
+.today { display: grid; gap: 6px; margin-bottom: 10px; }
+.today p { margin: 0; }
+.today-end { margin: 0 0 12px; display: grid; gap: 10px; }
+.today-steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.tstep {
+  font: 700 13px var(--round); padding: 4px 10px; border-radius: 999px;
+  border: 2px solid var(--line2); color: var(--muted);
+}
+.tstep.done { border-color: var(--good); background: var(--good-soft); color: var(--good-deep); }
+.tdone { flex-basis: 100%; font: 800 15px var(--round); color: var(--good-deep); margin-top: 4px; }
