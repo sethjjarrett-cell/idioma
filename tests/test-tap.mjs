@@ -143,6 +143,9 @@ console.log('a cloze card');
   ok('tapping a word while typing keeps the keyboard up', await p.evaluate(() => document.activeElement.id === 'answer'));
   ok('and shows the meaning', await p.isVisible('#gloss'));
   await p.fill('#answer', 'zzz');
+  // A verb's pop-up has rows and can reach down over Check; close it first,
+  // as you would by tapping elsewhere.
+  await p.keyboard.press('Escape');
   await p.click('#btn-submit'); await p.waitForTimeout(100);
   ok('the full sentence at the verdict can be tapped too', (await p.$$('#verdict-context .tap')).length > 0);
   await p.click('#btn-next'); await p.waitForTimeout(100);
