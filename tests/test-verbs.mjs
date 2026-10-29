@@ -72,6 +72,9 @@ const EXPECT = [
   ['decir', 'subjunctive', 'diga digas diga digamos digan', 'diga'],
   ['levantarse', 'present', 'levanto levantas levanta levantamos levantan', 'a reflexive, without its se'],
   ['despertarse', 'present', 'despierto despiertas despierta despertamos despiertan', 'and a reflexive stem changer'],
+  ['estar', 'imperfect', 'estaba estabas estaba estábamos estaban', 'an irregular verb\'s imperfect follows the rule'],
+  ['tener', 'imperfect', 'tenía tenías tenía teníamos tenían', 'tenía'],
+  ['traer', 'imperfect', 'traía traías traía traíamos traían', 'traía'],
   // Regular verbs are untouched.
   ['hablar', 'present', 'hablo hablas habla hablamos hablan', 'a regular -ar verb is unchanged'],
   ['comer', 'preterite', 'comí comiste comió comimos comieron', 'a regular -er verb is unchanged'],
@@ -82,6 +85,9 @@ for (const [v, t, want, why] of EXPECT) {
   const got = row(v, t);
   ok(`${why}: ${v}, ${t}`, got === want, `got ${got}`);
 }
+
+ok('and is vouched for, so estaba is a known form', V.isVouchedFor('estar', 'imperfect') && V.isVouchedFor('hacer', 'imperfect'));
+ok('while an irregular\'s unlisted subjunctive still is not', !V.isVouchedFor('estar', 'subjunctive'));
 
 console.log('every verb in the bank');
 const verbs = [...new Set(SEED.vocabulary.concat(VOCAB.vocabulary).filter((w) => w.pos === 'verb').map((w) => w.es))]

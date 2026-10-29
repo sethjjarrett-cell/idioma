@@ -522,6 +522,10 @@ function isVouchedFor(infinitive, tenseId) {
   const irregular = VERBS.irregulars.find((v) => v.infinitive === infinitive);
   if (!irregular) return true;                       // regular: the rule is the truth
   if (irregular.forms[tenseId]) return true;         // checked by hand
+  /* Only three verbs in Spanish have an irregular imperfect, ser, ir and ver,
+     and all three are written out. For every other verb the rule is right:
+     estaba, tenía, hacía. */
+  if (tenseId === "imperfect") return true;
   const tense = VERBS.tenses.find((t) => t.id === tenseId);
   // The future and the conditional are covered for everyone by the stem table.
   return !!(tense && tense.base === "infinitive");
