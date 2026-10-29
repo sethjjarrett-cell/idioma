@@ -53,6 +53,7 @@ equivalents.js  the other ways of saying the same thing, accepted but not shown
 phrases.js      the sentence ladder: short things to say, earliest words first
 chunks.js       the everyday phrase each common word lives in: tengo hambre
 units.js        the course: units with frames, a conversation, tasks, a retelling
+writing.js      Write it: 120 sentences to type from English, basic to hard
 vocab.js        the generated bank: 985 more words, 1383 more sentences
 topics.js       which context each word belongs to
 tools/bank/     the batches vocab.js is built from, and the builder
@@ -447,6 +448,33 @@ look at your mistakes between steps keeps your place. Finishing the last step
 marks the day done and counts towards a streak of days running; going again
 the same day is extra practice and does not count twice. Start a round is
 still there underneath for anything else.
+
+## Write it
+
+A practice mode for typing whole sentences from English, at a level you
+pick: Basic (present tense, short questions and answers), Medium (plans, the
+past, have to, comparisons, two clauses) or Hard (past stories, the
+subjunctive, would and could, if), or all three mixed. Forty sentences each,
+in `writing.js`, every one with a context line saying where you are and who
+you are talking to, which settles tú or usted.
+
+It is always typed, never tiles: pulling every word out of memory and
+putting it in order is what turns a word you recognise into one you can use.
+Nothing is locked; instead, any word in the answer you have not met yet is
+shown before you start, as its dictionary form so the sentence still has to
+be built, along with a gloss for anything beyond the bank.
+
+Marking is fair to a whole sentence. Every alternative the item lists is
+right, the subject pronoun may come or go (Hablo inglés, Yo hablo inglés),
+accents, capitals and punctuation do not count, a near miss is amber with
+another go, and a miss shows the answer word by word against what you typed.
+I was right remembers what you typed as right for that sentence. Each
+sentence has its own row in `state.writing` with the same levels as
+everything else, so the ones you get wrong come back sooner.
+
+`tests/test-writing.mjs` checks every item and that every word of every
+answer is in the bank or glossed, the marking, a round and its levels, and a
+save from before Write it loading with its progress intact.
 
 ## The course
 

@@ -183,6 +183,8 @@ function merge(local, remote) {
     return out;
   };
   const phrases = mergeBook("phrases");
+  // Write it's book, only when either side has one, as for grammar.
+  const writing = local.writing || remote.writing ? { writing: mergeBook("writing") } : {};
 
   /* Grammar answers, question by question: whichever device answered it
      last has the truth about it, the same rule the books use. */
@@ -245,6 +247,7 @@ function merge(local, remote) {
     settings: { ...staler.settings, ...fresher.settings },
     progress,
     phrases,
+    ...writing,
     customWords: [...words.values()],
     customSentences: [...sentences.values()],
     editedWords: { ...staler.editedWords, ...fresher.editedWords },

@@ -15,7 +15,8 @@
        stats: { rounds, lastRoundAt, todayLast, todayStreak },
        grammar: { [lessonId|question]: { n, r, last, streak, at } },
        hooks: { [wordId]: { text, at } },
-       units: { [unitId]: { read, retold, write: { [taskId]: { text, at } } } }
+       units: { [unitId]: { read, retold, write: { [taskId]: { text, at } } } },
+       writing: { [writeItId]: ...the same shape as progress }
      }
 
    Words added or edited in the app are kept separately from the bank
@@ -39,6 +40,7 @@ function defaultState() {
       tense: "present",              // which tense the verb drill asks about
       pos: "all",                    // which kind of word a words round draws
       subject: "all",                // what a sentences round is about
+      writeLevel: "basic",           // basic, medium, hard or mixed, for Write it
     },
     progress: {},
     /* Sentences keep their own book. Same shape, same level machinery, but a
@@ -47,6 +49,11 @@ function defaultState() {
        Ids cannot collide either way, which is a happy accident rather than
        something to rely on. */
     phrases: {},
+    /* Write it keeps a third book, for the same reason sentences keep their
+       own: a level here says how well you can write that sentence from
+       English, which is not the same as knowing any one word in it. A state
+       from before Write it simply has none yet. */
+    writing: {},
     /* Answers the learner said were right after all, per word and per side.
        Kept apart from editedWords, which is the Manage screen's, so that
        editing a word by hand does not silently throw these away. */
@@ -87,6 +94,17 @@ function cleanUnits(u) {
       if (w && typeof w.text === "string") write[t] = { text: w.text.slice(0, 2000), at: iso(w.at) };
     }
     out[id] = { read: iso(v.read), retold: iso(v.retold), write };
+  }
+  return out;
+}
+
+/* A book of progress rows (Write it's), each filled out to the full shape so
+   a hand-edited or older row cannot break the engine. */
+function cleanBook(b) {
+  if (!b || typeof b !== "object" || Array.isArray(b)) return {};
+  const out = {};
+  for (const [id, row] of Object.entries(b)) {
+    if (row && typeof row === "object") out[id] = { ...Engine.freshProgress(), ...row };
   }
   return out;
 }
@@ -154,6 +172,7 @@ function load() {
     merged.grammar = cleanGrammar(parsed.grammar);
     merged.hooks = cleanHooks(parsed.hooks);
     merged.units = cleanUnits(parsed.units);
+    merged.writing = cleanBook(parsed.writing);
     return { state: merged, warning: null };
   } catch (e) {
     try { window.localStorage.setItem(STORAGE_KEY + ".broken", raw); } catch (e2) { /* nothing more to do */ }
@@ -487,6 +506,16 @@ function peekPhrase(state, id) {
   return (state.phrases || {})[id] || Engine.freshProgress();
 }
 
+function peekWriting(state, id) {
+  return (state.writing || {})[id] || Engine.freshProgress();
+}
+
+function writingProgressFor(state, id) {
+  if (!state.writing || typeof state.writing !== "object") state.writing = {};
+  if (!state.writing[id]) state.writing[id] = Engine.freshProgress();
+  return state.writing[id];
+}
+
 function phraseProgressFor(state, id) {
   if (!state.phrases) state.phrases = {};
   if (!state.phrases[id]) state.phrases[id] = Engine.freshProgress();
@@ -544,6 +573,7 @@ function parseImport(text) {
   merged.grammar = cleanGrammar(parsed.grammar);
   merged.hooks = cleanHooks(parsed.hooks);
   merged.units = cleanUnits(parsed.units);
+  merged.writing = cleanBook(parsed.writing);
   return merged;
 }
 
@@ -551,5 +581,5 @@ window.Store = {
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow, hookFor, setHook, unitRecord, peekUnit,
   allWords, allSentences, siblingsOf, peekProgress, progressFor, alternatives, rememberAccepted,
   allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,
-  peekPhrase, phraseProgressFor, downloadExport, parseImport,
+  peekPhrase, phraseProgressFor, peekWriting, writingProgressFor, downloadExport, parseImport,
 };
