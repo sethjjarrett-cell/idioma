@@ -32,9 +32,9 @@ console.log('the data');
     const words = new Map(Store.allWords(st).map((w) => [w.id, w]));
     const ids = new Set(words.keys());
     const forms = Store.sentenceIndex(st).forms;
-    /* Forms the verb tables cannot build, checked by hand. The tables treat
-       doler and cerrar as regular, so they would say dole and cerran. */
-    const IRREGULAR = ['duele', 'cierran', 'tercer'];
+    /* Forms nothing else can build, checked by hand: tercer is tercero
+       shortened before a masculine noun. */
+    const IRREGULAR = ['tercer'];
     const unknownId = [], badShape = [], wrongForm = [], loose = [];
     for (const [id, v] of Object.entries(window.CHUNKS)) {
       if (!ids.has(id)) { unknownId.push(id); continue; }
