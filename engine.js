@@ -120,6 +120,9 @@ const CONFIG = {
   SENTENCE_TILE_TOP: 2,
   SENTENCE_ROUND_SIZE: 10,
   SENTENCE_MAX_NEW: 3,
+  // Write it: whole sentences typed from English, so fewer to a round.
+  WRITE_ROUND_SIZE: 8,
+  WRITE_MAX_NEW: 4,
   TILE_DISTRACTORS: 3,
 
   /* Listening: something read aloud, typed back. Ten to a round, because

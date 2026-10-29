@@ -316,6 +316,9 @@
       <button class="mode" data-mode="sentences">
         <b>Sentences</b><span>Tap the words into order, then type them</span>
       </button>
+      <button class="mode" data-mode="write">
+        <b>Write it</b><span>Whole sentences from English, basic to hard</span>
+      </button>
       <button class="mode" data-mode="listen">
         <b>Listen</b><span>Hear it read aloud, type what you heard</span>
       </button>
@@ -350,6 +353,7 @@
       <!-- On a verb drill: which person and which tense, labelled. -->
       <div class="target" id="card-target" hidden></div>
       <p class="muted small" id="card-hint"></p>
+      <p class="card-help small" id="card-help" hidden></p>
 
       <!-- A listening card: nothing written, only something to hear. -->
       <div class="listen" id="listen" hidden>
@@ -674,6 +678,7 @@
 <script src="phrases.js"></script>
 <script src="chunks.js"></script>
 <script src="units.js"></script>
+<script src="writing.js"></script>
 <script src="grammar.js"></script>
 <script src="verbs.js"></script>
 <script src="pronounce.js"></script>

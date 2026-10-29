@@ -697,16 +697,17 @@ table.conj td b { color: var(--accent-deep); }
   color: var(--accent-deep); box-shadow: 0 2px 0 var(--accent);
 }
 
-/* The four things a round can be. Wide targets with the explanation on the
+/* The things a round can be. Wide targets with the explanation on the
    button, because the difference between them is not obvious from a word.
-   Two by two on a phone, which costs less height than one column of four. */
+   Two across on a phone and three on anything wider, which costs less height
+   than one long column. */
 .modes {
   display: grid; gap: 8px; margin: 0 0 14px;
   grid-template-columns: 1fr 1fr;
 }
-@media (min-width: 620px) { .modes { grid-template-columns: repeat(5, 1fr); } }
-/* Five on a phone is two rows of two and one on its own, which reads better
-   across the full width than as half a row with a hole beside it. */
+@media (min-width: 620px) { .modes { grid-template-columns: repeat(3, 1fr); } }
+/* An odd one out on a phone (where reading aloud is not available, so there
+   are five) takes the full width rather than sitting beside a hole. */
 @media (max-width: 619px) { .modes .mode:last-child:nth-child(odd) { grid-column: 1 / -1; } }
 .mode {
   display: flex; flex-direction: column; gap: 2px; text-align: left;
@@ -1075,3 +1076,11 @@ button, .btn, .pill, .tab, .tile, .key, label { -webkit-tap-highlight-color: tra
 .model p { font: 600 15px/1.55 var(--round); }
 .btn.recording { border-color: var(--bad, #b33); color: var(--bad, #b33); }
 #unit-audio { width: 100%; margin-top: 4px; }
+
+/* Write it: words you may not have yet, shown before you answer. */
+.card-help { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 6px 0 0; }
+.hchip {
+  padding: 2px 9px; border-radius: 999px; border: 2px solid var(--line2);
+  background: var(--panel2); font-size: 13px;
+}
+.hchip b { color: var(--accent-deep); }

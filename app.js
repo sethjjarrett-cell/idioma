@@ -73,8 +73,10 @@
      the English; everything else wants the Spanish. */
   const askedFor = (c) => (c && c.band.key === "recognition" ? "en" : "es");
 
-  const bookPeek = (c) => (c && c.isSentence ? Store.peekPhrase : Store.peekProgress);
-  const bookWrite = (c) => (c && c.isSentence ? Store.phraseProgressFor : Store.progressFor);
+  const bookPeek = (c) => (c && c.isSentence ? Store.peekPhrase
+    : c && c.isWrite ? Store.peekWriting : Store.peekProgress);
+  const bookWrite = (c) => (c && c.isSentence ? Store.phraseProgressFor
+    : c && c.isWrite ? Store.writingProgressFor : Store.progressFor);
   const cardProgress = (c) => bookPeek(c)(state, c.word.id);
 
   /* What a round is made of. Kept in settings so the choice survives a
@@ -82,7 +84,7 @@
      be its own small annoyance. */
   // Listening needs a voice. Without one the mode is not offered at all, and
   // a saved choice of it falls back to words like any unknown mode does.
-  const MODES = ["words", "verbs", "sentences", "grammar"].concat(Speech.supported ? ["listen"] : []);
+  const MODES = ["words", "verbs", "sentences", "write", "grammar"].concat(Speech.supported ? ["listen"] : []);
   const mode = () => (MODES.includes(state.settings.mode) ? state.settings.mode : "words");
   const sentencesFor = (wordId) => sentences().filter((s) => s.wordId === wordId);
   const commit = () => Store.save(state);
@@ -914,6 +916,17 @@
           + `each with the reason.${lean || " Pick a topic above to drill just one."}`;
       return;
     }
+    if (mode() === "write") {
+      const lvl = WRITING.levels.find((l) => l.id === writeLevelName());
+      const pool = writeItems(writeLevelName());
+      const started = pool.filter((x) => Store.peekWriting(state, x.id).timesSeen > 0);
+      $("start-picked").hidden = true;
+      $("start-blurb").textContent = `${lvl ? `${lvl.name}: ${lvl.blurb}` : "Every level mixed together."} `
+        + `Whole sentences from English, typed out, each with where you are and who you are talking to. `
+        + `${started.length} of ${pool.length} started. `
+        + `Words you have not met yet are shown before you start.`;
+      return;
+    }
     if (mode() === "listen") {
       const pool = listenPool();
       const n = pool.sentences.length + pool.words.length;
@@ -1030,7 +1043,7 @@
      anything. "Words" on its own is the whole truth when nothing is filtered,
      and "Words · all" would be noise. */
   function pickerSummaryText() {
-    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences", listen: "Listen", grammar: "Grammar" }[mode()];
+    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences", listen: "Listen", grammar: "Grammar", write: "Write it" }[mode()];
     let narrowed = null;
     if (mode() === "verbs") {
       narrowed = pick && pick.kind === "drill" ? pick.name
@@ -1038,6 +1051,8 @@
         : (Verbs.VERBS.tenses.find((t) => t.id === tenseName()) || {}).name;
     } else if (mode() === "grammar") {
       narrowed = grammarLesson() ? grammarLesson().title : grammarName() === "weak" ? "Weak spots" : null;
+    } else if (mode() === "write") {
+      narrowed = (WRITING.levels.find((l) => l.id === writeLevelName()) || { name: "Mixed" }).name;
     } else if (mode() === "words") {
       narrowed = [pick && pick.kind === "topic" ? pick.name : null,
                   posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
@@ -1160,7 +1175,8 @@
     const showPos = mode() === "words" && !(pick && pick.kind === "drill");
     const showTheme = mode() === "sentences";
     const showGrammar = mode() === "grammar";
-    $("filters").hidden = !(showTense || showPos || showTheme || showGrammar);
+    const showWrite = mode() === "write";
+    $("filters").hidden = !(showTense || showPos || showTheme || showGrammar || showWrite);
     if ($("filters").hidden) return;
 
     let label, options, current, attr;
@@ -1178,6 +1194,12 @@
       options = POS_GROUPS
         .map((g) => ({ id: g.id, name: g.name, n: pool.filter(g.has).length }))
         .filter((o) => o.id === "all" || o.n > 0);
+    } else if (showWrite) {
+      label = "Level";
+      attr = "writeLevel";
+      current = writeLevelName();
+      options = WRITING.levels.map((l) => ({ id: l.id, name: l.name, n: writeItems(l.id).length }))
+        .concat([{ id: "mixed", name: "Mixed" }]);
     } else if (showGrammar) {
       label = "Topic";
       attr = "grammar";
@@ -1260,6 +1282,7 @@
     if (mode() === "sentences") return startSentenceRound();
     if (mode() === "listen") return startListenRound();
     if (mode() === "grammar") return startGrammarRound();
+    if (mode() === "write") return startWriteRound();
 
     /* A table picked from the Lessons screen is a standing choice and lives in
        `pick`. The starter drill is not: it is rebuilt from the tense pills on
@@ -1413,6 +1436,96 @@
     return Engine.weightedDraw(pool, size, weightOf, (e) => e.lesson.id, cap);
   }
 
+  /* ------------------------------------------------------------------
+     Write it
+
+     Whole sentences from writing.js, typed from English, at the level picked.
+     Each has its own row in state.writing with the same levels as everything
+     else, so the ones you get wrong come back sooner and the ones you know
+     drift away. Nothing is locked: the words you have not met yet are shown
+     before you start, along with anything the bank does not have.
+     ------------------------------------------------------------------ */
+  const WRITING = window.WRITING || { levels: [], items: [] };
+  const writeLevelName = () => {
+    const v = state.settings.writeLevel;
+    return v === "mixed" || WRITING.levels.some((l) => l.id === v) ? v : "basic";
+  };
+  const writeItems = (level) => WRITING.items.filter((x) => level === "mixed" || x.level === level);
+
+  function startWriteRound() {
+    const pool = writeItems(writeLevelName());
+    if (!pool.length) { toast("Nothing to write at this level.", true); return; }
+    const order = new Map(WRITING.items.map((x, i) => [x.id, i]));
+    const size = Engine.CONFIG.WRITE_ROUND_SIZE;
+    let queue = Engine.pickRound(pool, (id) => Store.peekWriting(state, id), new Date().toISOString(), size, {
+      maxNew: Engine.CONFIG.WRITE_MAX_NEW, rankOf: (id) => order.get(id),
+    });
+    /* Everything started and nothing due: asked for by name, so practise the
+       shakiest ones rather than say come back later. */
+    if (!queue.length) {
+      queue = pool.slice().sort((a, b) => Store.peekWriting(state, a.id).level - Store.peekWriting(state, b.id).level)
+        .slice(0, size);
+    }
+    beginRound({ queue, drill: false, write: true });
+  }
+
+  /* The words that might be needed: any bank word in the answer not yet met,
+     as its dictionary form so the sentence still has to be built, and the
+     item's own glosses for what the bank does not have. */
+  function writeHelp(item) {
+    const forms = Store.sentenceIndex(state).forms;
+    const byId = new Map(words().map((w) => [w.id, w]));
+    const own = new Map((item.help || []).map(([es, en]) => [Engine.wordToken(es), [es, en]]));
+    const out = [], seen = new Set();
+    for (const t of Engine.tokenise(item.es)) {
+      if (own.has(t)) {
+        if (!seen.has(t)) { seen.add(t); out.push(own.get(t)); }
+        continue;
+      }
+      const id = Engine.wordForToken(t, forms);
+      if (!id || id === Engine.FREE_TOKEN || seen.has(id) || prog(id).timesSeen > 0) continue;
+      const w = byId.get(id);
+      if (!w) continue;
+      seen.add(id);
+      out.push([w.es, w.en[0]]);
+    }
+    return out;
+  }
+
+  /* A card like a sentence card, always typed. Every answer the item lists is
+     right, and so is anything marked right before. */
+  function writeCard(item) {
+    const lvl = WRITING.levels.find((l) => l.id === item.level);
+    const remembered = ((state.accepted || {})[item.id] || {}).es || [];
+    return {
+      isWrite: true, item,
+      word: { id: item.id, es: item.es, note: item.note || "" },
+      band: { key: "translate", label: `Write it · ${lvl ? lvl.name : item.level}` },
+      prompt: item.en,
+      promptHint: item.context,
+      accepted: [item.es].concat(item.alt || [], remembered),
+      reveal: item.es,
+      revealContext: "",
+      note: item.note || "",
+      fellBack: false,
+      help: writeHelp(item),
+    };
+  }
+
+  /* Spanish leaves the subject out when the verb already says who, so a
+     sentence is right with or without one at the start: Hablo inglés, Yo
+     hablo inglés. On a miss the word diff comes back as well, which is the
+     useful part of getting a whole sentence wrong. */
+  const SUBJECT = /^([¿¡]*)\s*(yo|tú|él|ella|usted|nosotros|nosotras|ellos|ellas|ustedes)\s+/i;
+  const dropSubject = (t) => String(t).trim().replace(SUBJECT, "$1");
+  function gradeWrite(typed) {
+    const res = Engine.checkAnswer(dropSubject(typed), card.accepted.map(dropSubject), {
+      typoTolerance: state.settings.typoTolerance,
+    });
+    if (!res.correct && !res.almost && typed.trim()) res.diff = Engine.diffAnswer(typed, card.reveal);
+    return res;
+  }
+
   /* The sentence with the gap filled in. "—" means nothing goes there. */
   const fillGap = (es, option) => (option === "—"
     ? es.replace(/___\s?/, "")
@@ -1505,7 +1618,7 @@
   /* A card about one word from the bank, as against a drill, a grammar
      question, a sentence or something read aloud. Only these have a chunk or
      a memory hook. */
-  const isWordCard = (c) => !!(c && c.word && c.word.id && !c.drill && !c.listen && !c.grammar && !c.isSentence);
+  const isWordCard = (c) => !!(c && c.word && c.word.id && !c.drill && !c.listen && !c.grammar && !c.isSentence && !c.isWrite);
 
   /* The everyday phrase a word lives in, from chunks.js: the Spanish with the
      braces off, the form to pick out, and the English. */
@@ -1521,7 +1634,7 @@
   /* "I know this". Only on a word card that is a real question: not the
      teaching card, not a drill, a sentence or a second look. Pressed, it
      says what it will do; answer right and the word jumps ahead a stage. */
-  const canBeSure = (c) => !!(c && !round.review && !c.intro && !c.drill && !c.listen && !c.isSentence
+  const canBeSure = (c) => !!(c && !round.review && !c.intro && !c.drill && !c.listen && !c.isSentence && !c.isWrite
     && c.word && c.word.id && ["recognition", "production", "cloze"].includes(c.band.key));
   function drawSure() {
     const btn = $("btn-sure");
@@ -1544,6 +1657,7 @@
     const item = round.queue[round.index];
     // A drill item is already a card; a word or a sentence has to be built.
     card = round.listen ? listenCard(item)
+      : round.write ? writeCard(item)
       : round.grammar ? grammarCard(item)
       : round.drill ? drillCard(item)
       : round.sentences
@@ -1583,6 +1697,12 @@
       ? card.promptHint
       : (card.promptHint ? card.promptHint : "");
     $("card-hint").hidden = !$("card-hint").textContent;
+    // Write it: the words you may not have yet, before you try.
+    $("card-help").innerHTML = card.help && card.help.length
+      ? `<span class="muted">Might help:</span> ` + card.help.map(([es, en]) =>
+        `<span class="hchip"><b>${esc(es)}</b> ${esc(en)}</span>`).join("")
+      : "";
+    $("card-help").hidden = !(card.help && card.help.length);
     const t = card.target;
     $("card-target").innerHTML = t
       ? `<span class="tchip"><i>Person</i><b>${esc(t.person)}</b><em>(${esc(t.personEn)})</em></span>`
@@ -1823,6 +1943,7 @@
   });
 
   function grade(typed) {
+    if (card.isWrite) { applyAndShow(gradeWrite(typed), typed); return; }
     if (card.listen) {
       applyAndShow(Engine.checkHeard(typed, card.reveal, {
         typoTolerance: state.settings.typoTolerance,
@@ -1834,7 +1955,7 @@
       /* The other Spanish words that answer the same English prompt. A drill
          answer comes off a conjugation table and has no word behind it, so
          there is nothing to be a sibling of. */
-      siblings: card.drill || card.isSentence ? [] : Store.siblingsOf(words(), card.word.id),
+      siblings: card.drill || card.isSentence || card.isWrite ? [] : Store.siblingsOf(words(), card.word.id),
     }), typed);
   }
 
@@ -1987,7 +2108,7 @@
        reader. "MEH-sah" under mesa is noise; "HWEH-behs" under jueves is the
        whole point. */
     const spanish = card.band.key === "recognition" ? card.word.es : card.reveal;
-    $("verdict-say").textContent = !card.isSentence && Pronounce.isTricky(spanish)
+    $("verdict-say").textContent = !card.isSentence && !card.isWrite && Pronounce.isTricky(spanish)
       ? `Say it: ${Pronounce.respell(spanish)}`
       : "";
     $("verdict-say").hidden = !$("verdict-say").textContent;
@@ -2139,7 +2260,7 @@
     applyAndShow({ correct: true, almost: false, near: false, reason: null,
                    diff: null, sibling: null, equivalent: false }, typed);
     toast(remembered
-      ? `Marked correct, and "${typed.trim()}" will be accepted for this word from now on.`
+      ? `Marked correct, and "${typed.trim()}" will be accepted for this ${card.isWrite ? "sentence" : "word"} from now on.`
       : "Marked correct.");
   });
 
@@ -2264,11 +2385,12 @@
     const missed = missedThisRound();
     lastMissed = missed.length ? {
       items: missed,
-      flags: { drill: !!round.drill, grammar: !!round.grammar, listen: !!round.listen, sentences: !!round.sentences },
+      flags: { drill: !!round.drill, grammar: !!round.grammar, listen: !!round.listen, sentences: !!round.sentences,
+        write: !!round.write },
     } : null;
     $("btn-review").hidden = !missed.length;
     $("btn-review").textContent = `Go over the ${missed.length} you missed`;
-    const plainWords = !round.drill && !round.listen && !round.sentences && !round.grammar;
+    const plainWords = !round.drill && !round.listen && !round.sentences && !round.grammar && !round.write;
     const sticking = plainWords ? stickingWords().length : 0;
     $("btn-sticking").hidden = !sticking;
     $("btn-sticking").textContent = `Words you keep missing (${sticking})`;
@@ -3431,5 +3553,6 @@
   window.addEventListener("beforeunload", () => Store.saveNow(state));
 
   // Handy in the console while extending the bank by hand.
-  window.Idioma = { get state() { return state; }, get round() { return round; }, get today() { return todayRun; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding, checkTask };
+  window.Idioma = { get state() { return state; }, get round() { return round; }, get today() { return todayRun; }, Engine, Store, toast, glossFor, tappable , pickGrammarRound, topicStanding, checkTask,
+    markWrite: (item, typed) => { const keep = card; card = writeCard(item); try { return gradeWrite(typed); } finally { card = keep; } } };
 })();
