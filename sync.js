@@ -163,10 +163,23 @@ function merge(local, remote) {
     return out;
   };
   const progress = mergeBook("progress");
+  /* Answers the learner taught it, settled per word by whichever device
+     touched that word's list last. A union would be kinder when two devices
+     each teach a different synonym between syncs, and it cannot express a
+     removal: the other device's copy would put a deleted answer straight
+     back. Being asked once more about a synonym is the cheaper mistake.
+
+     Rows from before the timestamp existed have nothing to go on, so those
+     are unioned, which is what the release that wrote them did. */
   const mergeAccepted = (a, b) => {
     const out = {};
     for (const id of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
-      const rowA = (a || {})[id] || {}, rowB = (b || {})[id] || {};
+      const rowA = (a || {})[id], rowB = (b || {})[id];
+      if (!rowA || !rowB) { out[id] = rowA || rowB; continue; }
+      if (rowA.at || rowB.at) {
+        out[id] = new Date(rowA.at || 0) >= new Date(rowB.at || 0) ? rowA : rowB;
+        continue;
+      }
       out[id] = {};
       for (const side of ["es", "en"]) {
         const seen = new Set();
@@ -178,7 +191,6 @@ function merge(local, remote) {
         });
         if (both.length) out[id][side] = both;
       }
-      if (!Object.keys(out[id]).length) delete out[id];
     }
     return out;
   };

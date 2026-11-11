@@ -36,6 +36,7 @@ function defaultState() {
       tense: "present",              // which tense the verb drill asks about
       pos: "all",                    // which kind of word a words round draws
       subject: "all",                // what a sentences round is about
+      sentenceHow: "build",          // tiles first, or "type" from the first card
     },
     progress: {},
     /* Sentences keep their own book. Same shape, same level machinery, but a
@@ -372,7 +373,37 @@ function rememberAccepted(state, wordId, side, answer) {
   if (already.length && Engine.checkAnswer(text, already).correct) return false;
 
   state.accepted[wordId][side] = list.concat(text);
+  state.accepted[wordId].at = new Date().toISOString();
   return true;
+}
+
+/* Take one back. A mis-hit on I was right would otherwise accept a wrong
+   answer for good, with nothing short of editing the backup file to undo it.
+
+   The row stays even when it ends up empty, stamped with when it changed:
+   sync settles these rows by which device touched the word last, and a row
+   that had simply vanished could not say "this was removed on purpose", so
+   the other device's copy would put the answer straight back. */
+function forgetAccepted(state, id, side, answer) {
+  const row = (state.accepted || {})[id];
+  if (!row || !row[side]) return false;
+  const key = Engine.normalise(answer);
+  const kept = row[side].filter((v) => Engine.normalise(v) !== key);
+  if (kept.length === row[side].length) return false;
+  row[side] = kept;
+  row.at = new Date().toISOString();
+  return true;
+}
+
+/* Everything the learner has taught it, flat, for the Manage screen. */
+function taughtAnswers(state) {
+  const out = [];
+  for (const [id, row] of Object.entries(state.accepted || {})) {
+    for (const side of ["es", "en"]) {
+      for (const answer of row[side] || []) out.push({ id, side, answer });
+    }
+  }
+  return out;
 }
 
 /* Read-only: returns defaults for a word that has never been answered,
@@ -456,6 +487,7 @@ function parseImport(text) {
 window.Store = {
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow,
   allWords, allSentences, siblingsOf, peekProgress, progressFor, alternatives, rememberAccepted,
+  forgetAccepted, taughtAnswers,
   allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,
   peekPhrase, phraseProgressFor, downloadExport, parseImport,
 };

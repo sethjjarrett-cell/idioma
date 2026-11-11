@@ -162,6 +162,23 @@ ok('the two sides do not run into each other',
 ok('a state saved before any of this existed still merges',
   typeof S.merge({ version: 1, savedAt: T1, settings: {}, progress: {} }, accA).accepted === 'object');
 
+console.log('--- taking a taught answer back ---');
+/* Once a row carries a time, the device that touched the word last wins it
+   whole. That is what lets a removal stick: a union would have the other
+   device put the deleted answer straight back. */
+const hadIt = state({ accepted: { 'que-tal': { es: ['quiubo'], at: T1 } } });
+const tookItBack = state({ accepted: { 'que-tal': { es: [], at: T2 } } });
+ok('a removal made later survives the merge',
+  S.merge(hadIt, tookItBack).accepted['que-tal'].es.length === 0);
+ok('whichever way round the devices meet',
+  S.merge(tookItBack, hadIt).accepted['que-tal'].es.length === 0);
+ok('and an answer taught later than a removal comes back',
+  S.merge(state({ accepted: { x: { es: [], at: T1 } } }),
+          state({ accepted: { x: { es: ['uno'], at: T2 } } })).accepted.x.es.length === 1);
+ok('a stamped row beats one from before stamps existed',
+  S.merge(state({ accepted: { x: { es: ['viejo'] } } }),
+          state({ accepted: { x: { es: [], at: T1 } } })).accepted.x.es.length === 0);
+
 console.log('--- merging is safe to repeat ---');
 const once = S.merge(phone, laptop);
 const twice = S.merge(once, laptop);

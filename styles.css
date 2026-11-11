@@ -611,6 +611,24 @@ table.conj td b { color: var(--accent-deep); }
   text-decoration: underline; flex: none;
 }
 
+/* The answer box and the microphone share a line; the box takes what is
+   left. The button is square so that it reads as a control and not a label. */
+.answer-row { display: flex; gap: 8px; align-items: stretch; flex: 1; min-width: 0; }
+/* The phone layout stretches every button in the form to full width, which
+   is right for Check and would turn the microphone into a second one. */
+#answer-form .btn.mic { width: 48px; }
+.answer-row input { flex: 1; min-width: 0; }
+.btn.mic {
+  flex: none; width: 48px; padding: 0; display: flex; align-items: center;
+  justify-content: center; color: var(--accent-deep);
+}
+/* Listening. Red is the one colour everybody already reads as recording. */
+.btn.mic.on {
+  background: var(--bad-soft); border-color: var(--bad); color: var(--bad-deep);
+  box-shadow: 0 3px 0 var(--bad-edge);
+}
+table.bank.taught { min-width: 0; }
+
 .pills { display: flex; flex-wrap: wrap; gap: 6px; }
 /* The count on a pill, where there is one: how many words or sentences that
    choice would actually draw on. Quieter than the name, and it is the number

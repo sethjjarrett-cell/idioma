@@ -126,6 +126,13 @@ const CONFIG = {
   FREE_TOKENS: ["el", "la", "los", "las", "un", "una", "unos", "unas",
                 "del", "al", "lo", "que"],
 
+  /* Subject pronouns a typed sentence may carry or leave out. Spanish drops
+     them because the verb ending already says who, so "quiero ir" and "yo
+     quiero ir" are the same sentence, and marking either against the other
+     would be teaching English word order. */
+  OPTIONAL_SUBJECTS: ["yo", "tu", "el", "ella", "usted", "nosotros", "nosotras",
+                      "ustedes", "ellos", "ellas"],
+
   /* Articles on the English side are a different matter: "a glass of
      water" and "glass of water" are not the same Spanish, so they are
      flagged amber rather than waved through. Same for the infinitive
@@ -874,13 +881,20 @@ function sentenceCard(item, progress, options = {}) {
     word: { id: item.id, es: answer, note: item.note || "" },
     prompt: item.en,
     promptHint: "",
-    accepted: [answer],
+    /* The sentence as written, then whatever else the learner has said is
+       also a right way to put it. There is rarely one translation of
+       anything, and a typed card that knows only one is wrong more often
+       than the person typing. */
+    accepted: [answer].concat(options.alternatives || []),
     reveal: answer,
     revealContext: "",
     note: item.note || "",
     fellBack: false,
   };
-  if (level > CONFIG.SENTENCE_TILE_TOP) {
+  /* `options.typed` skips the tiles altogether. Arranging words somebody
+     else chose is recognition; producing them is the skill, and a learner who
+     wants the harder exercise from the first card should be able to have it. */
+  if (options.typed || level > CONFIG.SENTENCE_TILE_TOP) {
     return { ...base, band: BANDS.translate, tiles: null, tileAnswer: null };
   }
   /* Tiles carry bare words. The punctuation belongs to the sentence, not to
@@ -898,6 +912,66 @@ function sentenceCard(item, progress, options = {}) {
   const tiles = shuffle(parts.map((text, i) => ({ text: lower(text), key: "w" + i }))
     .concat(extra.map((text, i) => ({ text: lower(text), key: "x" + i, decoy: true }))));
   return { ...base, band: BANDS.build, tiles, tileAnswer: parts.map(lower) };
+}
+
+/* Grading a typed sentence.
+
+   checkAnswer was written for a word. Given a sentence it measures the whole
+   string by edit distance, so one wrong word in six is five letters out, a
+   flat Not quite, and no indication of which word it was. That is no way to
+   learn to translate: the useful thing to be told is where.
+
+   So a sentence is compared word by word. Every word right is correct, with
+   accents, capitals and punctuation left out of it as everywhere else. One
+   word misspelt, or one word wrong, missing or extra in a sentence long
+   enough for that to be a slip (three words or more), is amber. Anything
+   further out is wrong, and the diff comes back either way, because being
+   wrong is exactly when you most need to see which part. */
+function checkSentence(typed, accepted) {
+  const miss = { correct: false, almost: false, matched: null, near: false,
+                 reason: null, diff: null, sibling: null, equivalent: false };
+  if (!tokenise(typed).length) return miss;
+
+  let best = null;
+  for (let i = 0; i < accepted.length; i++) {
+    const candidate = accepted[i];
+    const got = tokenise(typed);
+    const want = tokenise(candidate);
+    if (got.length === want.length && got.every((t, k) => t === want[k])) {
+      return { ...miss, correct: true, matched: candidate, equivalent: i > 0 };
+    }
+    /* The same sentence with or without its subject pronoun. Leaving one out
+       or putting one in is free; swapping él for ella is not, so where both
+       sides name a subject they have to name the same one. */
+    const isSubject = (t) => CONFIG.OPTIONAL_SUBJECTS.includes(t);
+    const g2 = got.filter((t) => !isSubject(t)), w2 = want.filter((t) => !isSubject(t));
+    const gs = got.filter(isSubject), ws = want.filter(isSubject);
+    const subjectsAgree = !gs.length || !ws.length || gs.join(" ") === ws.join(" ");
+    if (subjectsAgree && g2.length && g2.length === w2.length && g2.every((t, k) => t === w2[k])) {
+      return { ...miss, correct: true, matched: candidate, equivalent: i > 0 };
+    }
+    const diff = diffAnswer(typed, candidate);
+    const off = diff.filter((o) => o.op !== "same");
+    const score = off.length;
+    if (!best || score < best.score) best = { candidate, diff, off, score, words: want.length };
+  }
+
+  const { candidate, diff, off, words } = best;
+  const oneSlip = off.length === 1 && off[0].op === "changed";
+  const oneWord = off.length === 1 && words >= 3;
+  // One word swapped for another comes out of the diff as an extra beside a
+  // missing: two ops, one mistake.
+  const swapped = off.length === 2 && words >= 3
+    && off.some((o) => o.op === "extra") && off.some((o) => o.op === "missing")
+    && Math.abs(diff.indexOf(off[0]) - diff.indexOf(off[1])) === 1;
+  const almost = oneSlip || oneWord || swapped;
+  return {
+    ...miss,
+    almost,
+    matched: almost ? candidate : null,
+    reason: oneSlip ? "spelling" : almost ? "word" : "sentence",
+    diff,
+  };
 }
 
 /* Grading a built sentence. The tiles carry the words, so spelling cannot be
@@ -938,5 +1012,5 @@ window.Engine = {
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
-  sentenceRank, sentenceCard, checkSequence, shuffle, FREE_TOKEN,
+  sentenceRank, sentenceCard, checkSequence, checkSentence, shuffle, FREE_TOKEN,
 };

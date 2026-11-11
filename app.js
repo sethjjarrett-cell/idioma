@@ -191,6 +191,7 @@
   });
 
   function refreshMenu() {
+    $("mic-note").hidden = !(window.SpeechRecognition || window.webkitSpeechRecognition);
     $("set-dark").checked = loadTheme() === "dark";
     $("set-typo").checked = !!state.settings.typoTolerance;
     $("set-introduce").checked = state.settings.introduceNew !== false;
@@ -517,6 +518,7 @@
     filtersOpen = false;
     drawFilters();
     drawPickerSummary();
+    drawHows();
   }
 
   /* What the one line says: the mode, and the filter if it is narrowing
@@ -533,7 +535,8 @@
       narrowed = [pick && pick.kind === "topic" ? pick.name : null,
                   posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
     } else {
-      narrowed = subjectName() === "all" ? null : subjectLabel(subjectName());
+      narrowed = [subjectName() === "all" ? null : subjectLabel(subjectName()),
+                  howName() === "type" ? "typed" : null].filter(Boolean).join(", ") || null;
     }
     return narrowed ? `${label} · ${narrowed}` : label;
   }
@@ -546,6 +549,7 @@
       $("filters").hidden = true;
       $("picker-summary-text").textContent = pickerSummaryText();
     }
+    drawHows();
   }
 
   $("picker-summary").addEventListener("click", () => {
@@ -598,6 +602,30 @@
         return { id, name: topic ? topic.name : "Other", n };
       });
   }
+
+  /* Tiles first, or typed from the first card. Arranging words somebody else
+     chose is recognition and producing them is the skill, so the harder
+     exercise is on offer from the start rather than earned. */
+  const howName = () => (state.settings.sentenceHow === "type" ? "type" : "build");
+
+  function drawHows() {
+    const on = mode() === "sentences" && !(inRound() && !pickersOpen);
+    $("hows").hidden = !on;
+    document.querySelectorAll("#how-pills .pill").forEach((b) => {
+      b.classList.toggle("on", b.dataset.how === howName());
+    });
+  }
+
+  $("how-pills").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    state.settings.sentenceHow = pill.dataset.how;
+    commit();
+    round = null; card = null;
+    drawHows();
+    updateStartBlurb();
+    resetPracticeView();
+  });
 
   function drawFilters() {
     if (inRound() && !pickersOpen) { $("filters").hidden = true; return; }
@@ -783,6 +811,8 @@
       ? Engine.sentenceCard(item.item, Store.peekPhrase(state, item.id), {
           distractors: Store.tileDistractors(state, item.item, item.needs,
             (id) => prog(id), Engine.CONFIG.TILE_DISTRACTORS),
+          typed: howName() === "type",
+          alternatives: Store.alternatives(state, item.id, "es"),
         })
       : Engine.buildCard(item, prog(item.id), sentencesFor, {
           introduce: state.settings.introduceNew !== false,
@@ -807,6 +837,8 @@
 
     // Three things can occupy the bottom of the card, and only ever one: the
     // teaching block, the tile tray, or the answer box.
+    stopHearing();
+    $("btn-mic").hidden = !Recogniser;
     drawTeach(card);
     drawBuild(card);
     const building = card.band.key === "build";
@@ -966,6 +998,66 @@
     };
   }
 
+  /* Saying the answer instead of typing it.
+
+     The browser does the listening; there is no service of ours behind this
+     and nothing to set up. That also means it only exists where the browser
+     offers it (Chrome and Safari do, Firefox does not), so the button stays
+     hidden unless it would work, and the audio goes to whoever makes the
+     browser, which is said in the menu rather than left to be discovered.
+
+     What is heard goes into the box and stops there. It is not submitted:
+     recognisers mishear, and being marked wrong for what the phone thought
+     you said is worse than having no microphone at all. Read it, fix it if
+     it needs fixing, press Check. */
+  const Recogniser = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let hearing = null;
+
+  /* Colombian first, then the nearest things a browser might have instead. */
+  const SPOKEN = { es: ["es-CO", "es-419", "es-MX", "es-US", "es-ES"], en: ["en-GB", "en-US"] };
+
+  function stopHearing() {
+    if (hearing) { try { hearing.abort(); } catch (e) { /* already stopped */ } }
+    hearing = null;
+    $("btn-mic").classList.remove("on");
+  }
+
+  function hear(langs) {
+    const rec = new Recogniser();
+    rec.lang = langs[0];
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    const before = $("answer").value;
+    rec.onresult = (ev) => {
+      let said = "";
+      for (let i = 0; i < ev.results.length; i++) said += ev.results[i][0].transcript;
+      $("answer").value = (before ? before + " " : "") + said.trim();
+    };
+    rec.onerror = (ev) => {
+      // A language this browser has no model for: try the next nearest.
+      if (ev.error === "language-not-supported" && langs.length > 1) {
+        hearing = null;
+        hear(langs.slice(1));
+        return;
+      }
+      if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
+        toast("The microphone is blocked for this site. Allow it in the browser's settings to say answers.", true);
+      } else if (ev.error !== "aborted" && ev.error !== "no-speech") {
+        toast("Could not hear that. Try again, or type it.", true);
+      }
+    };
+    rec.onend = () => { if (hearing === rec) stopHearing(); };
+    hearing = rec;
+    $("btn-mic").classList.add("on");
+    try { rec.start(); } catch (e) { stopHearing(); }
+  }
+
+  $("btn-mic").addEventListener("click", () => {
+    if (!Recogniser || !card || $("answer").disabled) return;
+    if (hearing) { stopHearing(); return; }
+    hear(SPOKEN[askedFor(card)]);
+  });
+
   $("answer-form").addEventListener("submit", (e) => {
     e.preventDefault();
     if (!card || !$("verdict").hidden) return;
@@ -975,6 +1067,10 @@
   });
 
   function grade(typed) {
+    if (card.isSentence) {
+      applyAndShow(Engine.checkSentence(typed, card.accepted), typed);
+      return;
+    }
     applyAndShow(Engine.checkAnswer(typed, card.accepted, {
       typoTolerance: state.settings.typoTolerance,
       /* The other Spanish words that answer the same English prompt. A drill
@@ -997,6 +1093,8 @@
     infinitive: "the infinitive apart",
     spelling: "a letter out",
     order: "the right words, the wrong way round",
+    word: "one word out",
+    sentence: "not this sentence; the marks show where",
     words: "the right number of words, not the right ones",
     length: "not the right number of words",
   };
@@ -1083,6 +1181,7 @@
     else if (outcome === "almost") {
       detail = res.reason === "sense" ? whySense(res) : (WHY[res.reason] || "close");
     }
+    else if (outcome === "wrong" && res.reason === "sentence") detail = WHY.sentence;
     else if (outcome === "wrong" && typed.trim()) detail = `you typed "${typed.trim()}"`;
     if (applied.movedUp) detail += `${detail ? " · " : ""}L${applied.levelBefore} to L${applied.levelAfter}`;
     if (applied.movedDown) detail += `${detail ? " · " : ""}dropped to L${applied.levelAfter}`;
@@ -1127,6 +1226,7 @@
        On a phone that is the difference between reading the verdict and
        scrolling to it. The tile tray already went this way; what you typed is
        in the verdict line anyway. Type it again puts the box back. */
+    stopHearing();
     $("answer").disabled = true;
     $("btn-submit").disabled = true;
     $("answer-form").hidden = true;
@@ -1164,13 +1264,15 @@
      answer is what makes an app feel broken, so what was typed is remembered
      as an accepted answer for that word and never asked about again.
 
-     Not for a drill, which has no word behind it, and not for a sentence,
-     where the answer is a whole sentence and remembering one would accept it
-     for that sentence for ever on the strength of one keystroke. */
+     Not for a drill, which has no word behind it, and not for a sentence
+     built out of tiles, where nothing was typed. A typed sentence is
+     remembered: there is rarely one translation of anything, and the Manage
+     screen lists what has been taught so a slip can be taken back. */
   $("btn-override").addEventListener("click", () => {
     if (!lastResult || lastResult.outcome === "correct") return;
     const typed = lastResult.typed;
-    const learnable = !card.drill && !card.isSentence && card.word && card.word.id;
+    const learnable = !card.drill && card.word && card.word.id
+      && (!card.isSentence || card.band.key === "translate");
     const remembered = learnable
       && Store.rememberAccepted(state, card.word.id, askedFor(card), typed);
     if (remembered) commit();
@@ -1503,7 +1605,42 @@
 
   $("filter").addEventListener("input", renderBank);
 
+  /* Everything I was right has taught it, and the way to take one back. The
+     label is the word or the sentence itself rather than an id nobody has
+     ever seen. */
+  function renderTaught() {
+    const rows = Store.taughtAnswers(state);
+    const wordsById = new Map(words().map((w) => [w.id, w]));
+    const phrasesById = new Map(Store.allPhrases(state).map((x) => [x.id, x]));
+    const label = (row) => {
+      const w = wordsById.get(row.id);
+      if (w) return row.side === "es" ? w.en.join(", ") : w.es;
+      const ph = phrasesById.get(row.id);
+      return ph ? ph.en : row.id;
+    };
+    $("taught-body").innerHTML = rows.length
+      ? rows.map((r) => `
+          <tr>
+            <td>${esc(label(r))}</td>
+            <td class="es">${esc(r.answer)}</td>
+            <td><button class="btn" data-act="forget" data-id="${esc(r.id)}"
+                  data-side="${esc(r.side)}" data-answer="${esc(r.answer)}">Take it back</button></td>
+          </tr>`).join("")
+      : '<tr><td colspan="3" class="muted small">Nothing yet. It fills up as you correct it.</td></tr>';
+  }
+
+  $("taught-body").addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-act="forget"]');
+    if (!btn) return;
+    if (Store.forgetAccepted(state, btn.dataset.id, btn.dataset.side, btn.dataset.answer)) {
+      commit();
+      renderTaught();
+      toast(`"${btn.dataset.answer}" is no longer accepted there.`);
+    }
+  });
+
   function renderBank() {
+    renderTaught();
     const q = Engine.normalise($("filter").value);
     const withSentence = new Set(sentences().map((s) => s.wordId));
     const rows = words().filter((w) => {

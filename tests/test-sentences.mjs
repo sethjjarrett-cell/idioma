@@ -225,5 +225,34 @@ console.log(`  (${accountable} of ${bankTotal} bank sentences are fully accounta
   + ` and so can be used as sentences; the rest stay cloze-only)`);
 ok('most of the bank is usable', accountable / bankTotal > 0.7);
 
+console.log('--- grading a typed sentence ---');
+/* Word by word, because a sentence measured as one long string calls one
+   wrong word in six a flat miss and cannot say which word it was. */
+const typedWant = ['Quiero ir a la playa mañana.'];
+const ts = (t, acc = typedWant) => E.checkSentence(t, acc);
+ok('right, with no capitals, accents or full stop', ts('quiero ir a la playa manana').correct);
+ok('one word misspelt is amber', ts('quiero ir a la plaia mañana').almost
+  && ts('quiero ir a la plaia mañana').reason === 'spelling');
+ok('one word wrong is amber, and says so', ts('quiero ir a la casa mañana').almost
+  && ts('quiero ir a la casa mañana').reason === 'word');
+ok('one word missing is amber', ts('quiero ir a la playa').almost);
+ok('a different sentence is wrong', !ts('voy a la casa hoy').almost && !ts('voy a la casa hoy').correct);
+ok('and still comes back with where', Array.isArray(ts('voy a la casa hoy').diff));
+ok('nothing typed is not an answer', !ts('').correct && !ts('   ').almost);
+ok('a wrong word in a two-word sentence is not a slip',
+  !ts('no voy', ['No sé.']).almost, 'half the sentence is not one word out');
+ok('the subject pronoun can be put in', ts('yo quiero ir a la playa mañana').correct);
+ok('or left out', ts('es mi hermana', ['Ella es mi hermana.']).correct);
+ok('but not swapped for a different one',
+  !ts('él es mi hermana', ['Ella es mi hermana.']).correct);
+ok('another accepted translation is right, and marked as the other one',
+  ts('debo ir', ['Tengo que ir.', 'Debo ir.']).correct
+  && ts('debo ir', ['Tengo que ir.', 'Debo ir.']).equivalent === true);
+ok('a card asked for typed is typed from level one',
+  E.sentenceCard(item, { level: 1 }, { typed: true }).band.key === 'translate');
+ok('and carries the alternatives it was given',
+  E.sentenceCard(item, { level: 1 }, { typed: true, alternatives: ['¿Dónde queda el baño?'] })
+    .accepted.length === 2);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
