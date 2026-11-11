@@ -73,7 +73,7 @@ const after = await p.evaluate(() => JSON.stringify(Object.keys(window.Idioma.st
 console.log('progress survives reload:', before === after, `(${before} words)`);
 
 // --- manage screen ---
-await p.click('.tab[data-screen="manage"]'); await p.waitForTimeout(300);
+await p.click('#btn-menu'); await p.click('#btn-manage'); await p.waitForTimeout(300);
 console.log('\nbank rows rendered:', await p.locator('#bank-body tr').count());
 await p.click('.pill[data-filter="nosentence"]'); await p.waitForTimeout(200);
 console.log('cloze-without-sentence filter rows:', await p.locator('#bank-body tr').count());
@@ -84,7 +84,8 @@ await p.fill('#nw-note', 'Colombian; very common as an exclamation.');
 await p.click('#add-word button[type=submit]'); await p.waitForTimeout(300);
 console.log('word added:', await p.evaluate(() => window.Idioma.state.customWords.length) === 1);
 await p.fill('#filter', 'chevere'); await p.waitForTimeout(200);
-console.log('new word findable by unaccented filter:', await p.locator('#bank-body tr').count() === 1);
+console.log('new word findable by unaccented filter:',
+  (await p.locator('#bank-body tr .es').allTextContents()).some((t) => t.includes('la chévere')));
 await p.fill('#filter', ''); await p.waitForTimeout(150);
 
 // --- progress screen ---

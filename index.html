@@ -160,7 +160,6 @@
     <button class="tab" data-screen="course">Course</button>
     <button class="tab" data-screen="topics">Topics</button>
     <button class="tab" data-screen="lessons">Lessons</button>
-    <button class="tab" data-screen="manage">Manage</button>
     <button class="tab" data-screen="progress">Progress</button>
   </nav>
   <div class="spacer"></div>
@@ -219,6 +218,9 @@
     <input type="checkbox" id="set-audio">
     <span>Read Spanish aloud <em id="audio-blurb">when Spanish appears on a card, and with each answer; this device only</em></span>
   </label>
+  <p class="muted small" id="mic-note" hidden>The microphone key on a card uses your browser's own
+    speech recognition, so what you say goes to whoever makes the browser, not to this app.
+    Nothing is sent unless you press it.</p>
   <label class="toggle">
     <input type="checkbox" id="set-introduce">
     <span>Show new words first <em>the first time a word comes up it is shown, not tested</em></span>
@@ -236,11 +238,13 @@
     <span>Cards per round</span>
     <input type="number" id="set-round" min="1" max="100" step="1">
   </label>
-  <div class="sync">
-    <div class="sync-head">
-      <b>Sync across devices</b>
+  <!-- Folded until it is set up: five controls for something most people
+       never switch on is a screen of menu nobody needs to scroll past. -->
+  <details class="sync" id="sync-panel">
+    <summary class="sync-head">
+      <b>Sync with your own server</b>
       <span class="muted small" id="sync-state">Not set up</span>
-    </div>
+    </summary>
     <label class="field"><span>Sync URL</span>
       <input id="sync-url" placeholder="https://idioma-sync.yourname.workers.dev"
              autocapitalize="none" autocorrect="off" spellcheck="false"></label>
@@ -258,8 +262,13 @@
       Anyone with that link has your progress, so treat it like a password and
       do not post it anywhere public. Putting the server up is four commands,
       once: see <span class="mono">tools/sync/README.md</span>.</p>
-  </div>
+  </details>
 
+  <!-- Adding and editing words is housekeeping, not practice, so it lives
+       here rather than taking a tab a phone has no room for. -->
+  <div class="menu-row">
+    <button class="btn" type="button" id="btn-manage">Add or edit words</button>
+  </div>
   <div class="menu-row">
     <button class="btn" id="btn-export">Export backup</button>
     <label class="btn" for="file-import">Import backup</label>
@@ -306,6 +315,25 @@
       <span id="picker-summary-text"></span><i>change</i>
     </button>
 
+    <!-- The start screen, in the order you would use it: the day's session
+         first, because it is what to press nine days in ten, and everything
+         for choosing your own round underneath it. -->
+    <div class="pane hero" id="round-start">
+      <div class="hero-top">
+        <svg class="fox fox-lg bob" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
+        <div class="bubble">
+          <h2>Ready when you are</h2>
+          <p class="muted small" id="today-blurb"></p>
+        </div>
+      </div>
+      <!-- The daily session: words, then grammar, then sentences, in one go. -->
+      <div class="today" id="today">
+        <button class="btn primary big" id="btn-today">Today's session</button>
+      </div>
+    </div>
+
+    <p class="or-line" id="or-line">Or practise one thing</p>
+
     <div class="modes" id="modes" role="group" aria-label="What to practise">
       <button class="mode on" data-mode="words">
         <b>Words</b><span>One word at a time, shown then asked</span>
@@ -335,6 +363,14 @@
     <div class="picked" id="start-picked" hidden>
       <span class="pick-chip" id="start-picked-name"></span>
       <button class="btn" id="btn-clear-pick">Whole bank</button>
+    </div>
+
+    <!-- Your own round: what the choice above comes to, and the button. -->
+    <div class="start-free" id="start-free">
+      <p class="small" id="mode-about"></p>
+      <p class="muted small" id="start-blurb"></p>
+      <button class="btn big" id="btn-start">Start a round</button>
+      <button class="btn big" id="btn-sticking-start" hidden></button>
     </div>
 
     <div class="round-bar" id="round-bar" hidden>
@@ -420,6 +456,15 @@
           <button type="button" class="key" data-ch="ñ">ñ</button>
           <button type="button" class="key" data-ch="¿">¿</button>
           <button type="button" class="key" data-ch="¡">¡</button>
+          <!-- Say it instead of typing it. Only where the browser can listen. -->
+          <button type="button" class="key mic" id="btn-mic" hidden
+                  aria-label="Say your answer" title="Say your answer">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/>
+              <path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
         </div>
         <input type="text" id="answer" placeholder="Type your answer"
                autocapitalize="none" autocorrect="off" spellcheck="false">
@@ -470,23 +515,6 @@
       </div>
     </div>
 
-    <div class="pane hero" id="round-start">
-      <div class="hero-top">
-        <svg class="fox fox-lg bob" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
-        <div class="bubble">
-          <h2>Ready when you are</h2>
-          <p class="muted" id="start-blurb"></p>
-        </div>
-      </div>
-      <!-- The daily session: words, then grammar, then sentences, in one go. -->
-      <div class="today" id="today">
-        <button class="btn primary big" id="btn-today">Today's session</button>
-        <p class="muted small" id="today-blurb"></p>
-      </div>
-      <button class="btn big" id="btn-start">Start a round</button>
-      <button class="btn big" id="btn-sticking-start" hidden></button>
-    </div>
-
     <div class="pane hero" id="round-end" hidden>
       <div class="hero-top">
         <svg class="fox fox-lg happy" aria-hidden="true" focusable="false"><use href="#fox-sym"/></svg>
@@ -532,11 +560,10 @@
   <!-- ============================= TOPICS ============================= -->
   <section class="screen" id="screen-topics">
     <div class="pane">
-      <h2>Practise one context at a time</h2>
-      <p class="muted small">A round drawn from a single topic instead of the whole
-        bank. The same levels and the same rules apply; only the pool changes.
-        Topics live in <span class="mono">topics.js</span> and are a judgement, not
-        a fact, so move anything that is filed wrongly.</p>
+      <h2>Practise one topic at a time</h2>
+      <p class="muted small">A words round drawn from one topic instead of the
+        whole bank: useful before a trip to the market or a night out. Levels
+        move exactly as they do anywhere else.</p>
     </div>
     <div id="topic-list"></div>
   </section>

@@ -77,7 +77,8 @@ await mp.click('#btn-start'); await mp.waitForTimeout(250);
 console.log('card visible:', !(await mp.locator('#card').isHidden()));
 console.log('input font size:', await mp.evaluate(() => getComputedStyle(document.getElementById('answer')).fontSize));
 for (const t of ['manage','progress']) {
-  await mp.click(`.tab[data-screen="${t}"]`); await mp.waitForTimeout(400);
+  if (t === 'manage') { await mp.click('#btn-menu'); await mp.click('#btn-manage'); }
+  else await mp.click(`.tab[data-screen="${t}"]`); await mp.waitForTimeout(400);
   console.log(`overflow on ${t}:`, await overflow());
 }
 console.log('mobile pageerror =', mpe);

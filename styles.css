@@ -247,6 +247,9 @@ main { max-width: 760px; margin: 0 auto;
 .sync-head b { font: 800 14px var(--round); }
 .sync-head .small { margin-left: auto; }
 .sync .menu-row .btn { flex: 1 1 auto; }
+summary.sync-head { cursor: pointer; }
+details.sync[open] summary.sync-head { margin-bottom: 10px; }
+.more-row td { padding: 14px 8px; }
 #sync-state.on { color: var(--good-deep); }
 #sync-state.bad { color: var(--bad-deep); }
 #sync-code { letter-spacing: 0.06em; }
@@ -335,6 +338,10 @@ main { max-width: 760px; margin: 0 auto;
   box-shadow: 0 3px 0 var(--line2);
   transition: transform .06s, box-shadow .06s;
 }
+/* The microphone sits at the end of the row, apart from the letters. Red
+   while listening: the one colour everybody already reads as recording. */
+.key.mic { margin-left: auto; display: flex; align-items: center; justify-content: center; color: var(--accent-deep); }
+.key.mic.on { background: var(--bad-soft); border-color: var(--bad); color: var(--bad-deep); }
 .key:active { transform: translateY(3px); box-shadow: 0 0 0 var(--line2); }
 
 /* Anything that reads Spanish aloud. Small and round, sat in the line it
@@ -724,6 +731,18 @@ table.conj td b { color: var(--accent-deep); }
 }
 .mode.on b, .mode.on span { color: var(--accent-deep); }
 
+/* The start screen below the day's session: a label, the modes, the filter
+   row, then what that choice comes to and its button. All of it belongs to
+   the start screen, so all of it goes when the start pane does. */
+.or-line {
+  margin: 4px 2px 8px; font: 800 11px var(--round); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.start-free { display: grid; gap: 8px; margin: 0 0 14px; }
+.start-free p { margin: 0 2px; }
+#round-start[hidden] ~ .or-line,
+#round-start[hidden] ~ .start-free { display: none; }
+
 /* Tapping words into order. The line is the answer being built and the tray
    is what is left; a tile moves between the two and nothing else happens. */
 .build { margin-top: 14px; }
@@ -827,7 +846,7 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .prompt { font-size: 23px; }
   /* Under 16px, Safari zooms the page when an input takes focus. */
   .field input, .field select, .filter, #answer { font-size: 16px; }
-  main { padding: 14px 10px calc(50px + env(safe-area-inset-bottom)); }
+  main { padding: 6px 10px 0; }
   .pane { padding: 14px; }
   .card { padding: 16px; }
   .verdict { margin: 18px -16px -16px; padding: 14px 16px 16px; }
@@ -840,14 +859,31 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .accents, #answer-form input { flex: none; }
   /* On a phone the wordmark gives way to the fox, and the tabs lose the
      wide tracking, so all three still fit without a sideways scroll. */
-  .brand span { display: none; }
-  .top { gap: 8px; padding: 0 10px; }
-  .tab { padding: 6px 9px; font-size: 11px; letter-spacing: 0.01em; }
-  /* Five tabs do not fit a phone at any width, so the strip scrolls sideways
-     and says so with a fade at the edge rather than cutting a word in half.
-     Hiding the brand does not change that, so the fox stays. */
-  .tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
-          mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  /* The tabs do not fit beside the fox at any phone width, and a strip that
+     scrolls sideways hides half the app behind a swipe nobody knows to make.
+     So on a phone they take a row of their own under the fox, all five
+     showing. The row costs forty pixels, paid for out of the empty space
+     that used to sit at the foot of the page. */
+  .top { gap: 0 8px; padding: 0 10px; height: auto; flex-wrap: wrap; }
+  .brand, #btn-sound, #btn-menu { margin-top: 6px; }
+  .brand { font-size: 19px; }
+  .tabs {
+    order: 5; flex: 0 0 100%; overflow: visible;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+    padding: 2px 0 4px;
+  }
+  .tab { padding: 6px 2px; font-size: 11px; letter-spacing: 0.02em; text-align: center; }
+  .menu { top: 86px; }
+  main { padding-bottom: 18px; }
+  /* Six descriptions is a screenful before anything can be started. On a
+     phone the modes are names, three across, and the one that is picked is
+     described by the line above its Start button. */
+  .modes { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+  .modes .mode:last-child:nth-child(odd) { grid-column: auto; }
+  .mode { padding: 9px 6px; text-align: center; align-items: center; }
+  .mode b { font-size: 13px; }
+  .mode span { display: none; }
+  .hero .hero-top { margin-bottom: 12px; }
   table.conj { min-width: 380px; font-size: 13px; }
   .example b { min-width: 0; }
 }

@@ -32,7 +32,7 @@ const meet = (n) => p.evaluate((count) => {
 }, n);
 
 console.log('--- the picker ---');
-console.log('three modes offered:', await p.locator('#modes .mode').count() === 3);
+console.log('six modes offered:', await p.locator('#modes .mode').count() === 6);
 console.log('words is the default:',
   await p.evaluate(() => document.querySelector('.mode.on').dataset.mode) === 'words');
 await p.click('[data-mode="sentences"]');
@@ -146,6 +146,8 @@ console.log('getting it wrong enough sends it back to tiles:',
   backToTiles.band === 'build', `(L${backToTiles.level})`);
 
 console.log('\n--- verb endings ---');
+// Mid-round the pickers are folded to one line; open them first.
+if (await p.isVisible('#picker-summary')) await p.click('#picker-summary');
 await p.click('[data-mode="verbs"]');
 await p.waitForTimeout(150);
 const blurb = await p.textContent('#start-blurb');
@@ -162,17 +164,21 @@ console.log('and the round is the length you asked for, not the whole table:',
   vc.queue === 15, `(${vc.queue} cards)`);
 
 console.log('\n--- picking a tense ---');
+const unfold = async () => { if (await p.isVisible('#picker-summary')) await p.click('#picker-summary'); };
+await unfold();
 console.log('the picker is only in verb mode:', await p.isVisible('#filters'));
 const tenseNames = await p.$$eval('#filter-pills .pill', ps => ps.map(x => x.textContent));
 console.log('mixed plus every tense:', tenseNames.join(', '));
 const runTense = async (tense, cards) => {
+  await unfold();
   await p.click(`#filter-pills .pill[data-value="${tense}"]`);
   await p.waitForTimeout(150);
   await p.click('#btn-start');
   await p.waitForTimeout(250);
   const seen = new Set();
   for (let i = 0; i < cards; i++) {
-    const c = await p.evaluate(() => ({ t: window.__card.band.label, a: window.__card.accepted[0] }));
+    // The tense is on the card's target now; the band only says Verb ending.
+    const c = await p.evaluate(() => ({ t: (window.__card.target || {}).tense || window.__card.band.label, a: window.__card.accepted[0] }));
     seen.add(c.t);
     await p.fill('#answer', c.a); await p.click('#btn-submit'); await p.waitForTimeout(45);
     await p.click('#btn-next'); await p.waitForTimeout(45);
@@ -187,6 +193,7 @@ console.log('and a mixed round is still a round, not two hundred cards:',
   await p.evaluate(() => window.Idioma.round ? window.Idioma.round.queue.length : 0) <= 15);
 console.log('and changing it takes effect on the next round, not never:',
   JSON.stringify(await runTense('present', 8)));
+await unfold();
 console.log('the picker survives a round:', await p.isVisible('#filters'));
 
 console.log('\n--- pace ---');

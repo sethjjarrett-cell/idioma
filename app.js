@@ -132,6 +132,13 @@
     if (tab) showScreen(tab.dataset.screen);
   });
 
+  // The word bank's own screen has no tab; it is opened from the menu.
+  $("btn-manage").addEventListener("click", () => {
+    $("menu").hidden = true;
+    showScreen("manage");
+    window.scrollTo(0, 0);
+  });
+
   /* ------------------------------------------------------------------
      Theme
 
@@ -554,6 +561,8 @@
     const el = $("sync-state");
     el.classList.remove("on", "bad");
     if (!Sync.configured(syncCfg)) { el.textContent = "Not set up"; return; }
+    // In use, so worth seeing; until then it stays folded.
+    $("sync-panel").open = true;
     if (syncing) { el.textContent = "Syncing..."; return; }
     if (syncCfg.lastError) { el.textContent = syncCfg.lastError; el.classList.add("bad"); return; }
     el.textContent = syncCfg.lastSyncedAt
@@ -988,13 +997,15 @@
     const named = [pick && pick.kind === "topic" ? pick.name : null,
                    posName() === "all" ? null : posGroup(posName()).name.toLowerCase()]
       .filter(Boolean).join(", ");
-    const where = named ? `${named}: ${enabled.length} words. ` : `${enabled.length} words. `;
+    const where = named ? `${named}: ` : "";
     $("start-blurb").textContent = where
-      + `${met} met, ${settling} still settling, ${unseen} to come. `
+      + (met
+        ? `You have met ${met} of ${enabled.length} words, and ${settling} ${settling === 1 ? "is" : "are"} still being learnt. `
+        : `${enabled.length} words, none met yet. `)
       + (allowance
         ? `Up to ${allowance} new ${allowance === 1 ? "word" : "words"} this round, commonest first`
           + (state.settings.introduceNew === false ? ", tested straight away." : ".")
-        : `No new words until some of those settle; a word settles once you can produce it, not just recognise it.`);
+        : `No new words this round: get a few of those to the point where you can type them from memory and more will come.`);
   }
 
   $("modes").addEventListener("click", (e) => {
@@ -1031,6 +1042,11 @@
   function drawModes() {
     document.querySelectorAll("#modes .mode").forEach((b) => {
       b.classList.toggle("on", b.dataset.mode === mode());
+      // On a phone the buttons are names only, so the one that is picked is
+      // described once, above its Start button.
+      if (b.dataset.mode === mode()) {
+        $("mode-about").textContent = `${b.querySelector("b").textContent}: ${b.querySelector("span").textContent.toLowerCase()}.`;
+      }
     });
     // A long filter row expanded in one mode should not stay expanded in the
     // next; the row is about the mode you are in.
@@ -1718,6 +1734,9 @@
     drawChoices(card);
     $("answer-form").hidden = !!card.intro || building || !!card.grammar;
     $("accents").hidden = !SPANISH_BACK.has(card.band.key);
+    // Not on a listening card: the phone would transcribe its own voice.
+    stopHearing();
+    $("btn-mic").hidden = !Recogniser || !!card.listen || mode() === "listen";
     $("card").classList.toggle("teaching", !!card.intro);
     $("card").classList.toggle("building", building);
 
@@ -1925,10 +1944,68 @@
       if (e.target.closest(".key")) e.preventDefault();
     });
   }
+  /* Saying the answer instead of typing it.
+
+     The browser does the listening; there is no service of ours behind this
+     and nothing to set up. It only exists where the browser offers it (Chrome
+     and Safari do, Firefox does not), so the key stays hidden unless it would
+     work, and the audio goes to whoever makes the browser, which the menu
+     says rather than leaving it to be discovered.
+
+     What is heard goes into the box and stops there. It is not submitted:
+     recognisers mishear, and being marked wrong for what the phone thought
+     you said is worse than having no microphone at all. Read it, fix it if
+     it needs fixing, press Check. */
+  const Recogniser = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let hearing = null;
+  // Colombian first, then the nearest things a browser might have instead.
+  const SPOKEN = ["es-CO", "es-419", "es-MX", "es-US", "es-ES"];
+  $("mic-note").hidden = !Recogniser;
+
+  function stopHearing() {
+    if (hearing) { try { hearing.abort(); } catch (e) { /* already stopped */ } }
+    hearing = null;
+    $("btn-mic").classList.remove("on");
+  }
+
+  function hear(langs) {
+    const rec = new Recogniser();
+    rec.lang = langs[0];
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    const before = $("answer").value;
+    rec.onresult = (ev) => {
+      let said = "";
+      for (let i = 0; i < ev.results.length; i++) said += ev.results[i][0].transcript;
+      $("answer").value = (before ? before + " " : "") + said.trim();
+    };
+    rec.onerror = (ev) => {
+      // A language this browser has no model for: try the next nearest.
+      if (ev.error === "language-not-supported" && langs.length > 1) {
+        hearing = null;
+        hear(langs.slice(1));
+        return;
+      }
+      if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
+        toast("The microphone is blocked for this site. Allow it in the browser's settings to say answers.", true);
+      } else if (ev.error !== "aborted" && ev.error !== "no-speech") {
+        toast("Could not hear that. Try again, or type it.", true);
+      }
+    };
+    rec.onend = () => { if (hearing === rec) stopHearing(); };
+    hearing = rec;
+    $("btn-mic").classList.add("on");
+    try { rec.start(); } catch (e) { stopHearing(); }
+  }
+
   $("accents").addEventListener("click", (e) => {
     const key = e.target.closest(".key");
     const box = $("answer");
     if (!key || box.disabled) return;
+    if (key.id === "btn-mic") {
+      if (hearing) stopHearing(); else if (Recogniser) hear(SPOKEN);
+      return;
+    }
     const at = box.selectionStart ?? box.value.length;
     box.setRangeText(key.dataset.ch, at, box.selectionEnd ?? at, "end");
     box.focus();
@@ -2157,6 +2234,7 @@
        On a phone that is the difference between reading the verdict and
        scrolling to it. The tile tray already went this way; what you typed is
        in the verdict line anyway. Type it again puts the box back. */
+    stopHearing();
     $("answer").disabled = true;
     $("btn-submit").disabled = true;
     $("answer-form").hidden = true;
@@ -2948,8 +3026,11 @@
       let seen = 0;
       for (const w of pool) {
         const pr = prog(w.id);
+        // A word never met sits at level 1, which is the recognition band,
+        // and counting it there drew a full bar on a topic nobody had opened.
+        if (!pr.timesSeen) continue;
         bands[Engine.bandForLevel(pr.level).key] += 1;
-        if (pr.timesSeen) seen += 1;
+        seen += 1;
       }
       const rows = pool
         .slice()
@@ -3232,6 +3313,14 @@
 
   $("filter").addEventListener("input", renderBank);
 
+  const BANK_PAGE = 40;
+  let bankShowAll = false;
+  document.addEventListener("click", (e) => {
+    if (e.target.id !== "btn-bank-all") return;
+    bankShowAll = true;
+    renderBank();
+  });
+
   function renderBank() {
     const q = Engine.normalise($("filter").value);
     const withSentence = new Set(sentences().map((s) => s.wordId));
@@ -3253,7 +3342,17 @@
 
     rows.sort((a, b) => prog(b.id).level - prog(a.id).level || a.es.localeCompare(b.es, "es"));
 
-    $("bank-body").innerHTML = rows.map((w) => {
+    /* A thousand rows is eighty thousand pixels of table on a phone and a
+       pause every time the screen opens. The first screenful, and the rest on
+       request; the filter box finds anything further down. */
+    const total = rows.length;
+    const shown = bankShowAll ? rows : rows.slice(0, BANK_PAGE);
+    const more = total > shown.length
+      ? `<tr class="more-row"><td colspan="8"><button class="btn" type="button" id="btn-bank-all">Show all ${total} words</button>
+           <span class="muted small">or type in the box above to find one</span></td></tr>`
+      : "";
+
+    $("bank-body").innerHTML = shown.map((w) => {
       const p = prog(w.id);
       const band = Engine.bandForLevel(p.level);
       const needsSentence = band.key === "cloze" && !withSentence.has(w.id);
@@ -3275,7 +3374,7 @@
             <button class="btn" data-act="toggle">${p.enabled === false ? "Enable" : "Disable"}</button>
           </div></td>
         </tr>`;
-    }).join("") || '<tr><td colspan="8" class="muted small">Nothing matches that filter.</td></tr>';
+    }).join("") + more || '<tr><td colspan="8" class="muted small">Nothing matches that filter.</td></tr>';
   }
 
   function editRow(w) {

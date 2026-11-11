@@ -128,9 +128,20 @@ const stems = [
 for (const [v, t, p2, want] of stems) {
   ok(`${v} ${t} ${p2} is ${want}`, conjugate(v, t, p2) === want, conjugate(v, t, p2));
 }
-ok('a tense an irregular verb does not list is not vouched for',
-  ctx.window.Verbs.isVouchedFor('tener', 'imperfect') === false,
-  'the regular rule happens to be right there, but the table cannot say so');
+/* Only ser, ir and ver have an irregular imperfect, and all three are written
+   out, so the regular rule is vouched for there. Any other tense an irregular
+   verb does not list is still a guess. */
+ok('the imperfect of an irregular verb is vouched for, the rule being right',
+  ctx.window.Verbs.isVouchedFor('tener', 'imperfect') === true
+  && conjugate('tener', 'imperfect', 'yo') === 'tenía', conjugate('tener', 'imperfect', 'yo'));
+{
+  const guess = [];
+  for (const v of VERBS.irregulars) for (const t of VERBS.tenses) {
+    if (!v.forms[t.id] && t.id !== 'imperfect' && t.base !== 'infinitive') guess.push([v.infinitive, t.id]);
+  }
+  ok(`a tense an irregular verb does not list is not vouched for (${guess.length} such)`,
+    guess.every(([v, t]) => ctx.window.Verbs.isVouchedFor(v, t) === false));
+}
 ok('one it does list is', ctx.window.Verbs.isVouchedFor('hacer', 'preterite') === true);
 ok('a regular verb is vouched for everywhere',
   VERBS.tenses.every((t) => ctx.window.Verbs.isVouchedFor('hablar', t.id)));
