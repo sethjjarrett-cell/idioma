@@ -200,7 +200,19 @@
     try { window.localStorage.setItem(AUDIO_KEY, JSON.stringify(audio)); } catch (e) { /* private mode */ }
   };
 
-  const say = (text, slow) => Speech.say(text, { slow: !!slow });
+  const say = (text, slow, onSilent) => Speech.say(text, { slow: !!slow, onSilent });
+
+  /* When Listen hands the phone a sentence and nothing starts, say so and say
+     what to try. Once every couple of minutes at most: the same toast on
+     every card would be nagging, not help. */
+  let silentToldAt = 0;
+  const heardNothing = () => {
+    if (Date.now() - silentToldAt < 120000) return;
+    silentToldAt = Date.now();
+    toast("Nothing played. Check the volume and that the phone is not on silent. On an iPhone, "
+      + "Settings, Accessibility, Spoken Content, Voices adds a Spanish voice.", true);
+  };
+  const sayListen = (text, slow) => say(text, slow, heardNothing);
   const autoSay = (text) => { if (audio.auto) say(text); };
 
   const SPEAKER = '<svg aria-hidden="true" focusable="false"><use href="#speaker-sym"/></svg>';
@@ -974,14 +986,15 @@
       return;
     }
     if (mode() === "write") {
-      const lvl = WRITING.levels.find((l) => l.id === writeLevelName());
+      const lvl = writeLevels().find((l) => l.id === writeLevelName());
       const pool = writeItems(writeLevelName());
       const started = pool.filter((x) => Store.peekWriting(state, x.id).timesSeen > 0);
       $("start-picked").hidden = true;
       $("start-blurb").textContent = `${lvl ? `${lvl.name}: ${lvl.blurb}` : "Every level mixed together."} `
-        + `Whole sentences from English, typed out, each with where you are and who you are talking to. `
-        + `${started.length} of ${pool.length} started. `
-        + `Words you have not met yet are shown before you start.`;
+        + (writeLevelName() === "mine"
+          ? `${pool.length} sentences in reach so far, and more with every word you learn. `
+          : `Whole sentences from English, typed out, each with where you are and who you are talking to. `)
+        + `${started.length} of ${pool.length} started.`;
       return;
     }
     if (mode() === "listen") {
@@ -1116,7 +1129,7 @@
     } else if (mode() === "grammar") {
       narrowed = grammarLesson() ? grammarLesson().title : grammarName() === "weak" ? "Weak spots" : null;
     } else if (mode() === "write") {
-      narrowed = (WRITING.levels.find((l) => l.id === writeLevelName()) || { name: "Mixed" }).name;
+      narrowed = (writeLevels().find((l) => l.id === writeLevelName()) || { name: "Mixed" }).name;
     } else if (mode() === "words") {
       narrowed = [pick && pick.kind === "topic" ? pick.name : null,
                   posName() === "all" ? null : posGroup(posName()).name].filter(Boolean).join(", ");
@@ -1262,7 +1275,7 @@
       label = "Level";
       attr = "writeLevel";
       current = writeLevelName();
-      options = WRITING.levels.map((l) => ({ id: l.id, name: l.name, n: writeItems(l.id).length }))
+      options = writeLevels().map((l) => ({ id: l.id, name: l.name, n: writeItems(l.id).length }))
         .concat([{ id: "mixed", name: "Mixed" }]);
     } else if (showGrammar) {
       label = "Topic";
@@ -1513,14 +1526,36 @@
   const WRITING = window.WRITING || { levels: [], items: [] };
   const writeLevelName = () => {
     const v = state.settings.writeLevel;
-    return v === "mixed" || WRITING.levels.some((l) => l.id === v) ? v : "basic";
+    return v === "mixed" || writeLevels().some((l) => l.id === v) ? v : "basic";
   };
-  const writeItems = (level) => WRITING.items.filter((x) => level === "mixed" || x.level === level);
+
+  /* Your words: every sentence in the bank, about a thousand, offered once
+     you have the words for it, or all but one, which Might help then shows.
+     The hand-written levels are better sentences, each with a situation, but
+     there are a hundred and twenty of them; this is the one that grows with
+     what you learn and never runs out. The same sentences as Sentences mode,
+     but always typed from the start and with a progress book of their own. */
+  const MINE = { id: "mine", name: "Your words",
+    blurb: "Sentences from the bank built from the words you have met." };
+  const writeLevels = () => [MINE].concat(WRITING.levels);
+  function mineItems() {
+    return Store.sentenceIndex(state).rows
+      .filter((r) => !r.loose.length && r.needs.filter((id) => !prog(id).timesSeen).length <= 1)
+      .sort((a, b) => a.rank - b.rank)
+      .map((r) => ({ id: r.item.id, level: "mine", context: "", en: r.item.en, es: r.item.es, note: r.item.note || "" }));
+  }
+  const writeItems = (level) => (level === "mine" ? mineItems()
+    : WRITING.items.filter((x) => level === "mixed" || x.level === level));
 
   function startWriteRound() {
     const pool = writeItems(writeLevelName());
-    if (!pool.length) { toast("Nothing to write at this level.", true); return; }
-    const order = new Map(WRITING.items.map((x, i) => [x.id, i]));
+    if (!pool.length) {
+      toast(writeLevelName() === "mine"
+        ? "No sentences in reach yet. Meet a few words first, or try Basic."
+        : "Nothing to write at this level.", true);
+      return;
+    }
+    const order = new Map(pool.map((x, i) => [x.id, i]));
     const size = Engine.CONFIG.WRITE_ROUND_SIZE;
     let queue = Engine.pickRound(pool, (id) => Store.peekWriting(state, id), new Date().toISOString(), size, {
       maxNew: Engine.CONFIG.WRITE_MAX_NEW, rankOf: (id) => order.get(id),
@@ -1551,16 +1586,45 @@
       if (!id || id === Engine.FREE_TOKEN || seen.has(id) || prog(id).timesSeen > 0) continue;
       const w = byId.get(id);
       if (!w) continue;
+      /* A phrase only when the whole phrase is there. "me" is part of
+         ¿me regala?, and offering that as help for "Me llamo Sam" was
+         worse than no help at all. */
+      const parts = Engine.tokenise(w.es);
+      if (parts.length > 1 && !Engine.tokenise(item.es).join(" ").includes(parts.join(" "))) continue;
       seen.add(id);
       out.push([w.es, w.en[0]]);
     }
     return out;
   }
 
+  /* Might help, or not. One tap hides the hints on every Write it card, and
+     one tap brings them back; trying without them first is the harder and
+     better exercise once the words are half known. */
+  const hintsOn = () => state.settings.writeHints !== false;
+  function drawHelp() {
+    const el = $("card-help");
+    const has = !!(card && card.help && card.help.length);
+    el.hidden = !has;
+    if (!has) { el.innerHTML = ""; return; }
+    el.innerHTML = hintsOn()
+      ? `<span class="muted">Might help:</span> ` + card.help.map(([es, en]) =>
+          `<span class="hchip"><b>${esc(es)}</b> ${esc(en)}</span>`).join("")
+        + `<button class="help-toggle" type="button" data-hints="off">Hide hints</button>`
+      : `<button class="help-toggle" type="button" data-hints="on">Show hints</button>`;
+  }
+  $("card-help").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-hints]");
+    if (!btn) return;
+    state.settings.writeHints = btn.dataset.hints === "on";
+    commit();
+    drawHelp();
+    $("answer").focus();
+  });
+
   /* A card like a sentence card, always typed. Every answer the item lists is
      right, and so is anything marked right before. */
   function writeCard(item) {
-    const lvl = WRITING.levels.find((l) => l.id === item.level);
+    const lvl = writeLevels().find((l) => l.id === item.level);
     const remembered = ((state.accepted || {})[item.id] || {}).es || [];
     return {
       isWrite: true, item,
@@ -1767,11 +1831,7 @@
       : (card.promptHint ? card.promptHint : "");
     $("card-hint").hidden = !$("card-hint").textContent;
     // Write it: the words you may not have yet, before you try.
-    $("card-help").innerHTML = card.help && card.help.length
-      ? `<span class="muted">Might help:</span> ` + card.help.map(([es, en]) =>
-        `<span class="hchip"><b>${esc(es)}</b> ${esc(en)}</span>`).join("")
-      : "";
-    $("card-help").hidden = !(card.help && card.help.length);
+    drawHelp();
     const t = card.target;
     $("card-target").innerHTML = t
       ? `<span class="tchip"><i>Person</i><b>${esc(t.person)}</b><em>(${esc(t.personEn)})</em></span>`
@@ -1809,7 +1869,7 @@
       : $("answer")).focus();
     // A listening card is nothing without its sound, so it always plays. Any
     // other card reads its Spanish only if reading aloud is on.
-    if (card.listen) say(card.reveal);
+    if (card.listen) sayListen(card.reveal);
     else if (shown) autoSay(shown);
     window.__card = card;   // handy for debugging and for the UI test
   }
@@ -1986,8 +2046,8 @@
     };
   }
 
-  $("btn-listen-play").addEventListener("click", () => { if (card && card.listen) say(card.reveal); });
-  $("btn-listen-slow").addEventListener("click", () => { if (card && card.listen) say(card.reveal, true); });
+  $("btn-listen-play").addEventListener("click", () => { if (card && card.listen) sayListen(card.reveal); });
+  $("btn-listen-slow").addEventListener("click", () => { if (card && card.listen) sayListen(card.reveal, true); });
 
   /* The accent keys. Pressing one must not take focus off the box, or on a
      phone the keyboard folds away between every letter. Cancelling the press
@@ -2368,7 +2428,7 @@
     $("btn-submit").disabled = false;
     $("answer").focus();
     drawSure();
-    if (card.listen) say(card.reveal);
+    if (card.listen) sayListen(card.reveal);
   }
 
   $("btn-retry").addEventListener("click", startRetype);

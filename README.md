@@ -491,6 +491,19 @@ everything else, so the ones you get wrong come back sooner.
 answer is in the bank or glossed, the marking, a round and its levels, and a
 save from before Write it loading with its progress intact.
 
+**Your words** is the first level, and the one that does not run out. It
+offers every sentence in the bank, 1,643 of them, once you have met the words
+for it, or all but one, which Might help then shows: about 250 after fifty
+words, 450 after a hundred, 720 after two hundred. They are the same
+sentences as Sentences mode, but always typed from the start and kept in the
+Write it book. The hand-written levels are better sentences, each with a
+situation; there are a hundred and twenty of them.
+
+**Hide hints** on the card turns Might help off on every Write it card, and
+**Show hints** brings it back (`settings.writeHints`). Might help only offers
+a phrase when the whole phrase is in the sentence: it used to suggest
+*¿me regala?* for "Me llamo Sam" because of the *me*.
+
 ## The course
 
 The Course tab holds ten units built round real situations. The first five
@@ -964,6 +977,19 @@ hidden on cards that want English, typing at the caret, and leaving the
 focus in the box so a phone keyboard stays up.
 
 ## Hearing it
+
+### When it is silent
+
+Listen was silent on an iPhone, and Safari has three habits that explain it,
+all handled in `speak.js`. Stopping one sentence and starting the next in the
+same breath loses the new one, so after a stop the next waits 120ms. iOS only
+speaks once a tap has unlocked it, so the first tap anywhere says nothing at
+no volume. A voice can be listed and not downloaded, which takes the sentence
+and never starts it, so anything that has not started within a second and a
+half is tried again on the language alone; if that does not start either,
+Listen says "Nothing played" and what to check. `tests/test-speak.mjs` runs
+Listen against a stand-in voice with all three habits. It cannot prove a real
+iPhone speaks, and the silent switch still silences it.
 
 Everything Spanish can be heard, read by the voice the phone or laptop already
 has. `speak.js` uses the browser's speech synthesis: free, no network, works
