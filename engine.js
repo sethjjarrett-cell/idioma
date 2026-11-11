@@ -51,6 +51,8 @@ const CONFIG = {
      than twenty unfamiliar words at once, without putting a schedule or a
      calendar anywhere near it. */
   SETTLED_LEVEL: 4,
+  // The share of a round's review places kept for words not yet settled.
+  LEARNING_SHARE: 0.5,
   LEARNING_CAP: 20,
 
   /* Sticking points. Some words simply will not go in, and the level on its
@@ -420,7 +422,23 @@ function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE, options =
     .slice(0, Math.max(0, Math.min(maxNew, count)));
   const met = enabled.filter((w) => !isNew(w)).map(entry);
 
-  return fresh.concat(drawFrom(met, count - fresh.length));
+  /* Words still being learnt get first call on half of what is left.
+
+     Drawn purely by weight, a round a month in was nine or ten words already
+     settled and four or five still on the way up, simply because there are
+     more of the former. The ones on the way up are what hold the allowance
+     shut, so they crept, the allowance stayed at nought, and a learner on
+     two rounds a day met about 130 words in sixty days. Giving them half the
+     places roughly doubles that without starving what is already known: the
+     other half is still drawn by weight from everything, which is where
+     overdue words come from. */
+  const room = Math.max(0, count - fresh.length);
+  const learning = met.filter((x) => progressFor(x.word.id).level < CONFIG.SETTLED_LEVEL);
+  const first = drawFrom(learning, Math.min(learning.length, Math.ceil(room * CONFIG.LEARNING_SHARE)));
+  const taken = new Set(first.map((w) => w.id));
+  const rest = drawFrom(met.filter((x) => !taken.has(x.word.id)), room - first.length);
+
+  return fresh.concat(first, rest);
 }
 
 /* ---------------------------------------------------------------

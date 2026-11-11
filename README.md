@@ -556,6 +556,15 @@ picked up most days without punishing a few days off. The floor keeps even a
 mastered word seen five minutes ago in the draw, so rounds do not collapse
 onto the same dozen words. A word never seen counts as maximally overdue.
 
+Words still being learnt, below level 4, get first call on half of a round's
+review places (`LEARNING_SHARE`); the other half is drawn by weight from
+everything. By weight alone a round a month in was mostly settled words, the
+ones on the way up crept, and since they are what holds the new-word
+allowance shut, new words all but stopped. Simulated at two rounds a day and
+75% right, sixty days went from about 110 words you can produce to about 190.
+The cost is that settled words climb to the cloze band more slowly, which
+matters less now that Sentences, Write it and Listen do that job.
+
 There are no fixed due dates in v1, as the brief asks.
 
 ### Answer checking
@@ -1117,6 +1126,35 @@ a third-person s and a two-verb table for be and have. The preterite would
 need English past tenses, which are irregular in their own right, and the
 subjunctive has no clean English at all, so both fall back to naming the
 person instead.
+
+### The start screen and the tabs
+
+The start screen is in the order you would use it. Today's session is first,
+because it is the thing to press most days. Under it, "Or practise one
+thing": the six modes, the filter row, a line saying what the choice comes to,
+and Start a round. On a phone the modes are names only, three across, and
+the one picked is described above its button; six descriptions were a
+screenful before anything could be started.
+
+There are five tabs, and on a phone they sit in a row of their own under the
+fox, all showing. They used to be a strip that scrolled sideways, which hid
+Lessons and Progress behind a swipe nothing told you to make. Manage is no
+longer a tab: adding and editing words is housekeeping, so it is **Add or
+edit words** in the menu. Its table shows the first forty words with a button
+for the rest; rendering all 1115 rows made the page eighty thousand pixels
+tall.
+
+The sync panel for your own server is folded until it is set up.
+
+### Saying it
+
+On a card that wants Spanish, a microphone key sits at the end of the accent
+keys, where the browser can listen (Chrome and Safari; not Firefox). What it
+hears goes into the box and is not submitted, because recognisers mishear:
+read it, fix it, press Check. It asks for Colombian Spanish and falls back to
+the nearest the browser has. The audio goes to whoever makes the browser, not
+to this app, and the menu says so. `tests/test-mic.mjs` checks all of that
+against a stand-in recogniser; no test can say how well a phone hears you.
 
 ### One screen on a phone
 

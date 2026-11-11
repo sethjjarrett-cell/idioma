@@ -83,7 +83,9 @@ const CODE = 'bcdfghjkmnpqrstvwxyz00';
 console.log('\n--- the panel with nothing set up ---');
 const phone = await device('phone');
 await phone.click('#btn-menu'); await phone.waitForTimeout(200);
-console.log('panel shown        :', await phone.isVisible('.sync'));
+console.log('panel shown        :', await phone.isVisible('#sync-panel'));
+console.log('and folded until it is set up:', !(await phone.isVisible('#btn-sync-now')));
+await phone.click('#sync-panel summary'); await phone.waitForTimeout(150);
 console.log('state says         :', (await phone.textContent('#sync-state')).trim());
 await phone.click('#btn-sync-now'); await phone.waitForTimeout(300);
 console.log('sync now with no url is refused, not a crash:',
@@ -129,7 +131,7 @@ await syncNow(laptop);
 console.log('laptop took the drop:', await levelOf(laptop, 'mesa'), '(want 3, not 8)');
 
 console.log('\n--- a word added on the laptop reaches the phone ---');
-await laptop.click('.tab[data-screen="manage"]'); await laptop.waitForTimeout(300);
+await laptop.click('#btn-menu'); await laptop.click('#btn-manage'); await laptop.waitForTimeout(300);
 await laptop.fill('#nw-es', 'chévere');
 await laptop.fill('#nw-en', 'cool, great');
 await laptop.click('#add-word button[type="submit"]'); await laptop.waitForTimeout(300);

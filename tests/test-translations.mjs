@@ -73,6 +73,18 @@ const REVIEWED = new Set([
   'recibo:recibo',    // a receipt, not "I receive"
   'baile:baile',      // a dance, not the subjunctive of bailar
   'saco:saco',        // a jumper, not "I take out"
+  // The second word list, read on the same terms: each uses the sense it is
+  // filed under, and the verb form is a coincidence.
+  'casa:casa',        // the house, not "he marries"
+  'almuerzo:almuerzo',// lunch, not "I have lunch"
+  'cuenta:cuenta',    // the bill, not "she counts"
+  'rio:rio',          // the river, not "I laugh"
+  'juego:juego',      // the game, not "I play"
+  'caso:caso',        // the case, not "I marry"
+  'recuerdo:recuerdo',// a memory, not "I remember"
+  'hacia:hacia',      // towards, not hacía, "was doing"
+  'ducha:ducha',      // the shower, not "he showers"
+  'vuelo:vuelo',      // the flight, not "I fly"
 ]);
 
 const verbForm = new Map();

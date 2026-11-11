@@ -326,5 +326,28 @@ ok('switching back restores every number',
   && E.CONFIG.SENTENCE_MAX_NEW === 3 && E.CONFIG.STICKY_LAPSES === 3,
   'a pace that only sets some of them would leave the others stuck');
 
+console.log('--- words still being learnt get half the review places ---');
+{
+  // Five on the way up among sixty long settled: by weight alone a round of
+  // ten would take about one of the five.
+  const book = {};
+  const ws = SEED.vocabulary.slice(0, 65);
+  ws.forEach((w, i) => { book[w.id] = { ...E.freshProgress(), timesSeen: 9, lastSeen: NOW,
+    level: i < 5 ? 2 : 9 }; });
+  const pfx = (id) => book[id];
+  let low = 0, least = 99;
+  for (let i = 0; i < 40; i++) {
+    const r = E.pickRound(ws, pfx, NOW, 10, { maxNew: 0 });
+    const n = r.filter((w) => book[w.id].level < E.CONFIG.SETTLED_LEVEL).length;
+    low += n; least = Math.min(least, n);
+    if (r.length !== 10 || new Set(r.map((w) => w.id)).size !== 10) least = -1;
+  }
+  ok('all five are in every round of ten, and nothing is drawn twice', least === 5, `least ${least}`);
+  // With nothing settling, the round is drawn as it always was.
+  ws.forEach((w) => { book[w.id].level = 9; });
+  ok('with none on the way up the round is still full',
+    E.pickRound(ws, pfx, NOW, 10, { maxNew: 0 }).length === 10);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
