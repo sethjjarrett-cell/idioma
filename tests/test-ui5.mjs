@@ -19,8 +19,13 @@ console.log('meaning shown       :', (await p.textContent('#teach-meaning')).tri
 console.log('example shown       :', await p.isVisible('#teach-example'));
 console.log('example sentence    :', (await p.textContent('#teach-es')).trim());
 console.log('and its translation :', (await p.textContent('#teach-en')).trim());
-console.log('the word is picked out of it:', await p.locator('#teach-es b').count() === 1,
-  '->', (await p.locator('#teach-es b').textContent().catch(() => '')).trim());
+/* At least once, and only the word itself. Exactly once was wrong: ser's
+   examples include "¿Ser o no ser?", which rightly marks it twice, so the
+   check failed whenever that sentence was the one drawn. */
+const marks = (await p.locator('#teach-es b').allTextContents()).map((t) => t.trim());
+console.log('the word is picked out of it:', marks.length >= 1
+  && await p.evaluate((m) => { const want = new Set(window.Idioma.Engine.tokenise(window.__card.example.target));
+    return m.every((t) => want.has(window.Idioma.Engine.wordToken(t))); }, marks), '->', marks.join(', '));
 console.log('nothing to type     :', await p.isHidden('#answer-form'));
 console.log('one button, Got it  :', await p.isVisible('#btn-got'));
 
@@ -69,11 +74,13 @@ while (await p.isVisible('#card') && cards2 < 20) {
 }
 console.log('second round introduced', intros2, 'new words of', cards2, '(cap is 5)');
 
-console.log('\n--- with the setting off ---');
+console.log('\n--- on Brisk, which is the one switch for it now ---');
 await p.click('#btn-menu'); await p.waitForTimeout(150);
-await p.uncheck('#set-introduce'); await p.waitForTimeout(150);
+console.log('no separate checkbox           :', await p.locator('#set-introduce').count() === 0);
+await p.click('#set-pace .pill[data-pace="brisk"]'); await p.waitForTimeout(150);
 await p.click('#btn-menu');
-await p.click('#btn-again'); await p.waitForTimeout(300);
+// Changing pace ends the round in hand, so it is a fresh start, not Another round.
+await p.click('#btn-start'); await p.waitForTimeout(300);
 console.log('new words go straight to a test:', await p.evaluate(() => !!window.__card.intro) === false);
 console.log('the box is back                :', await p.isVisible('#answer-form'));
 

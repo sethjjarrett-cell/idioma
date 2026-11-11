@@ -122,7 +122,6 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.screen === name));
     if (name === "manage") renderBank();
     if (name === "progress") renderProgress();
-    if (name === "topics") renderTopics();
     if (name === "lessons") renderLessons();
     if (name === "course") renderCourse(); else stopRetell();
   }
@@ -409,9 +408,6 @@
       b.classList.toggle("on", b.dataset.pace === paceName());
     });
     $("pace-blurb").textContent = pace.blurb;
-    /* Brisk turns the teaching card off, and the checkbox that also turns it
-       off would otherwise sit there ticked and lying. */
-    $("set-introduce").disabled = Engine.CONFIG.INTRODUCE_UNTIL_SEEN === 0;
   }
 
   $("set-pace").addEventListener("click", (e) => {
@@ -430,7 +426,6 @@
   function refreshMenu() {
     $("set-dark").checked = loadTheme() === "dark";
     $("set-typo").checked = !!state.settings.typoTolerance;
-    $("set-introduce").checked = state.settings.introduceNew !== false;
     $("set-audio").checked = Speech.supported && audio.auto;
     $("set-audio").disabled = !Speech.supported;
     $("audio-blurb").textContent = !Speech.supported
@@ -440,6 +435,7 @@
       : `when Spanish appears on a card, and with each answer; this device only${Speech.voiceName() ? ` · ${Speech.voiceName()}` : ""}. No sound? Check the volume and the silent switch`;
     $("set-round").value = state.settings.roundSize;
     applyPace();
+    drawClockSetting();
     drawSync();
     drawGoogle();
     $("saved-at").textContent = state.savedAt
@@ -486,13 +482,65 @@
       : "Typo tolerance off.");
   });
 
-  $("set-introduce").addEventListener("change", (e) => {
-    state.settings.introduceNew = e.target.checked;
+  /* Against the clock.
+
+     Knowing a word given time to think is not the same as having it when
+     somebody is waiting for an answer, which is the only time it matters. So
+     a word or verb card can be timed: a bar drains, and when it is empty
+     whatever is in the box is checked as it stands, so an empty box is a
+     miss. Off by default. Only for single words and verb endings: a whole
+     sentence on eight seconds would be a typing test, and the teaching card
+     is for reading, not racing. */
+  const CLOCK_TEXT = {
+    0: "Take as long as you like.",
+    15: "Fifteen seconds a word or verb, then it is checked as it stands. A good place to start.",
+    8: "Eight seconds: about as long as anyone waits for an answer in a conversation.",
+  };
+  const clockSeconds = () => ([0, 8, 15].includes(Number(state.settings.clock)) ? Number(state.settings.clock) : 0);
+  function drawClockSetting() {
+    document.querySelectorAll("#set-clock .pill").forEach((b) => {
+      b.classList.toggle("on", Number(b.dataset.clock) === clockSeconds());
+    });
+    $("clock-blurb").textContent = CLOCK_TEXT[clockSeconds()];
+  }
+  $("set-clock").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    state.settings.clock = Number(pill.dataset.clock);
     commit();
-    toast(e.target.checked
-      ? "New words will be shown once before they are tested."
-      : "New words go straight to being tested.");
+    drawClockSetting();
   });
+
+  let clockTimer = null, lateTimer = null;
+  const TIMED_BANDS = new Set(["recognition", "production", "cloze"]);
+  const isTimed = (c) => !!c && !c.intro && !c.isSentence && !c.isWrite && !c.listen && !c.grammar
+    && (!!c.drill || TIMED_BANDS.has(c.band.key));
+
+  function stopClock() {
+    clearTimeout(clockTimer); clearTimeout(lateTimer);
+    clockTimer = lateTimer = null;
+    const el = $("clock");
+    el.hidden = true;
+    el.classList.remove("run", "late");
+  }
+
+  function startClock() {
+    stopClock();
+    const secs = clockSeconds();
+    if (!secs || !isTimed(card) || $("answer-form").hidden) return;
+    const el = $("clock"), fill = $("clock-fill");
+    el.hidden = false;
+    fill.style.transitionDuration = "0s";
+    void fill.offsetWidth;                  // start from full every time
+    fill.style.transitionDuration = `${secs}s`;
+    el.classList.add("run");
+    lateTimer = setTimeout(() => el.classList.add("late"), secs * 750);
+    clockTimer = setTimeout(() => {
+      clockTimer = null;
+      if (!card || !$("verdict").hidden || retypes) return;
+      grade($("answer").value);
+    }, secs * 1000);
+  }
 
   $("set-round").addEventListener("change", (e) => {
     const n = Math.max(1, Math.min(100, Number(e.target.value) || Engine.CONFIG.ROUND_SIZE));
@@ -1004,7 +1052,7 @@
         : `${enabled.length} words, none met yet. `)
       + (allowance
         ? `Up to ${allowance} new ${allowance === 1 ? "word" : "words"} this round, commonest first`
-          + (state.settings.introduceNew === false ? ", tested straight away." : ".")
+          + (Engine.CONFIG.INTRODUCE_UNTIL_SEEN === 0 ? ", tested straight away." : ".")
         : `No new words this round: get a few of those to the point where you can type them from memory and more will come.`);
   }
 
@@ -1284,6 +1332,7 @@
   });
 
   function resetPracticeView() {
+    stopClock();
     closeGloss();
     pickersOpen = false;
     $("card").hidden = true;
@@ -1682,8 +1731,12 @@
             (id) => prog(id), Engine.CONFIG.TILE_DISTRACTORS),
         })
       : Engine.buildCard(item, prog(item.id), sentencesFor, {
-          // A second look asks; it does not teach the word all over again.
-          introduce: !round.review && state.settings.introduceNew !== false,
+          /* A second look asks; it does not teach the word all over again.
+             Whether new words are shown first at all is Pace's business
+             (Brisk turns it off). There used to be a checkbox for it as
+             well, two controls for one thing; the old setting is still in
+             saved state and simply no longer read. */
+          introduce: !round.review,
         });
     lastResult = null;
     cardBefore = practiceOnly() ? null : JSON.parse(JSON.stringify(cardProgress(card)));
@@ -1747,6 +1800,7 @@
     $("card").classList.remove("correct", "almost", "wrong");
     $("card").hidden = false;
     drawPickerSummary();
+    startClock();
     $("round-count").textContent = `${round.index + 1} / ${round.queue.length}`;
     $("round-fill").style.width = `${(round.index / round.queue.length) * 100}%`;
     (card.intro ? $("btn-got")
@@ -2078,6 +2132,7 @@
   const renderDiff = (ops) => ops.map((o) => (DIFF[o.op] || DIFF.same)(o)).join(" ");
 
   function applyAndShow(res, typed) {
+    stopClock();
     const id = card.word.id;
     let outcome = res.correct ? "correct" : res.almost ? "almost" : "wrong";
     // A second go can only improve the card. Someone who stops to fix a
@@ -2348,6 +2403,7 @@
   });
 
   function endRound() {
+    stopClock();
     $("card").hidden = true;
     $("round-bar").hidden = true;
     $("round-fill").style.width = "100%";
@@ -2599,8 +2655,8 @@
     const streak = streakText();
     $("today-blurb").textContent = done
       ? `Done for today. ${streak} Going again is extra practice and counts the same.`
-      : `Words that are due and a few new ones, then ${TODAY_GRAMMAR} grammar questions leaning on your weak spots, `
-        + `then sentences with the words you have. About fifteen minutes.${streak ? ` ${streak} Keep it going.` : ""}`;
+      : `Your words, then ${TODAY_GRAMMAR} grammar questions on your weak spots, then sentences. `
+        + `About fifteen minutes.${streak ? ` ${streak} Keep it going.` : ""}`;
   }
 
   /* At the end of each round of the session: where you are, and the button
@@ -2697,6 +2753,7 @@
     $("course-list").hidden = !!u;
     $("unit-view").hidden = !u;
     if (u) { renderUnit(u); return; }
+    renderTopics();
     const next = currentUnit();
     $("units").innerHTML = UNITS.map((x, i) => `
       <button class="pane unit-card${x === next ? " next" : ""}" type="button" data-unit="${esc(x.id)}">
@@ -3019,52 +3076,19 @@
     const extras = new Set(words().map((w) => topicOf(w)).filter((t) => t && !known.has(t)));
     const all = TOPICS.concat([...extras].map((id) => ({ id, name: id, blurb: "Added here.", words: [] })));
 
+    /* One line each: the name, how many of its words you have met, and the
+       button. The bars and the word tables made this a 4,800px page; the word
+       bank in the menu still lists every word. */
     $("topic-list").innerHTML = all.map((t) => {
       const pool = wordsInTopic(t.id);
       if (!pool.length) return "";
-      const bands = { recognition: 0, production: 0, cloze: 0 };
-      let seen = 0;
-      for (const w of pool) {
-        const pr = prog(w.id);
-        // A word never met sits at level 1, which is the recognition band,
-        // and counting it there drew a full bar on a topic nobody had opened.
-        if (!pr.timesSeen) continue;
-        bands[Engine.bandForLevel(pr.level).key] += 1;
-        seen += 1;
-      }
-      const rows = pool
-        .slice()
-        .sort((a, b) => a.es.localeCompare(b.es, "es"))
-        .map((w) => {
-          const say = Pronounce.isTricky(w.es) ? Pronounce.respell(w.es) : "";
-          return `<tr>
-            <td class="es">${esc(w.es)}</td>
-            <td class="small">${esc(w.en.join(", "))}</td>
-            <td class="say-cell small">${esc(say)}</td>
-            <td class="lvl">${prog(w.id).level}</td>
-          </tr>`;
-        }).join("");
-
+      const seen = pool.filter((w) => prog(w.id).timesSeen).length;
       return `
-        <div class="pane topic" data-topic="${esc(t.id)}">
-          <div class="pane-head">
-            <h2>${esc(t.name)}</h2>
-            <span class="count-chip">${seen} / ${pool.length} seen</span>
-            <button class="btn primary" data-act="practise-topic">Practise</button>
-          </div>
-          <p class="muted small blurb">${esc(t.blurb)}</p>
-          <div class="topic-bar" title="${bands.recognition} recognition, ${bands.production} production, ${bands.cloze} cloze">
-            <i class="b1" style="width:${(bands.recognition / pool.length) * 100}%"></i>
-            <i class="b2" style="width:${(bands.production / pool.length) * 100}%"></i>
-            <i class="b3" style="width:${(bands.cloze / pool.length) * 100}%"></i>
-          </div>
-          <details class="lesson">
-            <summary>The ${pool.length} words<span class="muted small">${
-              bands.production + bands.cloze} past recognition</span></summary>
-            <div class="table-wrap">
-              <table class="bank"><tbody>${rows}</tbody></table>
-            </div>
-          </details>
+        <div class="topic" data-topic="${esc(t.id)}">
+          <div class="topic-name"><h3>${esc(t.name)}</h3>
+            <span class="muted small">${esc(t.blurb)}</span></div>
+          <span class="count-chip">${seen} / ${pool.length}</span>
+          <button class="btn" data-act="practise-topic">Practise</button>
         </div>`;
     }).join("");
   }

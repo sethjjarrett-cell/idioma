@@ -287,9 +287,13 @@ and time, describing things, everyday verbs, little words, people and family,
 body and health, numbers and amounts, travel and transport, work and study,
 weather and nature, feelings. Eighteen of them, each with between five and
 sixty-odd words.
-The Topics screen shows each one with how far through it you are and a button
-that runs a round drawn from that topic alone. Nothing else changes: same
-levels, same bands, same selection weighting, smaller pool.
+They live at the foot of the Course tab, folded, under **Words by topic**:
+one line each with how many of its words you have met and a button that runs
+a round drawn from that topic alone. Nothing else changes: same levels, same
+bands, same selection weighting, smaller pool. Topics used to be a tab of its
+own, 4,800 pixels of bars and word tables, and it overlapped with the Course,
+which also groups words by situation and does more with them. A topic round
+is a warm-up before a unit or a trip, not somewhere to go.
 
 The filing is kept out of `seed.js` deliberately. That file is the supplied
 bank, verbatim, and a word's topic is a judgement rather than a fact about the
@@ -489,8 +493,14 @@ save from before Write it loading with its progress intact.
 
 ## The course
 
-The Course tab holds units built round real situations: meeting people,
-food and drink, getting around, shopping and paying, your day and plans.
+The Course tab holds ten units built round real situations. The first five
+are the basics: meeting people, food and drink, getting around, shopping and
+paying, your day and plans. Six to ten lean towards everyday conversation and
+travel: your weekend (the Monday-morning chat, and the first use of the past
+tense), somewhere to stay, between cities by bus, feeling unwell at the
+chemist's, and likes and family. Every conversation is at least 95% words the
+bank already has; the only words outside it are *primer* (as in *primer
+piso*, which in Colombia is the ground floor), *pesos* and *colombiana*.
 Each runs the four kinds of practice the research on language learning keeps
 coming back to:
 
@@ -1136,15 +1146,29 @@ and Start a round. On a phone the modes are names only, three across, and
 the one picked is described above its button; six descriptions were a
 screenful before anything could be started.
 
-There are five tabs, and on a phone they sit in a row of their own under the
-fox, all showing. They used to be a strip that scrolled sideways, which hid
+There are four tabs, Practice, Course, Lessons and Progress, and on a phone
+they sit in a row of their own under the fox, all showing. They used to be a strip that scrolled sideways, which hid
 Lessons and Progress behind a swipe nothing told you to make. Manage is no
 longer a tab: adding and editing words is housekeeping, so it is **Add or
 edit words** in the menu. Its table shows the first forty words with a button
 for the rest; rendering all 1115 rows made the page eighty thousand pixels
 tall.
 
-The sync panel for your own server is folded until it is set up.
+The sync panel for your own server is folded until it is set up. The filter
+row under the modes is one line that scrolls sideways on a phone rather than
+three rows of pills, so the whole start screen fits without scrolling.
+
+### Against the clock
+
+A menu setting, Off, 15 s or 8 s, off by default. When it is on, a word or
+verb card has a bar that drains, and when it is empty whatever is in the box
+is checked as it stands; an empty box is a miss. Knowing a word given time to
+think is not the same as having it while somebody waits for an answer, and
+the second is the one conversation needs. It is only on single words and
+verb endings: not teaching cards, which are for reading, and not sentences,
+Write it or Listen, where eight seconds would be a typing test. The setting
+is `settings.clock`, and a save from before it loads with it off.
+`tests/test-clock.mjs` checks it.
 
 ### Saying it
 
@@ -1268,6 +1292,11 @@ Gentle is three new words and twelve on the go. Steady is five and twenty, and
 is exactly the numbers that were hard-coded before the setting existed, so the
 default changes nothing. Brisk is ten and forty, shows nothing before asking
 it, and sends a sentence to typing after one correct answer.
+
+There used to be a "Show new words first" checkbox as well, which did one of
+Pace's six jobs by another route and could contradict it. It is gone; Brisk
+is the way to skip the teaching card. The old setting stays in saved state,
+unread, so nothing that loads it breaks.
 
 Three positions rather than six sliders, because six sliders is a way of
 asking the learner to do the tuning. It is applied by writing into `CONFIG`

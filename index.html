@@ -158,7 +158,6 @@
   <nav class="tabs" id="tabs">
     <button class="tab on" data-screen="practice">Practice</button>
     <button class="tab" data-screen="course">Course</button>
-    <button class="tab" data-screen="topics">Topics</button>
     <button class="tab" data-screen="lessons">Lessons</button>
     <button class="tab" data-screen="progress">Progress</button>
   </nav>
@@ -221,10 +220,6 @@
   <p class="muted small" id="mic-note" hidden>The microphone key on a card uses your browser's own
     speech recognition, so what you say goes to whoever makes the browser, not to this app.
     Nothing is sent unless you press it.</p>
-  <label class="toggle">
-    <input type="checkbox" id="set-introduce">
-    <span>Show new words first <em>the first time a word comes up it is shown, not tested</em></span>
-  </label>
   <div class="field inline">
     <span>Pace</span>
     <div class="pills" id="set-pace">
@@ -234,6 +229,16 @@
     </div>
   </div>
   <p class="muted small" id="pace-blurb"></p>
+  <!-- Against the clock: conversation does not wait while you think. -->
+  <div class="field inline">
+    <span>Against the clock</span>
+    <div class="pills" id="set-clock">
+      <button class="pill on" data-clock="0">Off</button>
+      <button class="pill" data-clock="15">15 s</button>
+      <button class="pill" data-clock="8">8 s</button>
+    </div>
+  </div>
+  <p class="muted small" id="clock-blurb"></p>
   <label class="field inline">
     <span>Cards per round</span>
     <input type="number" id="set-round" min="1" max="100" step="1">
@@ -390,6 +395,7 @@
       <div class="target" id="card-target" hidden></div>
       <p class="muted small" id="card-hint"></p>
       <p class="card-help small" id="card-help" hidden></p>
+      <div class="clock" id="clock" hidden><i id="clock-fill"></i></div>
 
       <!-- A listening card: nothing written, only something to hear. -->
       <div class="listen" id="listen" hidden>
@@ -548,24 +554,22 @@
     <div id="course-list">
       <div class="pane">
         <h2>The course</h2>
-        <p class="muted small">Units built round real situations. Each one: learn the words and the
-          sentence frames, read and listen to a conversation, write a few true sentences of your own,
-          then say it out loud against the clock. About fifteen to twenty minutes a unit.</p>
+        <p class="muted small">Ten units built round real situations: the basics first, then everyday
+          conversation and travel. Each one: learn the words and the sentence frames, read and listen to
+          a conversation, write a few true sentences of your own, then say it out loud against the clock.
+          About fifteen to twenty minutes a unit.</p>
       </div>
       <div id="units"></div>
+      <!-- What was the Topics tab. A words round from one topic is a quick
+           warm-up before a unit or a trip, not a destination of its own, so
+           it lives here, folded, under the units it overlaps with. -->
+      <details class="pane topics-fold" id="topics-fold">
+        <summary><b>Words by topic</b>
+          <span class="muted small">a quick words round from one topic, before a trip or a night out</span></summary>
+        <div id="topic-list"></div>
+      </details>
     </div>
     <div id="unit-view" hidden></div>
-  </section>
-
-  <!-- ============================= TOPICS ============================= -->
-  <section class="screen" id="screen-topics">
-    <div class="pane">
-      <h2>Practise one topic at a time</h2>
-      <p class="muted small">A words round drawn from one topic instead of the
-        whole bank: useful before a trip to the market or a night out. Levels
-        move exactly as they do anywhere else.</p>
-    </div>
-    <div id="topic-list"></div>
   </section>
 
   <!-- ============================ LESSONS ============================= -->

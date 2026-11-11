@@ -1,4 +1,4 @@
-/* The course: five units, each learn, read, make it yours, say it.
+/* The course: ten units, each learn, read, make it yours, say it.
 
    The data first: every word and grammar lesson a unit names is real, every
    frame and task is complete, and each conversation is made of words the
@@ -32,7 +32,8 @@ console.log('the data');
     const lessons = new Set(window.GRAMMAR.lessons.map((l) => l.id));
     const forms = Store.sentenceIndex(st).forms;
     // Names of people and places are not vocabulary.
-    const NAMES = new Set(['sam', 'laura', 'medellin', 'camila', 'jaja', 'uy']);
+    const NAMES = new Set(['sam', 'laura', 'medellin', 'camila', 'jaja', 'uy',
+      'andres', 'cartagena', 'bogota', 'salento', 'sofia', 'inglaterra', 'jones']);
     const out = { n: window.UNITS.length, badWords: [], badGrammar: [], shape: [], coverage: [], loose: [], dupIds: [] };
     const seen = new Set();
     for (const u of window.UNITS) {
@@ -58,7 +59,7 @@ console.log('the data');
     }
     return out;
   });
-  ok(`five units (${r.n}), each with its own id`, r.n === 5 && r.dupIds.length === 0);
+  ok(`ten units (${r.n}), each with its own id`, r.n === 10 && r.dupIds.length === 0);
   ok('every unit word is in the bank', r.badWords.length === 0, r.badWords.join(', '));
   ok('every grammar lesson is real', r.badGrammar.length === 0, r.badGrammar.join(', '));
   ok('every unit, frame and task is complete, and every model passes its check', r.shape.length === 0, r.shape.join(' | '));
@@ -94,7 +95,7 @@ console.log('the course screen');
 {
   const { c, p } = await page();
   await p.click('.tab[data-screen="course"]'); await p.waitForTimeout(80);
-  ok('lists the five units, the first up next', (await p.$$('#units .unit-card')).length === 5
+  ok('lists the ten units, the first up next', (await p.$$('#units .unit-card')).length === 10
     && /up next/.test(await p.textContent('[data-unit="u1"]')));
   await p.click('[data-unit="u2"]'); await p.waitForTimeout(80);
   ok('opening one shows it in place of the list', await p.isHidden('#course-list') && await p.isVisible('#unit-view')
@@ -197,7 +198,7 @@ console.log('a save from before the course');
   ok('progress and hooks are kept, units start empty', st.progress.mesa.level === 6 && st.hooks.mesa.text === 'a table'
     && JSON.stringify(st.units) === '{}');
   await q.click('.tab[data-screen="course"]');
-  ok('and the course draws', (await q.$$('#units .unit-card')).length === 5);
+  ok('and the course draws', (await q.$$('#units .unit-card')).length === 10);
   await q.evaluate(() => { const s = JSON.parse(localStorage.getItem('idioma.state.v1')); s.units = { u1: { read: 'x', write: { name: { text: 'hola', at: 'y' }, bad: 3 } }, u2: 'broken' }; localStorage.setItem('idioma.state.v1', JSON.stringify(s)); });
   await q.close({ runBeforeUnload: false });
   const { p: r } = await page(ctx);

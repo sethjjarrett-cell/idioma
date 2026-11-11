@@ -41,6 +41,7 @@ function defaultState() {
       pos: "all",                    // which kind of word a words round draws
       subject: "all",                // what a sentences round is about
       writeLevel: "basic",           // basic, medium, hard or mixed, for Write it
+      clock: 0,                      // seconds per word or verb card; 0 is off
     },
     progress: {},
     /* Sentences keep their own book. Same shape, same level machinery, but a

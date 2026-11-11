@@ -26,10 +26,14 @@ console.log('tabs:', (await p.$$eval('.tab', ns => ns.map(n => n.textContent.tri
 
 // --- topics ----------------------------------------------------------
 await seedMetWords(p);
-await p.click('.tab[data-screen="topics"]');
+// Topics live under the course now, folded.
+await p.click('.tab[data-screen="course"]');
 await p.waitForTimeout(300);
+console.log('no Topics tab any more:', await p.locator('.tab[data-screen="topics"]').count() === 0);
+await p.click('#topics-fold summary');
+await p.waitForTimeout(150);
 const topics = await p.$$eval('.topic', ns => ns.map(n => ({
-  name: n.querySelector('h2').textContent.trim(),
+  name: n.querySelector('h3').textContent.trim(),
   count: n.querySelector('.count-chip').textContent.trim(),
 })));
 console.log('\n--- topics ---');
@@ -38,7 +42,8 @@ topics.forEach(t => console.log('  ', t.name.padEnd(22), t.count));
 const totalFiled = await p.evaluate(() =>
   window.TOPICS.reduce((a, t) => a + t.words.length, 0));
 console.log('words filed across topics:', totalFiled, '(bank is', await p.evaluate(() => SEED.vocabulary.length) + ')');
-console.log('word list has pronunciation column:', await p.locator('.topic .say-cell').count() > 0);
+console.log('one line each, not a page each:',
+  await p.evaluate(() => [...document.querySelectorAll('.topic')].every((n) => n.getBoundingClientRect().height < 120)));
 
 // practise one topic and check the pool really is limited to it
 const first = p.locator('.topic').first();

@@ -202,8 +202,8 @@ console.log('steady by default:', await p.$eval('#set-pace .pill.on', e => e.tex
 await p.click('#set-pace .pill[data-pace="brisk"]'); await p.waitForTimeout(200);
 console.log('the engine takes it:',
   await p.evaluate(() => window.Idioma.Engine.CONFIG.MAX_NEW_PER_ROUND) === 10);
-console.log('the teaching checkbox stops lying about itself:',
-  await p.isDisabled('#set-introduce'));
+console.log('brisk turns teaching off, with no checkbox left to contradict it:',
+  await p.locator('#set-introduce').count() === 0 && await p.evaluate(() => window.Idioma.Engine.CONFIG.INTRODUCE_UNTIL_SEEN) === 0);
 await p.reload(); await p.waitForTimeout(400);
 console.log('it survives a reload:',
   await p.evaluate(() => window.Idioma.Engine.CONFIG.MAX_NEW_PER_ROUND) === 10);
