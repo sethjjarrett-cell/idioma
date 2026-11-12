@@ -1298,8 +1298,9 @@
       label = "Level";
       attr = "writeLevel";
       current = writeLevelName();
-      options = writeLevels().map((l) => ({ id: l.id, name: l.name, n: writeItems(l.id).length }))
-        .concat([{ id: "mixed", name: "Mixed" }]);
+      // Your words, then Mixed, then the levels one at a time.
+      const lv = writeLevels().map((l) => ({ id: l.id, name: l.name, n: writeItems(l.id).length }));
+      options = [lv[0], { id: "mixed", name: "Mixed", n: writeItems("mixed").length }].concat(lv.slice(1));
     } else if (showGrammar) {
       label = "Topic";
       attr = "grammar";
@@ -1550,7 +1551,7 @@
   const WRITING = window.WRITING || { levels: [], items: [] };
   const writeLevelName = () => {
     const v = state.settings.writeLevel;
-    return v === "mixed" || writeLevels().some((l) => l.id === v) ? v : "basic";
+    return v === "mixed" || writeLevels().some((l) => l.id === v) ? v : "mixed";
   };
 
   /* Your words: every sentence in the bank, about a thousand, offered once
@@ -1599,7 +1600,18 @@
         : "Nothing to write at this level.", true);
       return;
     }
-    const order = new Map(pool.map((x, i) => [x.id, i]));
+    /* Which new sentence comes first. Within a level, hand-written and
+       patterned take turns; across levels on Mixed, Basic and Medium take
+       turns and Hard joins a little behind. Mixed used to mean forty Basic
+       sentences before anything else. */
+    const LEVEL_START = { basic: 0, medium: 1, hard: 3, mine: 0 };
+    const counters = {};
+    const order = new Map(pool.map((x) => {
+      const k = `${x.level}:${x.generated ? 1 : 0}`;
+      counters[k] = (counters[k] || 0) + 1;
+      const within = counters[k] * 2 + (x.generated ? 1 : 0);
+      return [x.id, within * 2 + (LEVEL_START[x.level] || 0)];
+    }));
     const size = Engine.CONFIG.WRITE_ROUND_SIZE;
     let queue = Engine.pickSentenceRound(pool, (id) => Store.peekWriting(state, id), new Date().toISOString(), size, {
       maxNew: Engine.CONFIG.WRITE_MAX_NEW,

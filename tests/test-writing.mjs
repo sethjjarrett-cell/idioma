@@ -35,10 +35,11 @@ console.log('the data');
     const NAMES = new Set(['sam', 'bogota', 'medellin', 'cali', 'cartagena', 'andres']);
     const levels = new Set(W.levels.map((l) => l.id));
     const ids = new Set(), dup = [], shape = [], loose = [], same = [];
-    const per = {};
+    const per = {}, hand = {};
     for (const x of W.items) {
       if (ids.has(x.id)) dup.push(x.id); ids.add(x.id);
       per[x.level] = (per[x.level] || 0) + 1;
+      if (!x.generated) hand[x.level] = (hand[x.level] || 0) + 1;
       if (!levels.has(x.level) || !x.context || !x.en || !x.es) shape.push(x.id);
       for (const a of x.alt || []) if (E.normalise(a) === E.normalise(x.es)) same.push(x.id);
       const own = new Set((x.help || []).map(([es]) => E.wordToken(es)));
@@ -49,9 +50,10 @@ console.log('the data');
     }
     // Basic is short; medium and hard differ more in grammar than in length.
     const avg = (lvl) => { const xs = W.items.filter((x) => x.level === lvl); return xs.reduce((n, x) => n + E.tokenise(x.es).length, 0) / xs.length; };
-    return { per, dup, shape, loose, same, avg: [avg('basic'), avg('medium'), avg('hard')] };
+    return { per, hand, dup, shape, loose, same, avg: [avg('basic'), avg('medium'), avg('hard')] };
   });
-  ok('three levels, forty sentences each', JSON.stringify(r.per) === '{"basic":40,"medium":40,"hard":40}', JSON.stringify(r.per));
+  ok('three levels, forty hand-written sentences each', JSON.stringify(r.hand) === '{"basic":40,"medium":40,"hard":40}', JSON.stringify(r.hand));
+  ok(`and patterned ones on top in every level (${JSON.stringify(r.per)})`, r.per.basic > 100 && r.per.medium > 200 && r.per.hard > 60);
   ok('ids are unique, and every item has a level, a context, English and Spanish', !r.dup.length && !r.shape.length, r.dup.concat(r.shape).join(', '));
   ok('no alternative is the answer again', !r.same.length, r.same.join(', '));
   ok('every word is in the bank or glossed in the item', !r.loose.length, r.loose.join(' | '));
@@ -63,9 +65,10 @@ console.log('a round');
 {
   const { c, p } = await page();
   await p.click('#modes [data-mode="write"]');
-  ok('a mode of its own, with the levels as pills, Basic first', await p.isVisible('#filters')
+  ok('a mode of its own, with the levels as pills, Mixed by default', await p.isVisible('#filters')
     && (await p.textContent('#filter-label')) === 'Level'
-    && (await p.textContent('#filter-pills .pill.on')).startsWith('Basic'));
+    && (await p.textContent('#filter-pills .pill.on')).startsWith('Mixed'));
+  await p.click('#filter-pills [data-value="basic"]');
   ok('the start screen says what it is', /typed out/.test(await p.textContent('#start-blurb')));
   await p.click('#btn-start'); await p.waitForTimeout(100);
   const r = await p.evaluate(() => ({ write: window.Idioma.round.write, n: window.Idioma.round.queue.length,
@@ -148,7 +151,7 @@ console.log('levels and old saves');
   const { p: q } = await page(ctx);
   const st = await q.evaluate(() => window.Idioma.state);
   ok('a save from before Write it keeps its progress', st.progress.mesa.level === 6 && st.phrases.p001.level === 3 && st.settings.mode === 'sentences');
-  ok('and starts with an empty book on Basic', JSON.stringify(st.writing) === '{}' && st.settings.writeLevel === 'basic');
+  ok('and starts with an empty book on Mixed', JSON.stringify(st.writing) === '{}' && st.settings.writeLevel === 'mixed');
   await q.evaluate(() => { const s = JSON.parse(localStorage.getItem('idioma.state.v1')); s.writing = { wb01: { level: 4 }, wb02: 'broken' }; localStorage.setItem('idioma.state.v1', JSON.stringify(s)); });
   await q.close({ runBeforeUnload: false });
   const { p: r } = await page(ctx);

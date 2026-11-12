@@ -40,7 +40,7 @@ function defaultState() {
       tense: "present",              // which tense the verb drill asks about
       pos: "all",                    // which kind of word a words round draws
       subject: "all",                // what a sentences round is about
-      writeLevel: "basic",           // basic, medium, hard or mixed, for Write it
+      writeLevel: "mixed",           // mine, mixed, basic, medium or hard, for Write it
       clock: 0,                      // seconds per word or verb card; 0 is off
       writeHints: true,              // Might help on Write it cards
     },

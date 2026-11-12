@@ -497,6 +497,22 @@ everything else, so the ones you get wrong come back sooner.
 answer is in the bank or glossed, the marking, a round and its levels, and a
 save from before Write it loading with its progress intact.
 
+**Patterned sentences.** `variations.js` adds 380 more to Write it: 25
+everyday and travel patterns (go to the beach, wait for the bus, ask for the
+bill, look for a cheap hotel), each asked with every person and with the
+times that suit it. Present is Basic; the past, going to and have to are
+Medium; used to is Hard. Who it is and when is what changes the ending, so
+these drill verb endings inside a sentence you would say. The Spanish verb
+comes off the tables in `verbs.js`, only where they vouch for the form; the
+English verb is given with the pattern (go, goes, went). "You" accepts the
+usted form too, and a time phrase may come first or last.
+
+**Mixed is the default**, second in the row after Your words, and it no
+longer means forty Basic sentences first: Basic and Medium take turns, Hard
+joins a little behind, and hand-written and patterned take turns within each
+level. A save that already had a level picked keeps it. Five rounds of Mixed
+clicked through gave 48 different sentences in 50.
+
 **Rounds of sentences are varied.** Write it and Tap the words pick with
 `pickSentenceRound`, not the word picker. A sentence got right rests for
 twelve hours (`SENTENCE_REST_HOURS`), since asked again straight away it is
