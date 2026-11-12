@@ -349,5 +349,35 @@ console.log('--- words still being learnt get half the review places ---');
     E.pickRound(ws, pfx, NOW, 10, { maxNew: 0 }).length === 10);
 }
 
+console.log('--- a round of sentences is varied ---');
+{
+  // Ten sentences on "ir", ten on "comer", ten on other words, all new.
+  const pool = [];
+  for (let i = 0; i < 10; i++) pool.push({ id: 'i' + i, es: `ir ${i}`, k: ['ir'] });
+  for (let i = 0; i < 10; i++) pool.push({ id: 'c' + i, es: `comer ${i}`, k: ['comer'] });
+  for (let i = 0; i < 10; i++) pool.push({ id: 'o' + i, es: `otro ${i}`, k: ['w' + i] });
+  pool.push({ id: 'dup', es: 'otro 0', k: ['zz'] });
+  const book = {};
+  const pf = (id) => book[id] || E.freshProgress();
+  const opts = { maxNew: 10, keysOf: (x) => x.k, rankOf: (x) => pool.indexOf(x) };
+  const r = E.pickSentenceRound(pool, pf, NOW, 10, opts);
+  ok('the round is full', r.length === 10);
+  ok('no two sentences share a content word while there is a choice',
+    r.filter((x) => x.k[0] === 'ir').length === 1 && r.filter((x) => x.k[0] === 'comer').length === 1);
+  ok('and the same words under two ids never share a round', !(r.some((x) => x.id === 'o0') && r.some((x) => x.id === 'dup')));
+  // Everything answered right just now rests; one got wrong comes back.
+  for (const x of pool) book[x.id] = { ...E.freshProgress(), timesSeen: 1, level: 2, correctStreak: 1, lastSeen: NOW };
+  book.c3 = { ...book.c3, correctStreak: 0 };
+  const extra = { id: 'new1', es: 'nuevo', k: ['nuevo'] };
+  const r2 = E.pickSentenceRound(pool.concat(extra), pf, NOW, 3, opts);
+  ok('a sentence got right just now rests, and a miss and a new one come first',
+    r2.some((x) => x.id === 'c3') && r2.some((x) => x.id === 'new1'), r2.map((x) => x.id).join(','));
+  const later = new Date(Date.parse(NOW) + (E.CONFIG.SENTENCE_REST_HOURS + 1) * 3600e3).toISOString();
+  ok('and comes back once it has rested', E.pickSentenceRound(pool, pf, later, 10, opts).length === 10);
+  ok('a round words being learnt come first among new ones',
+    E.pickSentenceRound([{ id: 'a', es: 'a', k: ['a'] }, { id: 'b', es: 'b', k: ['b'] }], () => E.freshProgress(), NOW, 1,
+      { maxNew: 1, keysOf: (x) => x.k, rankOf: (x) => (x.id === 'a' ? 0 : 1), boostOf: (x) => (x.id === 'b' ? 1 : 0) })[0].id === 'b');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

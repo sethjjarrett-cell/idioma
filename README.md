@@ -497,6 +497,33 @@ everything else, so the ones you get wrong come back sooner.
 answer is in the bank or glossed, the marking, a round and its levels, and a
 save from before Write it loading with its progress intact.
 
+**Patterned sentences.** `variations.js` adds 380 more to Write it: 25
+everyday and travel patterns (go to the beach, wait for the bus, ask for the
+bill, look for a cheap hotel), each asked with every person and with the
+times that suit it. Present is Basic; the past, going to and have to are
+Medium; used to is Hard. Who it is and when is what changes the ending, so
+these drill verb endings inside a sentence you would say. The Spanish verb
+comes off the tables in `verbs.js`, only where they vouch for the form; the
+English verb is given with the pattern (go, goes, went). "You" accepts the
+usted form too, and a time phrase may come first or last.
+
+**Mixed is the default**, second in the row after Your words, and it no
+longer means forty Basic sentences first: Basic and Medium take turns, Hard
+joins a little behind, and hand-written and patterned take turns within each
+level. A save that already had a level picked keeps it. Five rounds of Mixed
+clicked through gave 48 different sentences in 50.
+
+**Rounds of sentences are varied.** Write it and Tap the words pick with
+`pickSentenceRound`, not the word picker. A sentence got right rests for
+twelve hours (`SENTENCE_REST_HOURS`), since asked again straight away it is
+remembered word for word rather than produced; one got wrong can come
+straight back. No two sentences in a round share a content word (a noun,
+verb, adjective or adverb), the same words under two ids never share a
+round, and new sentences using a word you are learning right now come first.
+Rounds are full from the start: ten for Write it. Simulated over six rounds
+in one sitting, repeats went from 20 cards in 44 to 4 in 60, and the old
+run of "Tengo que ir", "Tenemos que ir", "¿Puedo ir?" is gone.
+
 **Your words** is the first level, and the one that does not run out. It
 offers every sentence in the bank, 1,643 of them, once you have met the words
 for it, or all but one, which Might help then shows: about 250 after fifty
@@ -1286,6 +1313,17 @@ already tells those apart and a plain Correct would undo the distinction the
 tags exist to teach. `tests/test-equivalents.mjs` holds that line, along with
 the ones about not giving the prompt away and not waving a misspelling
 through.
+
+### Greetings that stand in for each other
+
+¿Qué tal?, ¿cómo estás?, ¿cómo está?, ¿qué más?, ¿cómo vas?, ¿cómo te va?
+and ¿cómo va todo? are one group (`INTERCHANGEABLE`, in `equivalents.js`).
+Any of them is right where another is asked: as a word, with the English
+glosses shared too, and as a whole question inside a sentence, so
+"Hola, ¿cómo estás?" is right for "Hola, ¿qué tal?". Only a whole question
+between ¿ and ? is swapped, so "¿Qué tal el viaje?" is left alone. They are
+the one exception to the rule that two bank words sharing a gloss are told
+apart by sense: as a greeting there is no sense to tell apart.
 
 ### When the list is wrong
 

@@ -128,3 +128,16 @@ window.EQUIVALENTS = {
   correr: { en: ["to go running"] },
   caminar: { en: ["to go on foot"] },
 };
+
+/* Questions that mean the same and can stand in for each other anywhere,
+   as a word on its own or as a whole question inside a sentence: type
+   ¿cómo estás? where the card has ¿qué tal? and it is right, and the same
+   in "Hola, ¿qué tal?". Only as a whole question, between ¿ and ?, so
+   "¿Qué tal el viaje?" is left alone: "¿cómo estás el viaje?" is not Spanish.
+
+   These are the one exception to the rule above. ¿Qué tal? and ¿cómo estás?
+   each have a bank entry, and still there is no sense to tell apart: as a
+   greeting, any of them is the right answer to "how are you?". */
+window.INTERCHANGEABLE = [
+  ["¿qué tal?", "¿cómo estás?", "¿cómo está?", "¿qué más?", "¿cómo vas?", "¿cómo te va?", "¿cómo va todo?"],
+];

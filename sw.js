@@ -35,6 +35,7 @@ const SHELL = [
   "writing.js",
   "grammar.js",
   "verbs.js",
+  "variations.js",
   "pronounce.js",
   "speak.js",
   "engine.js",
