@@ -448,6 +448,7 @@
     $("set-round").value = state.settings.roundSize;
     applyPace();
     drawClockSetting();
+    drawFlags();
     drawSync();
     drawGoogle();
     $("saved-at").textContent = state.savedAt
@@ -1100,12 +1101,33 @@
   let pickersOpen = false;
   const inRound = () => !!round && !$("card").hidden;
 
+  /* Sentences is no longer a button of its own: it is Write it with the words
+     given as tiles. Internally it is still its own kind of round, with its own
+     progress book, so a saved "sentences" simply shows as Write it, Tap. */
+  const shownMode = () => (mode() === "sentences" ? "write" : mode());
+  function drawHows() {
+    const show = (mode() === "write" || mode() === "sentences") && !(inRound() && !pickersOpen);
+    $("hows").hidden = !show;
+    document.querySelectorAll("#how-pills .pill").forEach((b) => b.classList.toggle("on", b.dataset.how === mode()));
+  }
+  $("how-pills").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill || pill.dataset.how === mode()) return;
+    state.settings.mode = pill.dataset.how;
+    todayRun = null;
+    round = null; card = null;
+    commit();
+    drawModes();
+    updateStartBlurb();
+    resetPracticeView();
+  });
+
   function drawModes() {
     document.querySelectorAll("#modes .mode").forEach((b) => {
-      b.classList.toggle("on", b.dataset.mode === mode());
+      b.classList.toggle("on", b.dataset.mode === shownMode());
       // On a phone the buttons are names only, so the one that is picked is
       // described once, above its Start button.
-      if (b.dataset.mode === mode()) {
+      if (b.dataset.mode === shownMode()) {
         $("mode-about").textContent = `${b.querySelector("b").textContent}: ${b.querySelector("span").textContent.toLowerCase()}.`;
       }
     });
@@ -1120,7 +1142,7 @@
      anything. "Words" on its own is the whole truth when nothing is filtered,
      and "Words · all" would be noise. */
   function pickerSummaryText() {
-    const label = { words: "Words", verbs: "Verb endings", sentences: "Sentences", listen: "Listen", grammar: "Grammar", write: "Write it" }[mode()];
+    const label = { words: "Words", verbs: "Verb endings", sentences: "Write it · tap", listen: "Listen", grammar: "Grammar", write: "Write it" }[mode()];
     let narrowed = null;
     if (mode() === "verbs") {
       narrowed = pick && pick.kind === "drill" ? pick.name
@@ -1247,6 +1269,7 @@
   }
 
   function drawFilters() {
+    drawHows();
     if (inRound() && !pickersOpen) { $("filters").hidden = true; return; }
     const showTense = mode() === "verbs" && !(pick && pick.kind === "drill");
     const showPos = mode() === "words" && !(pick && pick.kind === "drill");
@@ -1785,7 +1808,9 @@
     if (!round || round.index >= round.queue.length) return endRound();
     const item = round.queue[round.index];
     // A drill item is already a card; a word or a sentence has to be built.
-    card = round.listen ? listenCard(item)
+    delete $("talk").dataset.spoken;
+    card = round.talk ? talkCard(item)
+      : round.listen ? listenCard(item)
       : round.write ? writeCard(item)
       : round.grammar ? grammarCard(item)
       : round.drill ? drillCard(item)
@@ -1826,6 +1851,7 @@
       : esc(card.prompt)) + sayButton(shown);
     $("card-prompt").hidden = !!card.listen;
     $("listen").hidden = !card.listen;
+    drawTalk(false);
     $("card-hint").textContent = card.band.key === "cloze"
       ? card.promptHint
       : (card.promptHint ? card.promptHint : "");
@@ -2193,6 +2219,8 @@
 
   function applyAndShow(res, typed) {
     stopClock();
+    if (card.talk) drawTalk(true);
+    drawFlag();
     const id = card.word.id;
     let outcome = res.correct ? "correct" : res.almost ? "almost" : "wrong";
     // A second go can only improve the card. Someone who stops to fix a
@@ -2446,7 +2474,7 @@
   $("btn-override").addEventListener("click", () => {
     if (!lastResult || lastResult.outcome === "correct") return;
     const typed = lastResult.typed;
-    const learnable = !card.drill && !card.listen && !card.isSentence && card.word && card.word.id;
+    const learnable = (!card.drill || !!card.talk) && !card.listen && !card.isSentence && card.word && card.word.id;
     const remembered = learnable
       && Store.rememberAccepted(state, card.word.id, askedFor(card), typed);
     if (remembered) commit();
@@ -2455,6 +2483,64 @@
     toast(remembered
       ? `Marked correct, and "${typed.trim()}" will be accepted for this ${card.isWrite ? "sentence" : "word"} from now on.`
       : "Marked correct.");
+  });
+
+  /* Sounds wrong? Keeps the card's Spanish and English on a list in the menu,
+     to show a native speaker. Tapped again, it comes off. */
+  function flagKey(c) {
+    if (!c) return null;
+    if (c.grammar) return `grammar:${c.grammarKey}`;
+    if (c.drill && !c.talk) return `drill:${c.reveal}`;
+    return c.word && c.word.id ? String(c.word.id) : null;
+  }
+  function drawFlag() {
+    const key = flagKey(card);
+    const btn = $("btn-flag");
+    btn.hidden = !key;
+    const on = !!(key && state.flags && state.flags[key] && !state.flags[key].done);
+    btn.classList.toggle("on", on);
+    btn.textContent = on ? "Flagged to check (undo)" : "Sounds wrong?";
+  }
+  $("btn-flag").addEventListener("click", () => {
+    const key = flagKey(card);
+    if (!key) return;
+    if (state.flags && state.flags[key] && !state.flags[key].done) {
+      Store.unflag(state, key);
+    } else {
+      const es = card.revealContext || card.reveal || (card.word && card.word.es) || "";
+      const en = card.band.key === "recognition" ? card.reveal : card.prompt;
+      Store.flagCard(state, key, { es: String(es), en: String(en || ""), where: card.band.label || "" });
+      toast("Kept in the menu under Flagged to check.");
+    }
+    commit();
+    drawFlag();
+    drawFlags();
+  });
+
+  function drawFlags() {
+    const list = Store.openFlags(state);
+    $("flags-count").textContent = list.length ? `${list.length}` : "None";
+    $("flag-list").innerHTML = list.map(([key, r]) => `<li><span><b>${esc(r.es)}</b></span>`
+      + `<span class="muted small">${esc(r.en)}${r.where ? ` · ${esc(r.where)}` : ""}</span>`
+      + `<button class="flag-btn" type="button" data-unflag="${esc(key)}">Take off the list</button></li>`).join("");
+    $("btn-flags-copy").disabled = !list.length;
+  }
+  $("flag-list").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-unflag]");
+    if (!btn) return;
+    Store.unflag(state, btn.dataset.unflag);
+    commit();
+    drawFlags();
+    drawFlag();
+  });
+  $("btn-flags-copy").addEventListener("click", async () => {
+    const text = Store.openFlags(state).map(([, r], i) => `${i + 1}. ${r.es}\n   (${r.en})`).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Copied. Paste it into a message.");
+    } catch (e) {
+      toast("This browser would not copy it. The list is above to read out or screenshot.", true);
+    }
   });
 
   $("btn-next").addEventListener("click", () => {
@@ -2580,7 +2666,7 @@
     lastMissed = missed.length ? {
       items: missed,
       flags: { drill: !!round.drill, grammar: !!round.grammar, listen: !!round.listen, sentences: !!round.sentences,
-        write: !!round.write },
+        write: !!round.write, talk: !!round.talk, unit: round.unit || null },
     } : null;
     $("btn-review").hidden = !missed.length;
     $("btn-review").textContent = `Go over the ${missed.length} you missed`;
@@ -2896,6 +2982,15 @@
         </div>
         <div class="dialogue" id="dialogue">${u.dialogue.lines.map((l, n) => lineHtml(l, n, true)).join("")}</div>
         <button class="btn ${rec.read ? "" : "primary"}" type="button" data-act="read-done">${rec.read ? "Read &#10003;" : "Done: I followed it"}</button>
+        <div class="talk-start">
+          <p><b>Have the conversation</b></p>
+          <p class="muted small">You are Sam. The others speak; you get the English of what Sam says and
+            answer in Spanish. Read and hear shows their lines as well; Hear only is the harder one.</p>
+          <div class="ustep-acts">
+            <button class="btn" type="button" data-act="talk" data-how="read">Read and hear</button>
+            ${Speech.supported ? '<button class="btn" type="button" data-act="talk" data-how="hear">Hear only</button>' : ""}
+          </div>
+        </div>
       </details>
 
       <details class="pane ustep" data-step="write"${open(2)}>
@@ -2966,6 +3061,81 @@
     beginRound({ queue, drill: false, unit: u.id });
   }
 
+  /* Having the conversation. You are Sam: the other person's lines are
+     spoken, and shown too unless you chose to hear only, and you are given
+     the English of what Sam says and answer in Spanish, typed or said. It is
+     practice, like a drill: nothing levels up or down, but what you get
+     wrong can be gone over, and "I was right" remembers your way of saying
+     it for next time. */
+  const ME = "Sam";
+  let talkHow = "read";
+
+  function startTalk(u, how) {
+    talkHow = how === "hear" && Speech.supported ? "hear" : "read";
+    const queue = [];
+    let context = [];
+    u.dialogue.lines.forEach((l, n) => {
+      if (l.who === ME) { queue.push({ id: `talk:${u.id}:${n}`, unit: u, line: l, n, context }); context = []; }
+      else context.push(l);
+    });
+    if (!queue.length) { toast("Nobody to talk to in this one.", true); return; }
+    todayRun = null;
+    showScreen("practice");
+    beginRound({ queue, drill: true, talk: true, unit: u.id });
+    window.scrollTo(0, 0);
+  }
+
+  function talkCard(item) {
+    const { unit, line, context } = item;
+    const remembered = ((state.accepted || {})[item.id] || {}).es || [];
+    return {
+      isWrite: true, drill: true, item: { id: item.id, es: line.es },
+      talk: { context, how: talkHow, first: item.n === 0 },
+      word: { id: item.id, es: line.es, note: "" },
+      band: { key: "translate", label: `Conversation · Unit ${UNITS.indexOf(unit) + 1}` },
+      levelLabel: "",
+      prompt: line.en,
+      promptHint: "You are Sam. Say it in Spanish.",
+      accepted: [line.es].concat(remembered),
+      reveal: line.es,
+      revealContext: "",
+      note: "",
+      fellBack: false,
+      help: writeHelp({ es: line.es }),
+    };
+  }
+
+  /* The other person's lines above the prompt. Heard as the card arrives;
+     on Hear only the Spanish stays hidden until you ask for it or answer. */
+  function drawTalk(answered) {
+    const el = $("talk");
+    if (!card || !card.talk) { el.hidden = true; el.innerHTML = ""; return; }
+    const { context, how, first } = card.talk;
+    const hidden = how === "hear" && !answered && !el.dataset.shown;
+    if (!answered) delete el.dataset.shown;
+    el.hidden = false;
+    el.innerHTML = (context.length
+      ? context.map((l) => `<p class="tline"><span class="twho">${esc(l.who)}</span>`
+          + (hidden ? `<span class="muted small">(listen)</span>` : `<span class="tes">${tappable(l.es)}</span>`)
+          + (answered ? `<span class="ten muted small">${esc(l.en)}</span>` : "") + `</p>`).join("")
+      : `<p class="tfirst muted small">${first ? "You start." : "You carry on."}</p>`)
+      + (context.length && Speech.supported
+        ? `<div class="tacts"><button class="btn small" type="button" data-talk="again">Hear it again</button>`
+          + (hidden ? `<button class="btn small" type="button" data-talk="show">Show it</button>` : "") + `</div>`
+        : "");
+    if (!answered && context.length && !el.dataset.spoken) {
+      el.dataset.spoken = "1";
+      Speech.sayAll(context.map((l) => l.es), {});
+    }
+    if (answered) delete el.dataset.spoken;
+  }
+  $("talk").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-talk]");
+    if (!btn || !card || !card.talk) return;
+    if (btn.dataset.talk === "again") Speech.sayAll(card.talk.context.map((l) => l.es), {});
+    if (btn.dataset.talk === "show") { $("talk").dataset.shown = "1"; drawTalk(false); }
+  });
+
   function stopRetell() {
     if (retell && retell.timer) clearInterval(retell.timer);
     retell = null;
@@ -3018,6 +3188,7 @@
     const act = btn.dataset.act;
     if (act === "units") { openUnit = null; renderCourse(); window.scrollTo(0, 0); return; }
     if (act === "unit-words") { startUnitWords(u); return; }
+    if (act === "talk") { startTalk(u, btn.dataset.how); return; }
     if (act === "unit-grammar") { practiseGrammar(u.grammar); return; }
     if (act === "toggle-en") {
       const ens = [...$("dialogue").querySelectorAll(".den")];

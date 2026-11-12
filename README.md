@@ -466,6 +466,12 @@ still there underneath for anything else.
 
 ## Write it
 
+Write it now holds what was the Sentences mode too. **Type it out** is Write
+it as below; **Tap the words** is the old Sentences round, the words given as
+tiles to put in order, then typed once you have it. Typing is the default,
+the choice is remembered, and the two keep their own progress books as
+before. A save that had Sentences picked opens on Write it, Tap the words.
+
 A practice mode for typing whole sentences from English, at a level you
 pick: Basic (present tense, short questions and answers), Medium (plans, the
 past, have to, comparisons, two clauses) or Hard (past stories, the
@@ -531,6 +537,16 @@ coming back to:
    allows it, then talk about the topic three times against a clock of 60,
    45 and 30 seconds. Stopping early does not count; letting the clock run
    out does.
+
+### Having the conversation
+
+At the foot of each unit's Read and listen step, **Have the conversation**
+runs the unit's dialogue with you as Sam. The other person's lines are
+spoken and, on **Read and hear**, shown; on **Hear only** they stay hidden
+until you tap Show it or answer. For each of Sam's lines you get its English
+and answer in Spanish, typed or with the microphone, marked like Write it.
+It is practice, like a drill: nothing levels up or down, misses can be gone
+over, and I was right remembers your way of saying it for next time.
 
 Nothing is locked. The list suggests the first unit not finished, and so
 does the end of Today's session. Per unit, the saved state keeps when the
@@ -1195,6 +1211,16 @@ verb endings: not teaching cards, which are for reading, and not sentences,
 Write it or Listen, where eight seconds would be a typing test. The setting
 is `settings.clock`, and a save from before it loads with it off.
 `tests/test-clock.mjs` checks it.
+
+### Sounds wrong?
+
+Under every verdict, **Sounds wrong?** puts the card's Spanish and English on
+a list in the menu, **Flagged to check**, with a button that copies it to
+paste into a message. The Spanish here was written with care but not by a
+native speaker, and this is the cheap way to get it checked by one. Flags
+sync: per sentence the later change wins, and taking one off is a change, so
+it comes off every device (`state.flags`). `tests/test-talk.mjs` checks it,
+along with the conversation and the Type or Tap choice.
 
 ### Saying it
 

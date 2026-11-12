@@ -300,6 +300,26 @@ details.sync[open] summary.sync-head { margin-bottom: 10px; }
 }
 #round-count { font-weight: 700; color: var(--muted); }
 
+/* A conversation card: the other person's lines above what you are to say. */
+.talk { display: grid; gap: 6px; margin: 0 0 14px; padding: 10px 12px;
+  background: var(--panel2); border: 2px solid var(--line); border-radius: 14px; }
+.talk .tline { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.talk .twho { font: 800 12px var(--round); color: var(--accent-deep); text-transform: uppercase; letter-spacing: 0.04em; }
+.talk .tes { font-size: 17px; }
+.talk .ten { flex: 0 0 100%; }
+.talk .tacts { display: flex; gap: 8px; flex-wrap: wrap; }
+.talk .tfirst { margin: 0; }
+
+/* Sounds wrong?: a quiet link under the verdict, there when wanted. */
+.flag-btn, .help-toggle-like {
+  background: none; border: 0; padding: 4px 0; cursor: pointer;
+  font: 700 12px var(--round); color: var(--muted); text-decoration: underline;
+}
+.flag-btn.on { color: var(--bad-deep); }
+.flag-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; }
+.flag-list li span { display: block; }
+.flag-list button { margin-top: 2px; }
+
 /* Hide hints / Show hints: a quiet link, not a third button on the card. */
 .help-toggle {
   background: none; border: 0; padding: 2px 0; margin-left: 4px; cursor: pointer;
@@ -1133,3 +1153,7 @@ button, .btn, .pill, .tab, .tile, .key, label { -webkit-tap-highlight-color: tra
   background: var(--panel2); font-size: 13px;
 }
 .hchip b { color: var(--accent-deep); }
+
+/* Have the conversation, at the foot of a unit's Read and listen step. */
+.talk-start { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.talk-start p { margin: 0 0 4px; }
