@@ -267,7 +267,18 @@ function merge(local, remote) {
     // As with grammar: only when either side has any.
     ...(local.hooks || remote.hooks ? { hooks: mergeHooks(local.hooks, remote.hooks) } : {}),
     ...(local.units || remote.units ? { units: mergeUnits(local.units, remote.units) } : {}),
+    // Flags: per sentence, the later change wins, taking one off included.
+    ...(local.flags || remote.flags ? { flags: mergeFlags(local.flags, remote.flags) } : {}),
   };
+}
+
+function mergeFlags(a, b) {
+  const out = {};
+  for (const key of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+    const x = (a || {})[key], y = (b || {})[key];
+    out[key] = !x ? y : !y ? x : (String(x.at) >= String(y.at) ? x : y);
+  }
+  return out;
 }
 
 /* ---------------------------------------------------------------

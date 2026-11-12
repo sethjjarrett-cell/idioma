@@ -60,6 +60,10 @@ function defaultState() {
        Kept apart from editedWords, which is the Manage screen's, so that
        editing a word by hand does not silently throw these away. */
     accepted: {},
+    /* Sentences flagged as sounding wrong, to show a native speaker:
+       { key: { es, en, where, at, done? } }. `done` rather than deleting, so
+       taking one off the list on the phone takes it off the laptop too. */
+    flags: {},
     customWords: [],
     customSentences: [],
     editedWords: {},
@@ -175,6 +179,7 @@ function load() {
     merged.hooks = cleanHooks(parsed.hooks);
     merged.units = cleanUnits(parsed.units);
     merged.writing = cleanBook(parsed.writing);
+    merged.flags = cleanFlags(parsed.flags);
     return { state: merged, warning: null };
   } catch (e) {
     try { window.localStorage.setItem(STORAGE_KEY + ".broken", raw); } catch (e2) { /* nothing more to do */ }
@@ -576,10 +581,35 @@ function parseImport(text) {
   merged.hooks = cleanHooks(parsed.hooks);
   merged.units = cleanUnits(parsed.units);
   merged.writing = cleanBook(parsed.writing);
+  merged.flags = cleanFlags(parsed.flags);
   return merged;
 }
 
-window.Store = {
+/* Only rows with the parts the list shows. Anything else in there is from a
+   hand-edited backup and is dropped rather than drawn as a blank line. */
+function cleanFlags(raw) {
+  const out = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, r] of Object.entries(raw)) {
+    if (!r || typeof r !== "object" || typeof r.es !== "string" || typeof r.at !== "string") continue;
+    out[key] = { es: r.es, en: typeof r.en === "string" ? r.en : "", where: typeof r.where === "string" ? r.where : "",
+      at: r.at, ...(r.done ? { done: true } : {}) };
+  }
+  return out;
+}
+
+function flagCard(state, key, row) {
+  if (!state.flags) state.flags = {};
+  state.flags[key] = { es: row.es, en: row.en || "", where: row.where || "", at: new Date().toISOString() };
+}
+function unflag(state, key) {
+  if (!state.flags || !state.flags[key]) return;
+  state.flags[key] = { ...state.flags[key], done: true, at: new Date().toISOString() };
+}
+const openFlags = (state) => Object.entries(state.flags || {})
+  .filter(([, r]) => !r.done).sort((a, b) => (a[1].at < b[1].at ? -1 : 1));
+
+window.Store = { flagCard, unflag, openFlags, cleanFlags,
   STORAGE_KEY, STATE_VERSION, defaultState, load, save, saveNow, hookFor, setHook, unitRecord, peekUnit,
   allWords, allSentences, siblingsOf, peekProgress, progressFor, alternatives, rememberAccepted,
   allPhrases, sentenceIndex, readyPhrases, tileDistractors, verbForms, topicOf,

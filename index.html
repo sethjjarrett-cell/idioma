@@ -274,6 +274,17 @@
   <div class="menu-row">
     <button class="btn" type="button" id="btn-manage">Add or edit words</button>
   </div>
+  <!-- Everything flagged as sounding wrong, to show a native speaker. -->
+  <details class="sync" id="flags-panel">
+    <summary class="sync-head"><b>Flagged to check</b>
+      <span class="muted small" id="flags-count">None</span></summary>
+    <p class="muted small">Sentences you thought sounded wrong. Copy the list and show it to a
+      Colombian friend or a tutor; whatever they correct can be fixed in the app.</p>
+    <ol class="flag-list" id="flag-list"></ol>
+    <div class="menu-row">
+      <button class="btn" type="button" id="btn-flags-copy">Copy the list</button>
+    </div>
+  </details>
   <div class="menu-row">
     <button class="btn" id="btn-export">Export backup</button>
     <label class="btn" for="file-import">Import backup</label>
@@ -346,9 +357,6 @@
       <button class="mode" data-mode="verbs">
         <b>Verb endings</b><span>Conjugations off the tables</span>
       </button>
-      <button class="mode" data-mode="sentences">
-        <b>Sentences</b><span>Tap the words into order, then type them</span>
-      </button>
       <button class="mode" data-mode="write">
         <b>Write it</b><span>Whole sentences from English, basic to hard</span>
       </button>
@@ -358,6 +366,16 @@
       <button class="mode" data-mode="grammar">
         <b>Grammar</b><span>The rules that trip people up, as quick drills</span>
       </button>
+    </div>
+
+    <!-- Write it, two ways: typed out in full, or the words given as tiles to
+         put in order (what used to be the Sentences mode). -->
+    <div class="tenses hows" id="hows" hidden>
+      <span class="muted small">How</span>
+      <div class="pills" id="how-pills">
+        <button class="pill" data-how="write">Type it out</button>
+        <button class="pill" data-how="sentences">Tap the words</button>
+      </div>
     </div>
 
     <div class="tenses" id="filters" hidden>
@@ -390,6 +408,9 @@
         <!-- Sure of this one? Answer it right and it skips ahead a stage. -->
         <button class="sure" type="button" id="btn-sure" aria-pressed="false" hidden>I know this</button>
       </div>
+      <!-- A conversation card: what the other person just said, read and
+           heard, or heard only. -->
+      <div class="talk" id="talk" hidden></div>
       <p class="prompt" id="card-prompt"></p>
       <!-- On a verb drill: which person and which tense, labelled. -->
       <div class="target" id="card-target" hidden></div>
@@ -515,6 +536,7 @@
         </div>
         <div class="verdict-actions">
           <button class="btn" id="btn-override" hidden>I was right</button>
+          <button class="flag-btn" type="button" id="btn-flag" title="Keep this to ask a native speaker about">Sounds wrong?</button>
           <button class="btn primary" id="btn-retry" hidden>Type it again</button>
           <button class="btn primary" id="btn-next">Next</button>
         </div>

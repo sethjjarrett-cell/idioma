@@ -32,10 +32,11 @@ const meet = (n) => p.evaluate((count) => {
 }, n);
 
 console.log('--- the picker ---');
-console.log('six modes offered:', await p.locator('#modes .mode').count() === 6);
+console.log('five modes offered, Sentences being inside Write it:', await p.locator('#modes .mode').count() === 5);
 console.log('words is the default:',
   await p.evaluate(() => document.querySelector('.mode.on').dataset.mode) === 'words');
-await p.click('[data-mode="sentences"]');
+// Sentences is Write it with the words as tiles now.
+await p.click('[data-mode="write"]'); await p.click('#how-pills [data-how="sentences"]');
 await p.waitForTimeout(150);
 console.log('with nothing met, it says so rather than starting an empty round:',
   (await p.textContent('#start-blurb')).includes('No sentences yet'));
@@ -48,7 +49,7 @@ await meet(30);
 await p.reload();
 await p.waitForTimeout(400);
 console.log('the mode survives a reload:',
-  await p.evaluate(() => document.querySelector('.mode.on').dataset.mode) === 'sentences');
+  await p.evaluate(() => window.Idioma.state.settings.mode) === 'sentences');
 console.log('blurb now counts what is in reach:',
   /\d+ sentences you have the words for/.test(await p.textContent('#start-blurb')));
 
