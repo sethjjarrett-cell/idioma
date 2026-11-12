@@ -123,8 +123,13 @@ const CONFIG = {
   SENTENCE_ROUND_SIZE: 10,
   SENTENCE_MAX_NEW: 3,
   // Write it: whole sentences typed from English, so fewer to a round.
-  WRITE_ROUND_SIZE: 8,
-  WRITE_MAX_NEW: 4,
+  WRITE_ROUND_SIZE: 10,
+  WRITE_MAX_NEW: 5,
+  /* A sentence got right is left alone this long before it can come back.
+     Unlike a word, a sentence answered a minute ago is still in your head
+     word for word, so asking it again tests memory of the last few seconds,
+     not of Spanish. One got wrong may come straight back. */
+  SENTENCE_REST_HOURS: 12,
   TILE_DISTRACTORS: 3,
 
   /* Listening: something read aloud, typed back. Ten to a round, because
@@ -439,6 +444,91 @@ function pickRound(words, progressFor, now, count = CONFIG.ROUND_SIZE, options =
   const rest = drawFrom(met.filter((x) => !taken.has(x.word.id)), room - first.length);
 
   return fresh.concat(first, rest);
+}
+
+/* A round of whole sentences, for Write it and for Tap the words.
+
+   pickRound is right for words and wrong for sentences, in two ways that
+   showed up as "too repetitive". It brings back a sentence answered right a
+   minute ago, which by then is remembered rather than produced. And it takes
+   new ones strictly easiest first, which in a bank of sentences means a run
+   of near-copies built on the same few verbs: Tengo que ir, Tenemos que ir,
+   ¿Puedo ir?, No voy a ir.
+
+   So: anything got right in the last SENTENCE_REST_HOURS rests. Within a
+   round no two sentences share a content word (`keysOf`: the nouns, verbs,
+   adjectives and adverbs in it), so each one is about something different.
+   Among new ones, a sentence using a word you are learning right now comes
+   first (`boostOf`), then the easiest. The round is filled to full length
+   from new sentences when there are not enough to review, and only if both
+   run out does it allow a repeated content word, then a resting sentence. */
+function pickSentenceRound(pool, progressFor, now, count, options = {}) {
+  const maxNew = options.maxNew === undefined ? Math.ceil(count / 2) : options.maxNew;
+  const keysOf = options.keysOf || (() => []);
+  const rankOf = options.rankOf || (() => 0);
+  const boostOf = options.boostOf || (() => 0);
+  const t = Date.parse(now);
+  const rest = CONFIG.SENTENCE_REST_HOURS * 3600e3;
+  const enabled = pool.filter((x) => progressFor(x.id).enabled !== false);
+  const isNew = (x) => !progressFor(x.id).timesSeen;
+  const resting = (x) => {
+    const p = progressFor(x.id);
+    return !!p.lastSeen && p.correctStreak > 0 && t - Date.parse(p.lastSeen) < rest;
+  };
+
+  const fresh = enabled.filter(isNew)
+    .sort((a, b) => boostOf(b) - boostOf(a) || rankOf(a) - rankOf(b));
+  // Reviews weakest and stalest first, with a little shuffle so two equal
+  // ones do not always come in the same order.
+  const review = shuffle(enabled.filter((x) => !isNew(x) && !resting(x)))
+    .map((x) => ({ x, w: selectionWeight(progressFor(x.id), now) }))
+    .sort((a, b) => b.w - a.w).map((r) => r.x);
+  const resters = enabled.filter((x) => !isNew(x) && resting(x));
+
+  // The same words under two ids (the bank has a few) never share a round,
+  // however short of sentences it is.
+  const textOf = (x) => normalise(String((x.item ? x.item.es : x.es) || x.id));
+  const out = [], ids = new Set(), used = new Set(), texts = new Set();
+  const fits = (x) => keysOf(x).every((k) => !used.has(k));
+  const take = (x) => { out.push(x); ids.add(x.id); texts.add(textOf(x)); keysOf(x).forEach((k) => used.add(k)); };
+  const fill = (list, limit, strict) => {
+    for (const x of list) {
+      if (out.length >= count || limit <= 0) break;
+      if (ids.has(x.id) || texts.has(textOf(x)) || (strict && !fits(x))) continue;
+      take(x); limit--;
+    }
+  };
+  fill(fresh, Math.min(maxNew, count), true);
+  fill(review, count, true);
+  fill(fresh, count, true);       // not enough to review: more new, not repeats
+  fill(fresh, count, false);
+  fill(review, count, false);
+  fill(resters, count, false);    // the very last resort
+  return shuffle(out);
+}
+
+/* Every way of writing `text` with one of its whole questions swapped for an
+   interchangeable one (equivalents.js). "Hola, ¿qué tal?" gives "Hola,
+   ¿cómo estás?", "Hola, ¿qué más?" and the rest. A question only counts as
+   whole between ¿ and ?, so "¿Qué tal el viaje?" gives nothing. */
+function swapVariants(text, groups) {
+  const s = String(text == null ? "" : text);
+  const out = [s];
+  const re = /¿[^¿?]*\?/g;
+  let m;
+  while ((m = re.exec(s))) {
+    const seg = m[0];
+    const key = normalise(seg);
+    const group = (groups || []).find((g) => g.some((x) => normalise(x) === key));
+    if (!group) continue;
+    const capital = /^¿\p{Lu}/u.test(seg);
+    for (const alt of group) {
+      if (normalise(alt) === key) continue;
+      const rep = capital ? "¿" + alt.charAt(1).toUpperCase() + alt.slice(2) : alt;
+      out.push(s.slice(0, m.index) + rep + s.slice(m.index + seg.length));
+    }
+  }
+  return out;
 }
 
 /* ---------------------------------------------------------------
@@ -1085,6 +1175,6 @@ window.Engine = {
   selectionWeight, pickRound, stillSettling, newWordAllowance, buildCard, introCard, normalise, fold, checkAnswer,
   levenshtein, damerau, nearMiss, diffAnswer,
   wordToken, tokenise, formsOfWord, buildFormIndex, wordForToken, sentenceNeeds, sentenceReady,
-  sentenceRank, sentenceCard, checkSequence, checkHeard, shuffle, FREE_TOKEN,
+  sentenceRank, sentenceCard, checkSequence, pickSentenceRound, swapVariants, checkHeard, shuffle, FREE_TOKEN,
   recordGrammar, grammarWeight, weightedDraw,
 };

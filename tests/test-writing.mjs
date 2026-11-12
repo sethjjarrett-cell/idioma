@@ -70,7 +70,9 @@ console.log('a round');
   await p.click('#btn-start'); await p.waitForTimeout(100);
   const r = await p.evaluate(() => ({ write: window.Idioma.round.write, n: window.Idioma.round.queue.length,
     levels: [...new Set(window.Idioma.round.queue.map((x) => x.level))] }));
-  ok('a round of basic sentences, four new to begin with', r.write && r.n === 4 && r.levels.join() === 'basic', JSON.stringify(r));
+  // A full round from the start: sentences are not words, and a short first
+  // round only meant the same few coming straight back.
+  ok('a full round of basic sentences from the start', r.write && r.n === 10 && r.levels.join() === 'basic', JSON.stringify(r));
   let k = await card(p);
   ok('the card shows the English and where you are', (await p.textContent('#card-prompt')).includes(k.item.en)
     && (await p.textContent('#card-hint')) === k.item.context);

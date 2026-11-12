@@ -1451,11 +1451,12 @@
         : "No sentences are within reach yet. Practise some words first.", true);
       return;
     }
-    const rankById = new Map(pool.map((x) => [x.id, x.rank]));
-    const picked = Engine.pickRound(pool, (id) => Store.peekPhrase(state, id),
+    const picked = Engine.pickSentenceRound(pool, (id) => Store.peekPhrase(state, id),
       new Date().toISOString(), Engine.CONFIG.SENTENCE_ROUND_SIZE, {
         maxNew: Engine.CONFIG.SENTENCE_MAX_NEW,
-        rankOf: (id) => (rankById.has(id) ? rankById.get(id) : Number.MAX_SAFE_INTEGER),
+        rankOf: (x) => (Number.isFinite(x.rank) ? x.rank : Number.MAX_SAFE_INTEGER),
+        keysOf: (x) => sentenceKeys(x.item ? x.item.es : x.es),
+        boostOf: (x) => learningBoost(x.item ? x.item.es : x.es),
       });
     round = { queue: picked, index: 0, results: [], movers: [], drill: false, sentences: true };
     pickersOpen = false;
@@ -1570,6 +1571,26 @@
   const writeItems = (level) => (level === "mine" ? mineItems()
     : WRITING.items.filter((x) => level === "mixed" || x.level === level));
 
+  /* What a sentence is about, for keeping a round varied: the bank words in
+     it that carry meaning (nouns, verbs, adjectives, adverbs), not the glue
+     every sentence shares. Cached, because a round asks of hundreds. */
+  const CONTENT_POS = new Set(["noun", "verb", "adjective", "adverb"]);
+  const keyCache = new Map();
+  function sentenceKeys(es) {
+    if (keyCache.has(es)) return keyCache.get(es);
+    const forms = Store.sentenceIndex(state).forms;
+    const byId = new Map(words().map((w) => [w.id, w]));
+    const keys = Engine.sentenceNeeds(String(es), forms).needs
+      .filter((id) => byId.has(id) && CONTENT_POS.has(byId.get(id).pos));
+    keyCache.set(es, keys);
+    return keys;
+  }
+  // Uses a word you are learning right now: met, not yet settled.
+  const learningBoost = (es) => (sentenceKeys(es).some((id) => {
+    const p = prog(id);
+    return p.timesSeen > 0 && p.level < Engine.CONFIG.SETTLED_LEVEL;
+  }) ? 1 : 0);
+
   function startWriteRound() {
     const pool = writeItems(writeLevelName());
     if (!pool.length) {
@@ -1580,8 +1601,11 @@
     }
     const order = new Map(pool.map((x, i) => [x.id, i]));
     const size = Engine.CONFIG.WRITE_ROUND_SIZE;
-    let queue = Engine.pickRound(pool, (id) => Store.peekWriting(state, id), new Date().toISOString(), size, {
-      maxNew: Engine.CONFIG.WRITE_MAX_NEW, rankOf: (id) => order.get(id),
+    let queue = Engine.pickSentenceRound(pool, (id) => Store.peekWriting(state, id), new Date().toISOString(), size, {
+      maxNew: Engine.CONFIG.WRITE_MAX_NEW,
+      rankOf: (x) => order.get(x.id),
+      keysOf: (x) => sentenceKeys(x.es),
+      boostOf: (x) => learningBoost(x.es),
     });
     /* Everything started and nothing due: asked for by name, so practise the
        shakiest ones rather than say come back later. */
@@ -1617,6 +1641,10 @@
       seen.add(id);
       out.push([w.es, w.en[0]]);
     }
+    /* The item's own glosses are written for it, so all of them are shown,
+       including one for a word that is only in an alternative answer
+       (decirme, for ¿Podría decirme…?), which the loop above never meets. */
+    for (const [t, g] of own) if (!seen.has(t)) { seen.add(t); out.push(g); }
     return out;
   }
 
@@ -1670,8 +1698,18 @@
      useful part of getting a whole sentence wrong. */
   const SUBJECT = /^([¿¡]*)\s*(yo|tú|él|ella|usted|nosotros|nosotras|ellos|ellas|ustedes)\s+/i;
   const dropSubject = (t) => String(t).trim().replace(SUBJECT, "$1");
+  // Every accepted answer, with its greetings swapped for the ones that mean
+  // the same (INTERCHANGEABLE, in equivalents.js). The first stays first.
+  const withSwaps = (list) => {
+    const out = [];
+    for (const t of list.flatMap((x) => Engine.swapVariants(x, window.INTERCHANGEABLE))) {
+      if (!out.includes(t)) out.push(t);
+    }
+    return out;
+  };
+
   function gradeWrite(typed) {
-    const res = Engine.checkAnswer(dropSubject(typed), card.accepted.map(dropSubject), {
+    const res = Engine.checkAnswer(dropSubject(typed), withSwaps(card.accepted).map(dropSubject), {
       typoTolerance: state.settings.typoTolerance,
     });
     if (!res.correct && !res.almost && typed.trim()) res.diff = Engine.diffAnswer(typed, card.reveal);
@@ -2167,7 +2205,7 @@
       }), typed);
       return;
     }
-    applyAndShow(Engine.checkAnswer(typed, card.accepted, {
+    applyAndShow(Engine.checkAnswer(typed, card.isSentence ? withSwaps(card.accepted) : card.accepted, {
       typoTolerance: state.settings.typoTolerance,
       /* The other Spanish words that answer the same English prompt. A drill
          answer comes off a conjugation table and has no word behind it, so

@@ -224,11 +224,26 @@ function saveNow(state) {
    Kept out of `es` and `en` on purpose. Those two are what the card shows, and
    a prompt reading "pretty, nice, lovely, beautiful, good looking" answers
    itself from the other direction. Accepted and not shown is the whole point. */
+/* The interchangeable questions a word belongs to, as alternatives: the
+   other members' Spanish, and their English glosses on the English side, so
+   "how is it going" is right for ¿cómo estás? as much as for ¿qué tal?. */
+function interchangeable(state, id, side) {
+  const groups = window.INTERCHANGEABLE || [];
+  const words = (window.SEED ? window.SEED.vocabulary : []).concat((window.VOCAB || {}).vocabulary || []);
+  const me = words.find((w) => w.id === id);
+  if (!me) return [];
+  const group = groups.find((g) => g.some((x) => Engine.normalise(x) === Engine.normalise(me.es)));
+  if (!group) return [];
+  if (side === "es") return group.filter((x) => Engine.normalise(x) !== Engine.normalise(me.es));
+  const inGroup = (w) => group.some((x) => Engine.normalise(x) === Engine.normalise(w.es));
+  return words.filter((w) => w.id !== id && inGroup(w)).flatMap((w) => w.en);
+}
+
 function alternatives(state, id, side) {
   const curated = (window.EQUIVALENTS || {})[id] || {};
   const learned = (state.accepted || {})[id] || {};
   const out = [];
-  for (const v of (curated[side] || []).concat(learned[side] || [])) {
+  for (const v of (curated[side] || []).concat(interchangeable(state, id, side), learned[side] || [])) {
     // normalise, not fold: fold leaves the punctuation on, so "cómo estás"
     // and "¿cómo estás?" would read as two different alternatives.
     const key = Engine.normalise(v);

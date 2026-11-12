@@ -140,5 +140,25 @@ ok('and the sense rule is untouched by any of it',
   E.checkAnswer('plata', production('dinero').accepted,
     { siblings: Store.siblingsOf(words, 'dinero') }).reason === 'sense');
 
+console.log('--- ¿cómo estás? and ¿qué tal? stand in for each other ---');
+{
+  const G = ctx.window.INTERCHANGEABLE;
+  const byIdW = new Map(Store.allWords(Store.defaultState()).map((w) => [w.id, w]));
+  const como = byIdW.get('como-estas'), tal = byIdW.get('que-tal');
+  const check = (typed, w) => E.checkAnswer(typed, [w.es, ...(w.es_alt || [])], {}).correct;
+  ok('¿qué tal? is right for ¿cómo estás?', check('que tal', como));
+  ok('and ¿cómo estás? for ¿qué tal?', check('como estas', tal));
+  ok('and ¿qué más?, the Colombian one, for either', check('¿qué más?', como) && check('que mas', tal));
+  ok('the English side too: "how is it going" for ¿cómo estás?',
+    E.checkAnswer('how is it going', como.en.concat(como.en_alt || []), {}).correct);
+  ok('the reveal still shows only the word itself', como.es === '¿cómo estás?');
+  const v = E.swapVariants('Hola, ¿qué tal?', G);
+  ok('inside a sentence, a whole question is swapped', v.includes('Hola, ¿cómo estás?') && v.includes('Hola, ¿qué más?'));
+  ok('keeping its capital', E.swapVariants('¿Qué tal? ¿Cómo va todo?', G).includes('¿Cómo estás? ¿Cómo va todo?'));
+  ok('but not a question that only starts the same', E.swapVariants('¿Qué tal el viaje?', G).length === 1);
+  ok('and nothing else is touched', E.swapVariants('Tengo hambre.', G).length === 1);
+  ok('every member is a whole question', G.every((g) => g.every((x) => /^¿[^¿?]+\?$/.test(x))));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
