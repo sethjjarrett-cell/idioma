@@ -32,8 +32,10 @@ const FAKE_VOICE = () => {
     speaking: false, pending: false,
     getVoices: () => window.__voices,
     speak(u) {
-      window.__spoken.push({ text: u.text, lang: u.lang, rate: u.rate, voice: u.voice && u.voice.name });
-      setTimeout(() => u.onend && u.onend(), 0);
+      // The silent utterance that unlocks speech on iOS is not something said.
+      if (u.text.trim()) window.__spoken.push({ text: u.text, lang: u.lang, rate: u.rate, voice: u.voice && u.voice.name });
+      // A real voice says it has started, then that it has finished.
+      setTimeout(() => { u.onstart && u.onstart(); u.onend && u.onend(); }, 0);
     },
     cancel() {},
     addEventListener() {},

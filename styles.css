@@ -300,6 +300,19 @@ details.sync[open] summary.sync-head { margin-bottom: 10px; }
 }
 #round-count { font-weight: 700; color: var(--muted); }
 
+/* Hide hints / Show hints: a quiet link, not a third button on the card. */
+.help-toggle {
+  background: none; border: 0; padding: 2px 0; margin-left: 4px; cursor: pointer;
+  font: 700 12px var(--round); color: var(--accent-deep); text-decoration: underline;
+}
+
+/* The clock: a bar that drains. No number, because a number ticking down
+   is something to read, and the point is to be answering instead. */
+.clock { height: 6px; margin: 12px 0 0; background: var(--line); border-radius: 999px; overflow: hidden; }
+.clock i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; }
+.clock.run i { transform: scaleX(0); transition-property: transform; transition-timing-function: linear; }
+.clock.late i { background: var(--bad); }
+
 .card {
   background: var(--panel); border: 2px solid var(--line);
   border-radius: 24px; padding: 20px; overflow: hidden;
@@ -612,23 +625,16 @@ body.no-speech .say-hint { display: none; }
   border-radius: 999px; padding: 4px 11px; white-space: nowrap;
 }
 
-/* One bar per topic, the three bands stacked left to right, so how far
-   through a topic you are is a shape rather than three numbers. */
-.topic-bar {
-  display: flex; height: 14px; margin: 10px 0 6px;
-  background: var(--line); border-radius: 999px; overflow: hidden;
+/* Topics, folded under the course: one line each. */
+.topics-fold summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.topics-fold[open] summary { margin-bottom: 8px; }
+.topic {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--line);
 }
-.topic-bar i { display: block; height: 100%; }
-.topic-bar i.b1 { background: var(--accent); }
-.topic-bar i.b2 { background: #ffa94d; }
-.topic-bar i.b3 { background: var(--good); }
-
-/* Eleven of these on one screen, so each is kept to a header, a line and a
-   bar; the word list is behind the fold it deserves. */
-.topic { padding: 14px 16px; margin-bottom: 10px; }
-.topic .blurb { margin: 0; }
-.topic .pane-head { margin-bottom: 6px; }
-.topic details { margin-top: 10px; }
+.topic h3 { margin: 0; font: 800 14px var(--round); }
+.topic-name { min-width: 0; }
+.topic-name .small { display: block; line-height: 1.35; }
 
 .lesson-list { display: flex; flex-direction: column; gap: 10px; }
 
@@ -869,7 +875,7 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .brand { font-size: 19px; }
   .tabs {
     order: 5; flex: 0 0 100%; overflow: visible;
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
     padding: 2px 0 4px;
   }
   .tab { padding: 6px 2px; font-size: 11px; letter-spacing: 0.02em; text-align: center; }
@@ -884,6 +890,13 @@ table.bank .row-actions .btn:active { transform: translateY(2px); box-shadow: no
   .mode b { font-size: 13px; }
   .mode span { display: none; }
   .hero .hero-top { margin-bottom: 12px; }
+  #round-start .fox-lg { width: 52px; height: 52px; }
+  /* The filter row is one line that scrolls sideways rather than three rows
+     of pills. The one you have picked is always first in view, and a pill cut
+     off at the edge says there are more. */
+  #filters .pills { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  #filters .pills::-webkit-scrollbar { display: none; }
+  #filters .pill { flex: none; }
   table.conj { min-width: 380px; font-size: 13px; }
   .example b { min-width: 0; }
 }

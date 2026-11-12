@@ -14,7 +14,20 @@
    - Safari can drop an utterance that is garbage-collected mid-sentence and
      never fire its end event, so the one being spoken is kept in `current`.
    - The voice list arrives late in some browsers, after a voiceschanged
-     event, so it is read again when that fires rather than once at load. */
+     event, so it is read again when that fires rather than once at load.
+
+   And three that made Listen silent on an iPhone:
+   - Stopping one utterance and starting the next in the same breath (cancel
+     then speak) often loses the new one in Safari, and Chrome now and then.
+     So after a cancel the next one waits a moment before it is handed over.
+   - iOS only lets a page speak once a tap has unlocked it. The first tap
+     anywhere says nothing, silently, which is what unlocks it; after that a
+     short wait before speaking no longer loses the permission.
+   - A voice the phone lists but has not downloaded, or an engine that has
+     stuck, takes the utterance and never starts it. If nothing has started
+     within a second and a half it is tried once more on the language alone,
+     and if that does not start either, `onSilent` says so, so the page can
+     tell the learner instead of leaving them tapping at nothing. */
 (function () {
   "use strict";
 
@@ -62,6 +75,75 @@
 
   let current = null;
 
+  // The tap that unlocks speech on iOS: an utterance at no volume, said once.
+  let unlocked = false;
+  function unlock() {
+    if (unlocked || !supported) return;
+    unlocked = true;
+    try {
+      const u = new Utterance(" ");
+      u.volume = 0;
+      synth.speak(u);
+    } catch (e) { /* nothing to unlock */ }
+    for (const t of ["pointerdown", "touchend", "keydown"]) document.removeEventListener(t, unlock, true);
+  }
+  if (supported && typeof document !== "undefined") {
+    for (const t of ["pointerdown", "touchend", "keydown"]) document.addEventListener(t, unlock, true);
+  }
+
+  const START_WAIT = 1500;   // how long an utterance may take to begin
+  const AFTER_CANCEL = 120;  // the pause after stopping, before the next
+
+  const tidy = (text) => String(text == null ? "" : text)
+    .replace(/[{}]/g, "").replace(/_+/g, " ").replace(/\s+/g, " ").trim();
+
+  function utterance(text, voice, options) {
+    const u = new Utterance(text);
+    if (voice) u.voice = voice;
+    // Set even with no voice found: given a language, most browsers pick a
+    // Spanish voice of their own rather than reading it out in English.
+    u.lang = voice ? voice.lang : "es-CO";
+    u.rate = options.slow ? RATE_SLOW : RATE;
+    return u;
+  }
+
+  /* Hand an utterance over, waiting first if something had to be stopped,
+     and watch that it actually starts. */
+  /* Bumped by every new request, so a retry or a silence report from an
+     older one never acts once something newer has been asked for. Not
+     `current`, which an engine clears on its own when it errors or is
+     cancelled. */
+  let generation = 0;
+
+  function speakWatched(make, options, attempt, gen = ++generation) {
+    const u = make(attempt);
+    let started = false;
+    const onstart = u.onstart;
+    u.onstart = (e) => { started = true; if (onstart) onstart(e); };
+    const go = () => {
+      try {
+        if (synth.paused) synth.resume();
+        current = u;
+        synth.speak(u);
+      } catch (e) { /* reported below as silence */ }
+      setTimeout(() => {
+        if (started || gen !== generation) return;
+        try { synth.cancel(); } catch (e) { /* nothing to stop */ }
+        // The retry waits after the cancel too, or it is dropped the same way.
+        if (attempt === 0) setTimeout(() => { if (gen === generation) speakWatched(make, options, 1, gen); }, AFTER_CANCEL);
+        else if (options.onSilent) options.onSilent();
+      }, START_WAIT);
+    };
+    let busy = false;
+    try { busy = synth.speaking || synth.pending; } catch (e) { busy = false; }
+    if (busy) {
+      try { synth.cancel(); } catch (e) { /* nothing to stop */ }
+      setTimeout(go, AFTER_CANCEL);
+    } else {
+      go();
+    }
+  }
+
   /* Say it. Returns whether anything was handed to the voice, which is not
      the same as anything being heard: a phone on silent or at no volume says
      yes here and stays quiet, and there is no way for a page to know. */
@@ -69,23 +151,17 @@
     if (!supported) return false;
     // Braces are the bank's mark for the word a sentence is teaching, and a
     // run of underscores is a cloze blank. Neither is meant to be read out.
-    const clean = String(text == null ? "" : text)
-      .replace(/[{}]/g, "").replace(/_+/g, " ").replace(/\s+/g, " ").trim();
+    const clean = tidy(text);
     if (!clean) return false;
+    if (!voices.length) load();
     try {
-      // Anything still playing is from the last card and is stopped, so two
-      // taps never talk over each other.
-      if (synth.speaking || synth.pending) synth.cancel();
-      const u = new Utterance(clean);
-      const voice = pickVoice();
-      if (voice) u.voice = voice;
-      // Set even with no voice found: given a language, most browsers pick a
-      // Spanish voice of their own rather than reading it out in English.
-      u.lang = voice ? voice.lang : "es-CO";
-      u.rate = options.slow ? RATE_SLOW : RATE;
-      u.onend = u.onerror = () => { if (current === u) current = null; };
-      current = u;
-      synth.speak(u);
+      speakWatched((attempt) => {
+        // The second try leaves the voice to the browser: the one picked may
+        // be listed and not actually there.
+        const u = utterance(clean, attempt === 0 ? pickVoice() : null, options);
+        u.onend = u.onerror = () => { if (current === u) current = null; };
+        return u;
+      }, options, 0);
       return true;
     } catch (e) {
       return false;
@@ -98,18 +174,22 @@
      first, like say. */
   function sayAll(texts, options = {}) {
     if (!supported || !texts.length) return false;
+    if (!voices.length) load();
     try {
-      if (synth.speaking || synth.pending) synth.cancel();
-      const voice = pickVoice();
-      texts.forEach((text, i) => {
-        const u = new Utterance(String(text).replace(/[{}]/g, "").replace(/_+/g, " ").trim());
-        if (voice) u.voice = voice;
-        u.lang = voice ? voice.lang : "es-CO";
-        u.rate = options.slow ? RATE_SLOW : RATE;
-        u.onstart = () => { if (options.onLine) options.onLine(i); };
-        if (i === texts.length - 1) u.onend = u.onerror = () => { if (options.onDone) options.onDone(); };
-        synth.speak(u);
-      });
+      const queue = () => {
+        const voice = pickVoice();
+        texts.forEach((text, i) => {
+          const u = utterance(tidy(text), voice, options);
+          u.onstart = () => { if (options.onLine) options.onLine(i); };
+          if (i === texts.length - 1) u.onend = u.onerror = () => { if (options.onDone) options.onDone(); };
+          if (i === 0) current = u;
+          synth.speak(u);
+        });
+      };
+      generation++;
+      let busy = false;
+      try { busy = synth.speaking || synth.pending; } catch (e) { busy = false; }
+      if (busy) { synth.cancel(); setTimeout(queue, AFTER_CANCEL); } else queue();
       return true;
     } catch (e) {
       return false;
@@ -118,6 +198,7 @@
 
   function stop() {
     if (!supported) return;
+    generation++;
     try { synth.cancel(); } catch (e) { /* nothing to stop */ }
     current = null;
   }
@@ -135,5 +216,5 @@
   const hasSpanishVoice = () => spanish().length > 0;
 
   window.Speech = { supported, say, sayAll, stop, voiceName, voicesKnown, hasSpanishVoice,
-    RATE, RATE_SLOW, pickVoice, reload: load };
+    RATE, RATE_SLOW, pickVoice, reload: load, START_WAIT, AFTER_CANCEL };
 })();
