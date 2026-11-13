@@ -1445,6 +1445,7 @@
      same cap on how many new ones arrive at once. Rank comes from the hardest
      word in the sentence, so they arrive commonest-first too. */
   function startSentenceRound() {
+    refreshPos();
     const pool = sentencePool();
     if (!pool.length) {
       toast(readySentences().length
@@ -1577,12 +1578,33 @@
      every sentence shares. Cached, because a round asks of hundreds. */
   const CONTENT_POS = new Set(["noun", "verb", "adjective", "adverb"]);
   const keyCache = new Map();
+  /* The part of speech of every word, built once and rebuilt only when the
+     bank changes size. Building it inside sentenceKeys meant building the
+     whole word list once per sentence, hundreds of times per round: 24
+     seconds to start a round on a laptop, and a phone simply froze. */
+  let posCache = { n: -1, pos: null, forms: null };
+  // Called once as a round starts, never per sentence: building the word
+  // list to see whether it has changed is itself the expensive part.
+  function refreshPos() {
+    const list = words();
+    if (posCache.n !== list.length) {
+      posCache = { n: list.length, pos: new Map(list.map((w) => [w.id, w.pos])) };
+      keyCache.clear();
+    }
+    // Asking the store for the index rebuilds both lists to see if it is
+    // stale, so it is asked once here and not once per sentence.
+    posCache.forms = Store.sentenceIndex(state).forms;
+  }
+  function posById() {
+    if (!posCache.pos) refreshPos();
+    return posCache.pos;
+  }
   function sentenceKeys(es) {
     if (keyCache.has(es)) return keyCache.get(es);
-    const forms = Store.sentenceIndex(state).forms;
-    const byId = new Map(words().map((w) => [w.id, w]));
+    const pos = posById();
+    const forms = posCache.forms;
     const keys = Engine.sentenceNeeds(String(es), forms).needs
-      .filter((id) => byId.has(id) && CONTENT_POS.has(byId.get(id).pos));
+      .filter((id) => CONTENT_POS.has(pos.get(id)));
     keyCache.set(es, keys);
     return keys;
   }
@@ -1593,6 +1615,7 @@
   }) ? 1 : 0);
 
   function startWriteRound() {
+    refreshPos();
     const pool = writeItems(writeLevelName());
     if (!pool.length) {
       toast(writeLevelName() === "mine"
