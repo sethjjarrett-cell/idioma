@@ -227,16 +227,34 @@ function saveNow(state) {
 /* The interchangeable questions a word belongs to, as alternatives: the
    other members' Spanish, and their English glosses on the English side, so
    "how is it going" is right for ¿cómo estás? as much as for ¿qué tal?. */
-function interchangeable(state, id, side) {
+/* Worked out once: which group each bank word is in. This is asked for every
+   word every time the word list is built, and searching the whole bank on
+   each ask made building it slow enough to freeze a phone. */
+let groupIndex = null;
+function groupsByWord() {
+  if (groupIndex) return groupIndex;
   const groups = window.INTERCHANGEABLE || [];
   const words = (window.SEED ? window.SEED.vocabulary : []).concat((window.VOCAB || {}).vocabulary || []);
-  const me = words.find((w) => w.id === id);
-  if (!me) return [];
-  const group = groups.find((g) => g.some((x) => Engine.normalise(x) === Engine.normalise(me.es)));
-  if (!group) return [];
-  if (side === "es") return group.filter((x) => Engine.normalise(x) !== Engine.normalise(me.es));
-  const inGroup = (w) => group.some((x) => Engine.normalise(x) === Engine.normalise(w.es));
-  return words.filter((w) => w.id !== id && inGroup(w)).flatMap((w) => w.en);
+  const groupOf = new Map();
+  groups.forEach((g, i) => g.forEach((x) => groupOf.set(Engine.normalise(x), i)));
+  const byId = new Map(), members = groups.map(() => []);
+  for (const w of words) {
+    const i = groupOf.get(Engine.normalise(w.es));
+    if (i === undefined) continue;
+    byId.set(w.id, i);
+    members[i].push(w);
+  }
+  groupIndex = { byId, members, groups };
+  return groupIndex;
+}
+
+function interchangeable(state, id, side) {
+  const { byId, members, groups } = groupsByWord();
+  const i = byId.get(id);
+  if (i === undefined) return [];
+  const me = members[i].find((w) => w.id === id);
+  if (side === "es") return groups[i].filter((x) => Engine.normalise(x) !== Engine.normalise(me.es));
+  return members[i].filter((w) => w.id !== id).flatMap((w) => w.en);
 }
 
 function alternatives(state, id, side) {
